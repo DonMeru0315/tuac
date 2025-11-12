@@ -1,0 +1,142 @@
+/* 基本スタイル */
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; }
+header { background-color: #0056b3; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+header h1 { margin: 0; font-size: 1.5rem; }
+main { padding: 1rem; }
+
+/* 認証フォーム */
+#login-register-area { text-align: center; }
+#login-register-area h3 { margin-top: 0; margin-bottom: 0.5rem; }
+#auth-form input { display: block; width: 200px; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+#auth-button, #logout-button { width: 100%; padding: 0.75rem; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+#auth-button { background-color: #007bff; }
+#logout-button { background-color: #dc3545; }
+#toggle-mode-button { background: none; border: none; color: white; text-decoration: underline; cursor: pointer; padding: 0.5rem; }
+
+/* ナビゲーション */
+#main-nav { display: flex; background-color: #e9ecef; border-bottom: 1px solid #dee2e6; }
+.nav-button { flex-grow: 1; padding: 1rem; font-size: 1rem; text-align: center; background-color: transparent; border: none; border-right: 1px solid #dee2e6; cursor: pointer; color: #495057; }
+.nav-button:last-child { border-right: none; }
+.nav-button.active { background-color: #007bff; color: white; font-weight: bold; }
+
+/* 情報共有 & 車両詳細タブ */
+#info-nav, #detail-nav { display: flex; margin-bottom: 1rem; border-bottom: 2px solid #007bff; }
+.info-nav-button, .detail-nav-button { padding: 0.75rem 1.5rem; border: none; background-color: transparent; cursor: pointer; font-size: 1rem; color: #6c757d; }
+.info-nav-button.active, .detail-nav-button.active { color: #007bff; font-weight: bold; border-bottom: 3px solid #007bff; margin-bottom: -2px; }
+
+/* ボタン */
+.primary-button { background-color: #007bff; color: white; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; border-radius: 5px; cursor: pointer; margin-bottom: 1rem; }
+#show-add-vehicle-button { background-color: #28a745; }
+#show-add-wiki-button, #show-add-event-button, #show-add-log-button, #show-add-custom-button { background-color: #17a2b8; }
+#back-to-list-button { background: none; border: 1px solid #6c757d; color: #6c757d; padding: 0.5rem 1rem; cursor: pointer; margin-bottom: 1rem; }
+
+/* カード & リストアイテム */
+.vehicle-card { background: #fff; padding: 1rem; border: 1px solid #ddd; margin-bottom: 0.5rem; cursor: pointer; border-radius: 5px; }
+.vehicle-card:hover { background: #f8f9fa; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.history-item, .wiki-list-item { background: #fff; padding: 1rem; border: 1px solid #ddd; margin-bottom: 0.5rem; border-radius: 5px; position: relative; }
+.wiki-list-item { cursor: pointer; }
+.wiki-list-item:hover { background: #f8f9fa; }
+#basic-info-content { background: #fff; padding: 1rem; border-radius: 8px; }
+#basic-info-content p { font-size: 1.1rem; line-height: 1.6; margin: 0.5rem 0; }
+#basic-info-content strong { display: inline-block; width: 120px; color: #495057; }
+
+/* カード内アクション */
+.card-actions { position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; }
+.card-actions button, .article-actions button { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
+.edit-button { background-color: #ffc107; }
+.delete-button { background-color: #dc3545; color: white; }
+
+/* Wiki記事 */
+#wiki-article-view h2 { margin-top: 0; }
+#wiki-article-view .article-content { background: #fff; padding: 1.5rem; border: 1px solid #ddd; min-height: 200px; line-height: 1.7; }
+#wiki-article-view .article-actions { margin-top: 1rem; }
+
+/* カレンダー */
+#calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+#calendar-month-year { font-size: 1.5rem; font-weight: bold; }
+#calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.calendar-day { border: 1px solid #ddd; background: #fff; min-height: 100px; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
+.calendar-day.not-current-month { background: #f8f9fa; color: #ccc; }
+
+/* ★ 変更: 日付ヘッダーに余白を追加 (todayの丸のため) */
+.calendar-day-header { 
+    font-weight: bold; 
+    text-align: right; 
+    margin-bottom: 4px; 
+    padding: 2px 4px;
+}
+.calendar-event { background: #007bff; color: white; padding: 4px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+
+/* ★ 変更点: カレンダーの予定詳細スタイルを追加 ★ */
+.calendar-event .event-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.calendar-event .event-detail {
+    font-size: 0.75rem; 
+    color: #e0eaff; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ★ 追加: 曜日の色と今日のスタイル ★ */
+.calendar-day.saturday .calendar-day-header {
+    color: #007bff; /* 土曜: 青 */
+}
+.calendar-day.sunday .calendar-day-header {
+    color: #dc3545; /* 日曜: 赤 */
+}
+.calendar-day.today .calendar-day-header {
+    /* 右寄せ(text-align: right)の中で丸を作る */
+    display: inline-block; 
+    width: 1.8em;
+    height: 1.8em;
+    line-height: 1.8em;
+    text-align: center;
+    border-radius: 50%;
+    background-color: #ffc107; /* 今日: 黄色 */
+    color: #333;
+    padding: 0;
+    margin-top: 2px;
+    margin-right: 2px;
+}
+/* ★ 変更ここまで ★ */
+
+/* モーダル */
+.modal-background { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-content { background-color: white; padding: 2rem; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+.modal-content label { display: block; margin-top: 1rem; margin-bottom: 0.25rem; font-weight: bold; }
+.modal-content input, .modal-content textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+
+/* ★ 変更: flex-end から space-between に変更 */
+.modal-buttons { 
+    margin-top: 1.5rem; 
+    display: flex; 
+    justify-content: space-between; /* ★変更 (flex-end から) */
+    align-items: center; /* 垂直中央揃え */
+    gap: 1rem; 
+}
+/* ★ 追加: 右側のボタングループ */
+.modal-buttons-right {
+    display: flex;
+    gap: 1rem;
+}
+
+.modal-buttons button { padding: 0.75rem 1.5rem; border-radius: 5px; border: none; cursor: pointer; }
+.modal-buttons [type="submit"] { background-color: #007bff; color: white; }
+.cancel-button { background-color: #6c757d; color: white; }
+
+/* ユーティリティ */
+.hidden { display: none !important; }
+.center-message { text-align: center; margin-top: 5rem; color: #777; }
+
+/* レスポンシブ対応 */
+@media (max-width: 600px) {
+    header { flex-direction: column; gap: 1rem; }
+    #main-nav, #info-nav, #detail-nav { flex-direction: column; }
+    .nav-button, .info-nav-button, .detail-nav-button { border-bottom: 1px solid #dee2e6; border-right: none; }
+}
