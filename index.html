@@ -2,13 +2,139 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>拓殖大学自動車部サイト</title>
-    <link rel="stylesheet" href="tuac.css">
+    <title>Club Auto Log</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <h1>拓殖大学自動車部</h1>
-    <script src="tuac.js"></script>
+
+    <header>
+        <h1>拓殖大学　自動車部</h1>
+        <div id="auth-container">
+            <div id="login-register-area">
+                <h3 id="form-title">ログイン</h3>
+                <form id="auth-form">
+                    <input type="email" id="auth-email" placeholder="メールアドレス" required>
+                    <input type="password" id="auth-password" placeholder="パスワード" required>
+                    <button type="submit" id="auth-button">ログイン</button>
+                </form>
+                <button id="toggle-mode-button">新規登録はこちら</button>
+            </div>
+            <div id="user-info" class="hidden">
+                <span id="user-email"></span>
+                <button id="logout-button">ログアウト</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="main-content" class="hidden">
+        <nav id="main-nav">
+            <button class="nav-button active" data-module="maintenance-module">🛠️ 整備管理</button>
+            <button class="nav-button" data-module="practice-module">⏱️ 走行練習</button>
+            <button class="nav-button" data-module="info-module">📋 情報共有</button>
+        </nav>
+
+        <main>
+            <div id="maintenance-module" class="module-content">
+                <h2>部車リスト</h2>
+                <button id="show-add-vehicle-button" class="primary-button">＋ 部車を新規登録</button>
+                <div id="vehicle-list-container"></div>
+            </div>
+
+            <div id="vehicle-detail-view" class="module-content hidden">
+                <button id="back-to-list-button">＜ 車両リストに戻る</button>
+                <h2 id="detail-vehicle-name"></h2>
+                <nav id="detail-nav">
+                    <button class="detail-nav-button active" data-detailtab="basic-info">基本情報</button>
+                    <button class="detail-nav-button" data-detailtab="maintenance-logs">整備履歴</button>
+                    <button class="detail-nav-button" data-detailtab="customizations">カスタマイズ</button>
+                </nav>
+
+                <div id="basic-info-tab" class="detail-tab-content"><div id="basic-info-content"></div></div>
+                <div id="maintenance-logs-tab" class="detail-tab-content hidden">
+                    <button id="show-add-log-button" class="primary-button">＋ 整備履歴を追加</button>
+                    <div id="maintenance-logs-container"></div>
+                </div>
+                <div id="customizations-tab" class="detail-tab-content hidden">
+                    <button id="show-add-custom-button" class="primary-button">＋ カスタマイズを追加</button>
+                    <div id="customizations-container"></div>
+                </div>
+            </div>
+            
+            <div id="practice-module" class="module-content hidden"><h2>走行練習支援</h2><p>この機能は現在開発中です。</p></div>
+            <div id="info-module" class="module-content hidden"><h2>情報共有</h2><p>この機能は現在開発中です。</p></div>
+        </main>
+    </div>
+    
+    <div id="login-prompt" class="center-message"><p>ログインまたは新規登録してください</p></div>
+
+    <div id="vehicle-modal" class="modal-background hidden">
+        <div class="modal-content">
+            <h3 id="vehicle-form-title">車両の基本情報</h3>
+            <form id="vehicle-form">
+                <input type="hidden" id="vehicle-id">
+                <label for="vehicle-manufacturer">メーカー</label><input type="text" id="vehicle-manufacturer" required>
+                <label for="vehicle-name">車名</label><input type="text" id="vehicle-name" required>
+                <label for="vehicle-grade">グレード</label><input type="text" id="vehicle-grade">
+                <label for="vehicle-year">年式</label><input type="number" id="vehicle-year" placeholder="例: 2012">
+                <label for="vehicle-model-code">型式</label><input type="text" id="vehicle-model-code" placeholder="例: ZN6">
+                <label for="vehicle-vin">車台番号</label><input type="text" id="vehicle-vin">
+                <div class="modal-buttons"><button type="submit">保存</button><button type="button" class="cancel-button">キャンセル</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="maintenance-log-modal" class="modal-background hidden">
+        <div class="modal-content">
+            <h3>整備履歴</h3>
+            <form id="maintenance-log-form">
+                <input type="hidden" id="log-id">
+                <label>作業日</label><input type="date" id="log-date" required>
+                <label>作業内容</label><input type="text" id="log-task" required>
+                <label>走行距離(km)</label><input type="number" id="log-mileage">
+                <label>メモ</label><textarea id="log-notes" rows="4"></textarea>
+                <div class="modal-buttons"><button type="submit">保存</button><button type="button" class="cancel-button">キャンセル</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="customization-modal" class="modal-background hidden">
+        <div class="modal-content">
+            <h3>カスタマイズ</h3>
+            <form id="customization-form">
+                <input type="hidden" id="custom-id">
+                <label>パーツ名</label><input type="text" id="custom-part" required>
+                <label>カテゴリ</label><input type="text" id="custom-category" placeholder="例: 足回り, エンジン">
+                <label>詳細</label><textarea id="custom-details" rows="4"></textarea>
+                <div class="modal-buttons"><button type="submit">保存</button><button type="button" class="cancel-button">キャンセル</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="wiki-modal" class="modal-background hidden">
+        <div class="modal-content">
+            <h3 id="wiki-form-title">Wiki記事</h3>
+            <form id="wiki-form">
+                <input type="hidden" id="wiki-id">
+                <label for="wiki-title">タイトル</label><input type="text" id="wiki-title" required>
+                <label for="wiki-content">内容 (Markdown対応)</label><textarea id="wiki-content" rows="15" required></textarea>
+                <div class="modal-buttons"><button type="submit">保存</button><button type="button" class="cancel-button">キャンセル</button></div>
+            </form>
+        </div>
+    </div>
+    <div id="event-modal" class="modal-background hidden">
+        <div class="modal-content">
+            <h3>予定を追加</h3>
+            <form id="event-form">
+                <label for="event-date">日付</label><input type="date" id="event-date" required>
+                <label for="event-title">予定</label><input type="text" id="event-title" required>
+                <div class="modal-buttons"><button type="submit">追加</button><button type="button" class="cancel-button">キャンセル</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="app.js"></script>
+
 </body>
 </html>
