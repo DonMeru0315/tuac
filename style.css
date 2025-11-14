@@ -627,3 +627,40 @@ footer {
     font-size: 0.75rem;
     cursor: default; /* クリック不可であることを示す */
 }
+
+.wiki-list-item {
+    padding: 0.75rem 1rem;
+}
+
+.wiki-list-title {
+    font-size: 1.15rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.wiki-list-meta {
+    font-size: 0.85rem;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap; /* スマホで折り返す */
+}
+
+.wiki-list-updater {
+    color: #dc3545; /* 更新日は赤色で目立たせる */
+    font-weight: bold;
+    margin-left: auto; /* ★ 右寄せにする */
+}
+
+/* スマホ表示の調整 */
+@media (max-width: 600px) {
+    .wiki-list-meta {
+        gap: 0.5rem;
+    }
+    .wiki-list-updater {
+        margin-left: 0; /* スマホでは右寄せ解除 */
+        width: 100%; /* 幅いっぱいで改行させる */
+        margin-top: 0.25rem;
+    }
+}
