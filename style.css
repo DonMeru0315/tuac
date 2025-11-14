@@ -1,5 +1,11 @@
 /* 基本スタイル */
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; }
+body { 
+    font-family: "Meiryo", "Hiragino Kaku Gothic ProN", "MS PGothic", sans-serif; font-size: 18px; background-color: #f4f4f9; color: #333; margin: 0;
+    /* ★ 追加: フッターを一番下に押しやるための設定 */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 header { background-color: #0056b3; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
 header h1 { margin: 0; font-size: 1.5rem; }
 main { padding: 1rem; }
@@ -58,12 +64,13 @@ main { padding: 1rem; }
 .calendar-day { border: 1px solid #ddd; background: #fff; min-height: 100px; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
 .calendar-day.not-current-month { background: #f8f9fa; color: #ccc; }
 
-/* ★ 変更: 日付ヘッダーに余白を追加 (todayの丸のため) */
+/* ★ 変更: 日付 (右上) */
 .calendar-day-header { 
     font-weight: bold; 
-    text-align: right; 
-    margin-bottom: 4px; 
+    margin-bottom: 0; 
     padding: 2px 4px;
+    text-align: right; /* 右寄せ */
+    flex-shrink: 0; /* 縮まないように */
 }
 .calendar-event { background: #007bff; color: white; padding: 4px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
 
@@ -90,8 +97,8 @@ main { padding: 1rem; }
 .calendar-day.sunday .calendar-day-header {
     color: #dc3545; /* 日曜: 赤 */
 }
+/* ★ 変更: 'today' の丸がflex-itemでも機能するように調整 */
 .calendar-day.today .calendar-day-header {
-    /* 右寄せ(text-align: right)の中で丸を作る */
     display: inline-block; 
     width: 1.8em;
     height: 1.8em;
@@ -101,8 +108,8 @@ main { padding: 1rem; }
     background-color: #ffc107; /* 今日: 黄色 */
     color: #333;
     padding: 0;
-    margin-top: 2px;
-    margin-right: 2px;
+    margin-top: 0; /* リセット */
+    margin-right: 0; /* リセット */
 }
 /* ★ 変更ここまで ★ */
 
@@ -116,7 +123,7 @@ main { padding: 1rem; }
 .modal-buttons { 
     margin-top: 1.5rem; 
     display: flex; 
-    justify-content: space-between; /* ★変更 (flex-end から) */
+    justify-content: space-between;
     align-items: center; /* 垂直中央揃え */
     gap: 1rem; 
 }
@@ -139,4 +146,290 @@ main { padding: 1rem; }
     header { flex-direction: column; gap: 1rem; }
     #main-nav, #info-nav, #detail-nav { flex-direction: column; }
     .nav-button, .info-nav-button, .detail-nav-button { border-bottom: 1px solid #dee2e6; border-right: none; }
+}
+
+/* 末尾に追加 */
+
+/* カンバンボード */
+#kanban-container {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    min-height: 300px;
+}
+.kanban-column {
+    flex: 1;
+    min-width: 200px;
+    background-color: #f4f5f7;
+    border-radius: 8px;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+}
+.kanban-column h4 {
+    margin: 0 0 0.5rem 0;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #5e6c84;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 5px;
+}
+/* ステータス別のヘッダー色 */
+.kanban-column[data-status="todo"] h4 { border-color: #6c757d; }
+.kanban-column[data-status="inprogress"] h4 { border-color: #007bff; color: #007bff; }
+.kanban-column[data-status="waiting"] h4 { border-color: #dc3545; color: #dc3545; }
+.kanban-column[data-status="done"] h4 { border-color: #28a745; color: #28a745; }
+
+.task-card {
+    background: white;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    border: 1px solid #e1e4e8;
+    cursor: pointer;
+}
+.task-card:hover { background-color: #fafbfc; }
+.task-title { font-weight: bold; margin-bottom: 4px; font-size: 0.95rem; }
+.task-meta { font-size: 0.8rem; color: #666; display: flex; justify-content: space-between; }
+.task-assignee-icon { 
+    background: #6c757d; color: white; 
+    border-radius: 50%; width: 20px; height: 20px; 
+    display: inline-flex; align-items: center; justify-content: center; 
+    font-size: 0.7rem; margin-right: 4px;
+}
+
+/* セッティングログ */
+.setup-item {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-left: 5px solid #17a2b8; /* シアン色で区別 */
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+}
+.setup-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.setup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+.setup-comment-box {
+    margin-top: 0.5rem;
+    background: #f9f9f9;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* Wiki難易度バッジ */
+.wiki-difficulty {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: #eee;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+/* カンバンの日付スタイル */
+.task-date {
+    font-size: 0.75rem;
+    color: #e74c3c; /* 少し目立つ赤色 */
+    background-color: #fdf0ed;
+    padding: 1px 4px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+}
+
+/* 外部ツールリンク (情報共有タブ用) */
+#external-tools {
+    background-color: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-bottom: 1.5rem;
+}
+#external-tools h3 {
+    margin-top: 0;
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+.tool-links {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.tool-button {
+    flex: 1;
+    min-width: 120px;
+    display: inline-block;
+    padding: 0.8rem;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    color: white;
+    transition: opacity 0.2s;
+}
+.tool-button:hover {
+    opacity: 0.8;
+}
+.tool-note {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 0;
+    margin-top: 0.5rem;
+    text-align: right;
+}
+
+/* 各サイトのイメージカラー（仮） */
+.epc-data {
+    background-color: #2c3e50; /* 落ち着いた紺色 */
+}
+.parts-fan {
+    background-color: #e67e22; /* オレンジ色 */
+}
+
+/* フッター */
+footer {
+    /* ★ 変更: '3rem' から 'auto' に変更 */
+    margin-top: auto; 
+    
+    padding: 2rem 1rem;
+    text-align: center;
+    border-top: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    flex-shrink: 0; /* ★ 追加: フッターが縮まないようにする */
+}
+
+.contact-link {
+    display: inline-block;
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px dashed #adb5bd; /* 点線の下線で控えめにリンクっぽく */
+    transition: color 0.2s, border-bottom-color 0.2s;
+}
+
+.contact-link:hover {
+    color: #0056b3;
+    border-bottom-color: #0056b3;
+}
+
+.copyright {
+    font-size: 0.8rem;
+    margin: 0;
+    color: #adb5bd;
+}
+
+/* ★ 変更: 祝日名 (左上) */
+.calendar-holiday-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #dc3545; /* 赤色 */
+    padding: 3px 4px; /* 余白を調整 */
+    text-align: left; /* 左揃え */
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    
+    /* 背景色やマージンは不要になったので削除・リセット */
+    background-color: transparent; 
+    border-radius: 0;
+    margin: 0;
+}
+
+/* ★ 追加: カレンダーヘッダーのレイアウト */
+.calendar-day-header-container {
+    display: flex;
+    justify-content: space-between; /* 祝日名(左)と日付(右)を振り分け */
+    align-items: flex-start; /* 上揃え */
+    min-height: 1.5em; /* 祝日名がない日も高さを揃える */
+}
+
+/* ★ 追加: 練習会 会場リスト */
+#practice-locations {
+    margin-top: 1.5rem;
+}
+
+#practice-locations h3 {
+    margin-top: 0;
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #007bff;
+}
+
+.location-list {
+    display: grid;
+    /* 画面幅に応じて、250px以上のカードを自動で折り返して並べる */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.location-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.location-card h4 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.location-address {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    flex-grow: 1; /* ボタンがカードの最下部に揃うように */
+}
+
+.location-link-button {
+    display: block;
+    text-align: center;
+    padding: 0.75rem;
+    background-color: #28a745; /* 目を引く緑色 */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.location-link-button:hover {
+    background-color: #218838; /* ホバー色 */
+}
+
+/* ★ 追加: 会場マップのh4リンクのスタイル */
+.location-name-link {
+    text-decoration: none; /* 下線を消す */
+    color: inherit; /* 親要素(h4)の色を継承する (黒っぽい色になる) */
+    transition: color 0.2s;
+}
+.location-name-link:hover {
+    color: #0056b3; /* ホバー時に色を変える */
+    text-decoration: underline; /* ホバー時に下線を出す */
 }
