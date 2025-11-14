@@ -58,10 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
         customizationModal: document.getElementById('customization-modal'),
         customizationForm: document.getElementById('customization-form'),
         
-        // ★ 変更点: info-module のタブ関連DOMを削除
-        // infoNavButtons: document.querySelectorAll('.info-nav-button'),
-        // infoTabContents: document.querySelectorAll('.info-tab-content'),
-        
         // 情報共有 (Wiki)
         showAddWikiButton: document.getElementById('show-add-wiki-button'),
         wikiModal: document.getElementById('wiki-modal'),
@@ -81,6 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 共通
         cancelButtons: document.querySelectorAll('.cancel-button'),
+
+        // ★ 追加: カンバン・セッティング関連
+        kanbanContainer: document.getElementById('kanban-container'),
+        showAddTaskButton: document.getElementById('show-add-task-button'),
+        taskModal: document.getElementById('task-modal'),
+        taskForm: document.getElementById('task-form'),
+        deleteTaskButton: document.getElementById('delete-task-button'),
+        setupLogContainer: document.getElementById('setup-log-container'),
+        showAddSetupButton: document.getElementById('show-add-setup-button'),
+        setupModal: document.getElementById('setup-modal'),
+        setupForm: document.getElementById('setup-form'),
     };
 
     // --- グローバル関数 (ここで定義し、必要なモジュールに渡す) ---
@@ -108,11 +115,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeButton) activeButton.classList.add('active');
     }
 
-    // ログイン成功時に呼び出される関数 (変更なし)
+    // ★★★ 変更点: ログイン成功時の処理 ★★★
     function initializeMainContent() {
-        showModule('maintenance-module'); // デフォルトは整備管理
+        // 1. デフォルトを「部活日程」に変更
+        showModule('practice-module'); 
+        
+        // 2. 部活日程のカレンダーを描画
+        renderPracticeCalendar(DOMElements);
+        
+        // 3. 整備管理タブも裏で読み込んでおく (タブ切り替えを高速化するため)
         fetchVehicles(DOMElements, (vehicleId) => showVehicleDetail(DOMElements, showModule, showDetailTab, vehicleId));
     }
+    // ★★★ 変更ここまで ★★★
 
     // --- セットアップ ---
     // ★ 各モジュールに、必要な「DOM」と「関数」を引数として渡す ★
