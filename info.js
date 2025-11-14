@@ -21,6 +21,9 @@ export function setupInfoHandlers(DOMElements) {
         const data = {
             title: DOMElements.wikiForm.querySelector('#wiki-title').value,
             content: DOMElements.wikiForm.querySelector('#wiki-content').value,
+            difficulty: DOMElements.wikiForm.querySelector('#wiki-difficulty').value,
+            time: DOMElements.wikiForm.querySelector('#wiki-time').value,
+            tags: DOMElements.wikiForm.querySelector('#wiki-tags').value.split(',').map(t => t.trim()).filter(t=>t), // 配列化
             updatedAt: firestore.FieldValue.serverTimestamp(),
         };
         if (id) {
@@ -62,12 +65,7 @@ export function setupInfoHandlers(DOMElements) {
         }
     });
 
-    // ★ 変更点: 「--- カレンダー ---」のセクションをすべて削除 ★
-    // DOMElements.prevMonthButton.addEventListener('click', ...);
-    // DOMElements.nextMonthButton.addEventListener('click', ...);
-    // DOMElements.showAddEventButton.addEventListener('click', ...);
-    // DOMElements.eventForm.addEventListener('submit', ...);
-    // DOMElements.calendarGrid.addEventListener('click', ...);
+    
 }
 
 // --- データ取得・描画関数 (main.js から呼び出される) ---
@@ -98,16 +96,19 @@ async function showWikiArticle(id, DOMElements) {
     DOMElements.wikiListContainer.classList.add('hidden');
     DOMElements.wikiArticleView.classList.remove('hidden');
     
+    const tagsHtml = (article.tags || []).map(t => `<span style="background:#eee; padding:2px 5px; border-radius:4px; margin-right:4px; font-size:0.8rem;">#${t}</span>`).join('');
     // marked.parse を使う (index.html でライブラリが読み込まれている前提)
     DOMElements.wikiArticleView.innerHTML = `
         <button id="back-to-wiki-list">＜ 記事一覧に戻る</button>
         <h2>${article.title}</h2>
+        <div style="margin-bottom: 1rem; color: #555;">
+            <span class="wiki-difficulty">${article.difficulty || '難易度不明'}</span>
+            <span>⏱ ${article.time || '時間不明'}</span>
+            <div style="margin-top:5px;">${tagsHtml}</div>
+        </div>
         <div class="article-content">${marked.parse(article.content)}</div>
         <div class="article-actions">
             <button class="edit-button" data-id="${doc.id}">編集</button>
             <button class="delete-button" data-id="${doc.id}">削除</button>
         </div>`;
 }
-
-// ★ 変更点: renderCalendar 関数をすべて削除 ★
-// export async function renderCalendar(DOMElements) { ... }
