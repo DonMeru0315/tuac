@@ -1,5 +1,4 @@
 // Firebaseライブラリをインポートします。
-// これにより、HTML側で <script> タグを読み込む必要がなくなります。
 import "https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js";
 import "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js";
 import "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js";
