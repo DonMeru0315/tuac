@@ -15,11 +15,10 @@ const firebaseConfig = {
 
 // Firebaseの初期化
 firebase.initializeApp(firebaseConfig);
+firebase.firestore().enablePersistence()
+  .catch(err => console.error("Firestore オフライン対応エラー: ", err));
 
 // --- インスタンスを 'export' して他のファイルから読み込めるようにする ---
 export const auth = firebase.auth();
 export const db = firebase.firestore();
-
-// FieldValue.serverTimestamp() や Timestamp.fromDate() を使うために
-// firestore 名前空間自体も export しておくと便利です。
 export const firestore = firebase.firestore;
