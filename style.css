@@ -558,3 +558,72 @@ footer {
     color: #0056b3; /* ホバー時に色を変える */
     text-decoration: underline; /* ホバー時に下線を出す */
 }
+
+/* 予備部品リストのアイテム (クリック可能にする) */
+.spare-part-item {
+    cursor: pointer;
+}
+.spare-part-item:hover {
+    background-color: #f8f9fa; /* 既存のホバー色 */
+}
+
+/* 予備部品リストのレイアウト */
+.spare-part-layout {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap; /* スマホで折り返す */
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.part-main-info {
+    flex-basis: 300px; /* メイン情報はある程度の幅を確保 */
+    flex-grow: 2;
+}
+.part-stock-info {
+    flex-basis: 200px;
+    flex-grow: 1;
+    text-align: right;
+    color: #495057;
+}
+
+.part-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: block;
+}
+.part-number {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+.part-quantity {
+    font-weight: bold;
+    margin-right: 1rem;
+}
+.part-notes {
+    font-size: 0.9rem;
+    color: #333;
+    background: #f9f9f9;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+}
+
+/* スマホ表示の調整 */
+@media (max-width: 600px) {
+    .part-stock-info {
+        text-align: left; /* スマホでは左揃え */
+        margin-top: 0.5rem;
+    }
+}
+
+/* タスクカード: 右側のアイコン類 (備考・日付) */
+.task-meta-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; /* 備考アイコンと日付の隙間 */
+}
+.task-notes-icon {
+    font-size: 0.75rem;
+    cursor: default; /* クリック不可であることを示す */
+}
