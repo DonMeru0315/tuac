@@ -1,666 +1,801 @@
-/* 基本スタイル */
-body { 
-    font-family: "Meiryo", "Hiragino Kaku Gothic ProN", "MS PGothic", sans-serif; font-size: 18px; background-color: #f4f4f9; color: #333; margin: 0;
-    /* ★ 追加: フッターを一番下に押しやるための設定 */
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-header { background-color: #0056b3; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-header h1 { margin: 0; font-size: 1.5rem; }
-main { padding: 1rem; }
+import { db, auth, firestore } from './firebase-init.js';
+let currentVehicleId = null;
+let unsubscribeVehicles = null; // リアルタイム監視を解除するための変数
 
-/* 認証フォーム */
-#login-register-area { text-align: center; }
-#login-register-area h3 { margin-top: 0; margin-bottom: 0.5rem; }
-#auth-form input { display: block; width: 200px; padding: 0.5rem; margin-bottom: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
-#auth-button, #logout-button { width: 100%; padding: 0.75rem; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-#auth-button { background-color: #007bff; }
-#logout-button { background-color: #dc3545; }
-#toggle-mode-button { background: none; border: none; color: white; text-decoration: underline; cursor: pointer; padding: 0.5rem; }
+// DOMElements とユーティリティ関数を引数で受け取る
+export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onVehicleClick) {
+    // --- 車両管理 (リスト) ---
+    DOMElements.showAddVehicleButton.addEventListener('click', () => {
+        DOMElements.vehicleForm.reset();
+        DOMElements.vehicleForm.querySelector('#vehicle-id').value = '';
+        DOMElements.vehicleModal.querySelector('h3').textContent = '車両を新規登録';
+        DOMElements.vehicleModal.classList.remove('hidden');
+    });
+    DOMElements.vehicleForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = DOMElements.vehicleForm.querySelector('#vehicle-id').value;
+        const yearValue = DOMElements.vehicleForm.querySelector('#vehicle-year').value;
+        const user = auth.currentUser; // ユーザー情報取得
+        const data = {
+            manufacturer: DOMElements.vehicleForm.querySelector('#vehicle-manufacturer').value,
+            name: DOMElements.vehicleForm.querySelector('#vehicle-name').value,
+            grade: DOMElements.vehicleForm.querySelector('#vehicle-grade').value,
+            year: yearValue ? parseInt(yearValue, 10) : null,
+            modelCode: DOMElements.vehicleForm.querySelector('#vehicle-model-code').value,
+            vin: DOMElements.vehicleForm.querySelector('#vehicle-vin').value,
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedBy: user ? user.displayName : '不明',
+            updatedById: user ? user.uid : '不明',
+        };
+        let promise;
+        if (id) {
+            promise = db.collection('vehicles').doc(id).update(data);
+        } else {
+            data.createdAt = firestore.FieldValue.serverTimestamp();
+            data.createdBy = user ? user.displayName : '不明';
+            data.createdById = user ? user.uid : '不明';
+            promise = db.collection('vehicles').add(data);
+        }
+        await promise.catch(err => console.error(err));
+        DOMElements.vehicleModal.classList.add('hidden');
+        if (id) await showVehicleDetail(DOMElements, showModule, showDetailTab, id); // ★編集後は詳細を再描画
+    });
+    // 車両リストのクリック
+    DOMElements.vehicleListContainer.addEventListener('click', e => {
+        const card = e.target.closest('.vehicle-card');
+        if (card) {
+            currentVehicleId = card.dataset.id;
+            onVehicleClick(currentVehicleId);
+        }
+    });
+    // --- 車両詳細 ---
+    DOMElements.detailNavButtons.forEach(b => b.addEventListener('click', () => showDetailTab(b.dataset.detailtab)));
+    DOMElements.backToListButton.addEventListener('click', () => {
+        DOMElements.vehicleDetailView.classList.add('hidden');
+        showModule('maintenance-module');
+        currentVehicleId = null;
+    });
+    // --- 整備履歴 (Maintenance Logs) ---
+    DOMElements.showAddLogButton.addEventListener('click', () => {
+        DOMElements.maintenanceLogForm.reset();
+        DOMElements.maintenanceLogForm.querySelector('#log-id').value = ''; // IDをクリア
+        DOMElements.maintenanceLogModal.querySelector('h3').textContent = '整備履歴を追加';
+        DOMElements.deleteLogButton.classList.add('hidden'); // 削除ボタンを隠す
+        DOMElements.maintenanceLogModal.classList.remove('hidden');
+    });
 
-/* ナビゲーション */
-#main-nav { display: flex; background-color: #e9ecef; border-bottom: 1px solid #dee2e6; }
-.nav-button { flex-grow: 1; padding: 1rem; font-size: 1rem; text-align: center; background-color: transparent; border: none; border-right: 1px solid #dee2e6; cursor: pointer; color: #495057; }
-.nav-button:last-child { border-right: none; }
-.nav-button.active { background-color: #007bff; color: white; font-weight: bold; }
+    DOMElements.syncDoneTasksButton.addEventListener('click', async () => {
+        if (!currentVehicleId) return;
 
-/* 情報共有 & 車両詳細タブ */
-#info-nav, #detail-nav { display: flex; margin-bottom: 1rem; border-bottom: 2px solid #007bff; }
-.info-nav-button, .detail-nav-button { padding: 0.75rem 1.5rem; border: none; background-color: transparent; cursor: pointer; font-size: 1rem; color: #6c757d; }
-.info-nav-button.active, .detail-nav-button.active { color: #007bff; font-weight: bold; border-bottom: 3px solid #007bff; margin-bottom: -2px; }
+        const btn = DOMElements.syncDoneTasksButton;
+        btn.disabled = true;
+        btn.textContent = '処理中...';
 
-/* ボタン */
-.primary-button { background-color: #007bff; color: white; border: none; padding: 0.75rem 1.5rem; font-size: 1rem; border-radius: 5px; cursor: pointer; margin-bottom: 1rem; }
-#show-add-vehicle-button { background-color: #28a745; }
-#show-add-wiki-button, #show-add-event-button, #show-add-log-button, #show-add-custom-button { background-color: #17a2b8; }
-#back-to-list-button { background: none; border: 1px solid #6c757d; color: #6c757d; padding: 0.5rem 1rem; cursor: pointer; margin-bottom: 1rem; }
+        try {
+            const tasksRef = db.collection('vehicles').doc(currentVehicleId).collection('tasks');
+            const logsRef = db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs');
+            
+            // ★★★ 変更点 ①: クエリをシンプルに「done」だけにします ★★★
+            // 'copiedToLogs' のチェックは削除します。
+            const snapshot = await tasksRef
+                .where('status', '==', 'done')
+                //.where('copiedToLogs', '!=', true) // ← この行を削除（またはコメントアウト）
+                .get();
 
-/* カード & リストアイテム */
-.vehicle-card { background: #fff; padding: 1rem; border: 1px solid #ddd; margin-bottom: 0.5rem; cursor: pointer; border-radius: 5px; }
-.vehicle-card:hover { background: #f8f9fa; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.history-item, .wiki-list-item { background: #fff; padding: 1rem; border: 1px solid #ddd; margin-bottom: 0.5rem; border-radius: 5px; position: relative; }
-.wiki-list-item { cursor: pointer; }
-.wiki-list-item:hover { background: #f8f9fa; }
-#basic-info-content { background: #fff; padding: 1rem; border-radius: 8px; }
-#basic-info-content p { font-size: 1.1rem; line-height: 1.6; margin: 0.5rem 0; }
-#basic-info-content strong { display: inline-block; width: 120px; color: #495057; }
+            if (snapshot.empty) {
+                alert('履歴に反映する完了タスクはありません。');
+                btn.disabled = false;
+                btn.textContent = '🔄 完了タスクを履歴に反映';
+                return;
+            }
 
-/* カード内アクション */
-.card-actions { position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; }
-.card-actions button, .article-actions button { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; }
-.edit-button { background-color: #ffc107; }
-.delete-button { background-color: #dc3545; color: white; }
+            const batch = db.batch();
+            let copiedCount = 0;
 
-/* Wiki記事 */
-#wiki-article-view h2 { margin-top: 0; }
-#wiki-article-view .article-content { background: #fff; padding: 1.5rem; border: 1px solid #ddd; min-height: 200px; line-height: 1.7; }
-#wiki-article-view .article-actions { margin-top: 1rem; }
+            snapshot.forEach(doc => {
+                const task = doc.data();
 
-/* カレンダー */
-#calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-#calendar-month-year { font-size: 1.5rem; font-weight: bold; }
-#calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-.calendar-day { border: 1px solid #ddd; background: #fff; min-height: 100px; padding: 5px; display: flex; flex-direction: column; gap: 4px; }
-.calendar-day.not-current-month { background: #f8f9fa; color: #ccc; }
+                // ★★★ 変更点 ②: ここで「コピー済みか」をチェックします ★★★
+                if (task.copiedToLogs === true) {
+                    return; // 既に反映済みのタスクはスキップ
+                }
+                
+                // 3. 整備履歴データを作成
+                const logDate = (task.doneAt && task.doneAt.toDate) 
+                                ? task.doneAt.toDate() 
+                                : new Date();
 
-/* ★ 変更: 日付 (右上) */
-.calendar-day-header { 
-    font-weight: bold; 
-    margin-bottom: 0; 
-    padding: 2px 4px;
-    text-align: right; /* 右寄せ */
-    flex-shrink: 0; /* 縮まないように */
-}
-.calendar-event { background: #007bff; color: white; padding: 4px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+                const logData = {
+                    date: logDate.toISOString().split('T')[0],
+                    task: task.title,
+                    notes: `[タスクから反映] ${task.notes || ''}`.trim(),
+                };
+                
+                batch.set(logsRef.doc(), logData);
+                batch.update(tasksRef.doc(doc.id), { copiedToLogs: true });
+                copiedCount++;
+            });
 
-/* ★ 変更点: カレンダーの予定詳細スタイルを追加 ★ */
-.calendar-event .event-title {
-    font-weight: bold;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.calendar-event .event-detail {
-    font-size: 0.75rem; 
-    color: #e0eaff; 
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+            // ★★★ 変更点 ③: 実際にコピーした件数が 0 の場合のアラート ★★★
+            if (copiedCount === 0) {
+                alert('履歴に反映する完了タスクはありません。\n(すべて反映済みです)');
+                btn.disabled = false;
+                btn.textContent = '🔄 完了タスクを履歴に反映';
+                return; // バッチ処理を実行せずに終了
+            }
 
-/* ★ 追加: 曜日の色と今日のスタイル ★ */
-.calendar-day.saturday .calendar-day-header {
-    color: #007bff; /* 土曜: 青 */
-}
-.calendar-day.sunday .calendar-day-header {
-    color: #dc3545; /* 日曜: 赤 */
-}
-/* ★ 変更: 'today' の丸がflex-itemでも機能するように調整 */
-.calendar-day.today .calendar-day-header {
-    display: inline-block; 
-    width: 1.8em;
-    height: 1.8em;
-    line-height: 1.8em;
-    text-align: center;
-    border-radius: 50%;
-    background-color: #ffc107; /* 今日: 黄色 */
-    color: #333;
-    padding: 0;
-    margin-top: 0; /* リセット */
-    margin-right: 0; /* リセット */
-}
-/* ★ 変更ここまで ★ */
+            // 5. バッチ処理を実行
+            await batch.commit();
 
-/* モーダル */
-.modal-background { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-.modal-content { background-color: white; padding: 2rem; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-.modal-content label { display: block; margin-top: 1rem; margin-bottom: 0.25rem; font-weight: bold; }
-.modal-content input, .modal-content textarea { width: 100%; padding: 0.5rem; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+            alert(`${copiedCount}件の完了タスクを整備履歴に反映しました。`);
 
-/* ★ 変更: flex-end から space-between に変更 */
-.modal-buttons { 
-    margin-top: 1.5rem; 
-    display: flex; 
-    justify-content: space-between;
-    align-items: center; /* 垂直中央揃え */
-    gap: 1rem; 
-}
-/* ★ 追加: 右側のボタングループ */
-.modal-buttons-right {
-    display: flex;
-    gap: 1rem;
-}
+            // 6. 整備履歴リストを再描画
+            await renderMaintenanceLogs(currentVehicleId, DOMElements);
 
-.modal-buttons button { padding: 0.75rem 1.5rem; border-radius: 5px; border: none; cursor: pointer; }
-.modal-buttons [type="submit"] { background-color: #007bff; color: white; }
-.cancel-button { background-color: #6c757d; color: white; }
+        } catch (err) {
+            console.error("タスクの同期エラー:", err);
+            alert("タスクの反映に失敗しました。");
+        } finally {
+            // 7. ボタンを元に戻す
+            btn.disabled = false;
+            btn.textContent = '🔄 完了タスクを履歴に反映';
+        }
+    });
 
-/* ユーティリティ */
-.hidden { display: none !important; }
-.center-message { text-align: center; margin-top: 5rem; color: #777; }
+    // 整備履歴フォームの送信 (新規・編集 兼用)
+    DOMElements.maintenanceLogForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!currentVehicleId) return;
+        const user = auth.currentUser;
+        const logId = DOMElements.maintenanceLogForm.querySelector('#log-id').value;
+        const data = {
+            date: DOMElements.maintenanceLogForm.querySelector('#log-date').value,
+            task: DOMElements.maintenanceLogForm.querySelector('#log-task').value,
+            notes: DOMElements.maintenanceLogForm.querySelector('#log-notes').value,
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedBy: user ? user.displayName : '不明',
+            updatedById: user ? user.uid : '不明',
+        };
+        
+        if (logId) {
+            // logId があれば「更新」
+            await db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs').doc(logId).update(data);
+        } else {
+            // logId がなければ「新規追加」
+            data.createdAt = firestore.FieldValue.serverTimestamp();
+            data.createdBy = user ? user.displayName : '不明';
+            data.createdById = user ? user.uid : '不明';
+            await db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs').add(data);
+        }
+        
+        DOMElements.maintenanceLogModal.classList.add('hidden');
+        await renderMaintenanceLogs(currentVehicleId, DOMElements);
+    });
 
-/* レスポンシブ対応 */
-@media (max-width: 600px) {
-    /* --- 基本 --- */
-    body {
-        font-size: 16px; /* 基本フォントサイズを少し小さく */
-    }
+    // 整備履歴リストの「項目」クリック (編集モーダルを開く)
+    DOMElements.maintenanceLogsContainer.addEventListener('click', async e => {
+        // .delete-button ではなく、.log-item (リスト項目自体) を探す
+        const item = e.target.closest('.log-item');
+        if (item && currentVehicleId) {
+            const logId = item.dataset.id;
+            await openLogModalForEdit(logId, DOMElements); // 上で追加したヘルパー関数を呼ぶ
+        }
+    });
 
-    /* --- ヘッダー --- */
-    header { 
-        flex-direction: column; 
-        gap: 1rem; 
-    }
-    header h1 {
-        font-size: 1.2rem; /* スマホではタイトルを少し小さく */
-    }
-    #auth-form input {
-        width: 100%; /* 認証フォームの入力欄を幅いっぱいに */
-        box-sizing: border-box; /* paddingを含めて幅100%にするため */
-    }
+    // 整備履歴モーダルの「削除」ボタン
+    DOMElements.deleteLogButton.addEventListener('click', async () => {
+        const logId = DOMElements.maintenanceLogForm.querySelector('#log-id').value;
+        if (!logId || !currentVehicleId) return;
+        
+        if (confirm('この整備履歴を本当に削除しますか？')) {
+            try {
+                await db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs').doc(logId).delete();
+                DOMElements.maintenanceLogModal.classList.add('hidden');
+                await renderMaintenanceLogs(currentVehicleId, DOMElements); // リストを再描画
+            } catch (err) {
+                console.error("削除エラー:", err);
+                alert("削除に失敗しました。");
+            }
+        }
+    });
+    // --- カスタマイズ (Customizations) ---
+    DOMElements.showAddCustomButton.addEventListener('click', () => {
+        DOMElements.customizationForm.reset();
+        DOMElements.customizationModal.classList.remove('hidden');
+    });
+    DOMElements.customizationForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!currentVehicleId) return;
+        const user = auth.currentUser;
+        const data = {
+            part: DOMElements.customizationForm.querySelector('#custom-part').value,
+            category: DOMElements.customizationForm.querySelector('#custom-category').value,
+            details: DOMElements.customizationForm.querySelector('#custom-details').value,
+            createdAt: firestore.FieldValue.serverTimestamp(),
+            createdBy: user ? user.displayName : '不明',
+            createdById: user ? user.uid : '不明',
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedBy: user ? user.displayName : '不明',
+            updatedById: user ? user.uid : '不明',
+        };
+        await db.collection('vehicles').doc(currentVehicleId).collection('customizations').add(data);
+        DOMElements.customizationModal.classList.add('hidden');
+        await renderCustomizations(currentVehicleId, DOMElements);
+    });
+    DOMElements.customizationsContainer.addEventListener('click', async e => {
+        if (e.target.matches('.delete-button')) {
+            if (confirm('この情報を削除しますか？') && currentVehicleId) {
+                await db.collection('vehicles').doc(currentVehicleId).collection('customizations').doc(e.target.dataset.id).delete();
+                await renderCustomizations(currentVehicleId, DOMElements);
+            }
+        }
+    });
 
-    /* --- ナビゲーション --- */
-    #main-nav, #info-nav, #detail-nav { 
-        flex-direction: column; 
-    }
-    .nav-button, .info-nav-button, .detail-nav-button { 
-        border-bottom: 1px solid #dee2e6; 
-        border-right: none; 
-        padding-top: 0.8rem; /* 少しパディングを調整 */
-        padding-bottom: 0.8rem;
-    }
+    // 「＋ タスクを追加」ボタン
+    DOMElements.showAddTaskButton.addEventListener('click', () => {
+        DOMElements.taskForm.reset();
+        DOMElements.taskModal.querySelector('h3').textContent = 'タスクを追加';
+        delete DOMElements.taskModal.dataset.editingId;
+        // ログインユーザー名を担当者に自動入力
+        const user = auth.currentUser;
+        if (user && user.displayName) {
+            DOMElements.taskForm.querySelector('#task-assignee').value = user.displayName;
+        }
+        // 削除ボタンを隠す
+        if (DOMElements.deleteTaskButton) {
+            DOMElements.deleteTaskButton.classList.add('hidden');
+        }
+        DOMElements.taskModal.classList.remove('hidden');
+    });
 
-    /* --- メインコンテンツ --- */
-    main {
-        padding: 0.5rem; /* スマホでは余白を減らす */
+    // タスクフォームの送信（保存）
+    DOMElements.taskForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!currentVehicleId) return;
+        const user = auth.currentUser;
+        const taskId = DOMElements.taskModal.dataset.editingId;
+        const newStatus = DOMElements.taskForm.querySelector('#task-status').value;
+
+        // ★ 変更点①: data オブジェクトから doneAt と、重複した updatedAt を削除
+        const data = {
+            title: DOMElements.taskForm.querySelector('#task-title').value,
+            assignee: DOMElements.taskForm.querySelector('#task-assignee').value,
+            status: newStatus,
+            dueDate: DOMElements.taskForm.querySelector('#task-due-date').value,
+            notes: DOMElements.taskForm.querySelector('#task-notes').value,
+            updatedAt: firestore.FieldValue.serverTimestamp(), // ★ 正しい updatedAt のみ残す
+            updatedBy: user ? user.displayName : '不明',
+            updatedById: user ? user.uid : '不明',
+            // updatedAt: new Date() // ★ BUG: 重複していたので削除
+        };
+
+        // ★ 変更点②: doneAt のロジックを「更新」と「新規」で分離
+
+        if (taskId) {
+            // --- 更新 (Update) ---
+            if (newStatus === 'done') {
+                data.doneAt = new Date(); // または firestore.FieldValue.serverTimestamp()
+            } else {
+                data.doneAt = firestore.FieldValue.delete(); // ★ 更新時は delete を使ってOK
+            }
+            await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).update(data);
+        
+        } else {
+            // --- 新規作成 (Add) ---
+            data.createdAt = firestore.FieldValue.serverTimestamp();
+            data.createdBy = user ? user.displayName : '不明';
+            data.createdById = user ? user.uid : '不明';
+
+            if (newStatus === 'done') {
+                data.doneAt = new Date(); // ★ 新規作成時は 'done' の時だけフィールドを追加
+            }
+            // ★ 'done' 以外の場合は、data.doneAt フィールドを *一切追加しない*
+            // これで FieldValue.delete() が .add() で呼ばれるのを防ぎます。
+
+            await db.collection('vehicles').doc(currentVehicleId).collection('tasks').add(data);
+        }
+        
+        DOMElements.taskModal.classList.add('hidden');
+        renderKanban(currentVehicleId, DOMElements);
+    });
+
+    // 削除ボタンのクリックイベント
+    if (DOMElements.deleteTaskButton) {
+        DOMElements.deleteTaskButton.addEventListener('click', async () => {
+            const taskId = DOMElements.taskModal.dataset.editingId;
+            if (!taskId || !currentVehicleId) return;
+            if (confirm('このタスクを本当に削除しますか？')) {
+                try {
+                    await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).delete();
+                    DOMElements.taskModal.classList.add('hidden');
+                    renderKanban(currentVehicleId, DOMElements); // カンバンを再描画
+                } catch (err) {
+                    console.error("削除エラー:", err);
+                    alert("削除に失敗しました。");
+                }
+            }
+        });
     }
     
-    /* --- カレンダー (重要) --- */
-    #calendar-grid {
-        gap: 2px; /* セルの隙間を詰める */
+    // タスクカードのクリック（編集モーダルを開く）
+    DOMElements.kanbanContainer.addEventListener('click', async e => {
+        const card = e.target.closest('.task-card');
+        if (!card) return;
+        const taskId = card.dataset.id;
+        const doc = await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).get();
+        const task = doc.data();
+        // 編集モーダルに値をセット
+        DOMElements.taskForm.querySelector('#task-title').value = task.title;
+        DOMElements.taskForm.querySelector('#task-assignee').value = task.assignee;
+        DOMElements.taskForm.querySelector('#task-status').value = task.status;
+        DOMElements.taskForm.querySelector('#task-due-date').value = task.dueDate || '';
+        DOMElements.taskForm.querySelector('#task-notes').value = task.notes || '';
+        DOMElements.taskModal.dataset.editingId = taskId;
+        DOMElements.taskModal.querySelector('h3').textContent = 'タスクを編集';  
+        // 編集時は削除ボタンを表示
+        if (DOMElements.deleteTaskButton) {
+            DOMElements.deleteTaskButton.classList.remove('hidden');
+        }
+        DOMElements.taskModal.classList.remove('hidden');
+    });
+
+    // --- セッティングログ ---
+
+    // 「＋ セッティングを記録」ボタン
+    DOMElements.showAddSetupButton.addEventListener('click', () => {
+        DOMElements.setupForm.reset();
+        DOMElements.setupForm.querySelector('#setup-id').value = ''; // IDをクリア
+        DOMElements.setupModal.querySelector('h3').textContent = 'セッティングを記録';
+        DOMElements.deleteSetupButton.classList.add('hidden'); // 削除ボタンを隠す
+        DOMElements.setupModal.classList.remove('hidden');
+    });
+
+    // セッティングフォームの送信 (新規・編集 兼用)
+    DOMElements.setupForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!currentVehicleId) return;
+        const user = auth.currentUser;
+        const setupId = DOMElements.setupForm.querySelector('#setup-id').value;
+
+        const data = {
+            date: DOMElements.setupForm.querySelector('#setup-date').value,
+            course: DOMElements.setupForm.querySelector('#setup-course').value,
+            suspension: {
+                damperF: DOMElements.setupForm.querySelector('#setup-damper-f').value,
+                damperR: DOMElements.setupForm.querySelector('#setup-damper-r').value,
+                spring: DOMElements.setupForm.querySelector('#setup-spring').value,
+                camber: DOMElements.setupForm.querySelector('#setup-camber').value,
+            },
+            tire: {
+                name: DOMElements.setupForm.querySelector('#setup-tire').value,
+                airF: DOMElements.setupForm.querySelector('#setup-air-f').value,
+                airR: DOMElements.setupForm.querySelector('#setup-air-r').value,
+            },
+            comment: DOMElements.setupForm.querySelector('#setup-comment').value,
+            
+            // タイムスタンプとユーザー情報を追加
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedBy: user ? user.displayName : '不明',
+            updatedById: user ? user.uid : '不明',
+        };
+
+        if (setupId) {
+            // setupId があれば「更新」
+            await db.collection('vehicles').doc(currentVehicleId).collection('setups').doc(setupId).update(data);
+        } else {
+            // setupId がなければ「新規追加」
+            data.createdAt = firestore.FieldValue.serverTimestamp();
+            data.createdBy = user ? user.displayName : '不明';
+            data.createdById = user ? user.uid : '不明';
+            await db.collection('vehicles').doc(currentVehicleId).collection('setups').add(data);
+        }
+
+        DOMElements.setupModal.classList.add('hidden');
+        renderSetups(currentVehicleId, DOMElements);
+    });
+
+    // ★ 新設: セッティングリストの「項目」クリック (編集モーダルを開く)
+    DOMElements.setupLogContainer.addEventListener('click', async e => {
+        const item = e.target.closest('.setup-item');
+        if (item && currentVehicleId) {
+            const setupId = item.dataset.id;
+            await openSetupModalForEdit(setupId, DOMElements);
+        }
+    });
+
+    // ★ 新設: セッティングモーダルの「削除」ボタン
+    DOMElements.deleteSetupButton.addEventListener('click', async () => {
+        const setupId = DOMElements.setupForm.querySelector('#setup-id').value;
+        if (!setupId || !currentVehicleId) return;
+        
+        if (confirm('このセッティング記録を本当に削除しますか？')) {
+            try {
+                await db.collection('vehicles').doc(currentVehicleId).collection('setups').doc(setupId).delete();
+                DOMElements.setupModal.classList.add('hidden');
+                await renderSetups(currentVehicleId, DOMElements); // リストを再描画
+            } catch (err) {
+                console.error("削除エラー:", err);
+                alert("削除に失敗しました。");
+            }
+        }
+    });
+
+    // 予備部品を登録ボタン
+    DOMElements.showAddPartButton.addEventListener('click', () => {
+        DOMElements.sparePartForm.reset();
+        DOMElements.sparePartModal.querySelector('h3').textContent = '予備部品を登録';
+        delete DOMElements.sparePartModal.dataset.editingId;
+        DOMElements.deletePartButton.classList.add('hidden');
+        DOMElements.sparePartModal.classList.remove('hidden');
+    });
+
+    // 予備部品リストのアイテムをクリック（編集）
+    DOMElements.sparePartsContainer.addEventListener('click', async e => {
+        const item = e.target.closest('.spare-part-item');
+        if (item && currentVehicleId) {
+            await openPartModalForEdit(item.dataset.id, DOMElements);
+        }
+    });
+
+    // 予備部品フォームの送信（保存/更新）
+    DOMElements.sparePartForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        if (!currentVehicleId) return;
+        const user = auth.currentUser;
+        const partId = DOMElements.sparePartModal.dataset.editingId;
+        const data = {
+            name: DOMElements.sparePartForm.querySelector('#part-name').value,
+            partNumber: DOMElements.sparePartForm.querySelector('#part-number').value,
+            quantity: DOMElements.sparePartForm.querySelector('#part-quantity').value,
+            location: DOMElements.sparePartForm.querySelector('#part-location').value,
+            notes: DOMElements.sparePartForm.querySelector('#part-notes').value,
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedBy: user ? user.displayName : '不明',
+            updatedById: user ? user.uid : '不明',
+        };
+        if (partId) {
+            await db.collection('vehicles').doc(currentVehicleId).collection('spare_parts').doc(partId).update(data);
+        } else {
+            data.createdAt = firestore.FieldValue.serverTimestamp();
+            data.createdBy = user ? user.displayName : '不明';
+            data.createdById = user ? user.uid : '不明';
+            await db.collection('vehicles').doc(currentVehicleId).collection('spare_parts').add(data);
+        }
+        DOMElements.sparePartModal.classList.add('hidden');
+        renderSpareParts(currentVehicleId, DOMElements); // リストを再描画
+    });
+
+    // 予備部品モーダルの「削除」ボタン
+    DOMElements.deletePartButton.addEventListener('click', async () => {
+        const partId = DOMElements.sparePartModal.dataset.editingId;
+        if (!partId || !currentVehicleId) return;
+        if (confirm('この予備部品情報を本当に削除しますか？')) {
+            try {
+                await db.collection('vehicles').doc(currentVehicleId).collection('spare_parts').doc(partId).delete();
+                DOMElements.sparePartModal.classList.add('hidden');
+                renderSpareParts(currentVehicleId, DOMElements); // リストを再描画
+            } catch (err) {
+                console.error("削除エラー:", err);
+                alert("削除に失敗しました。");
+            }
+        }
+    });
+}
+
+// 車両リストをDBから取得・描画
+export function fetchVehicles(DOMElements, onVehicleClick) {
+    if (unsubscribeVehicles) unsubscribeVehicles();
+    unsubscribeVehicles = db.collection('vehicles').orderBy('name').onSnapshot(snapshot => {
+        DOMElements.vehicleListContainer.innerHTML = '';
+        if (snapshot.empty) {
+            DOMElements.vehicleListContainer.innerHTML = '<p>車両が登録されていません。</p>';
+        }
+        snapshot.forEach(doc => {
+            const vehicle = doc.data();
+            const card = document.createElement('div');
+            card.className = 'vehicle-card';
+            card.dataset.id = doc.id;
+            card.innerHTML = `<h3>${vehicle.manufacturer || ''} ${vehicle.name}</h3><p>${vehicle.modelCode || ''}</p>`;
+            DOMElements.vehicleListContainer.appendChild(card);
+        });
+    }, err => console.error(err));
+}
+
+// ログアウト時に監視を停止
+export function stopVehicleUpdates() {
+    if (unsubscribeVehicles) {
+        unsubscribeVehicles();
+        unsubscribeVehicles = null;
     }
-    .calendar-day {
-        min-height: 80px; /* セルの最低限の高さを低くする */
-        padding: 3px;     /* セル内の余白を詰める */
-        gap: 2px;       /* セル内の要素の隙間を詰める */
-        font-size: 0.8rem; /* セル内のフォントを小さく */
+}
+
+// 車両詳細を表示
+export async function showVehicleDetail(DOMElements, showModule, showDetailTab, vehicleId) {
+    showDetailTab('basic-info');
+    DOMElements.detailVehicleName.textContent = '読み込み中...';
+    showModule('vehicle-detail-view'); 
+    const vehicleDoc = await db.collection('vehicles').doc(vehicleId).get();
+    if (!vehicleDoc.exists) { DOMElements.backToListButton.click(); return; }
+    const vehicleData = vehicleDoc.data();
+    DOMElements.detailVehicleName.textContent = `${vehicleData.manufacturer || ''} ${vehicleData.name}`;
+    currentVehicleId = vehicleId; // グローバル変数にセット
+    // 基本情報タブ
+    DOMElements.basicInfoContent.innerHTML = `
+        <p><strong>メーカー:</strong> ${vehicleData.manufacturer || '未設定'}</p>
+        <p><strong>車名:</strong> ${vehicleData.name || '未設定'}</p>
+        <p><strong>グレード:</strong> ${vehicleData.grade || '未設定'}</p>
+        <p><strong>年式:</strong> ${vehicleData.year || '未設定'}</p>
+        <p><strong>型式:</strong> ${vehicleData.modelCode || '未設定'}</p>
+        <p><strong>車台番号:</strong> ${vehicleData.vin || '未設定'}</p>
+        <button id="edit-basic-info-button" class="edit-button">基本情報を編集</button>`;
+    
+    document.getElementById('edit-basic-info-button').addEventListener('click', () => {
+        const form = DOMElements.vehicleForm;
+        form.querySelector('#vehicle-id').value = vehicleId;
+        form.querySelector('#vehicle-manufacturer').value = vehicleData.manufacturer || '';
+        form.querySelector('#vehicle-name').value = vehicleData.name || '';
+        form.querySelector('#vehicle-grade').value = vehicleData.grade || '';
+        form.querySelector('#vehicle-year').value = vehicleData.year || '';
+        form.querySelector('#vehicle-model-code').value = vehicleData.modelCode || '';
+        form.querySelector('#vehicle-vin').value = vehicleData.vin || '';
+        DOMElements.vehicleModal.querySelector('h3').textContent = '基本情報を編集';
+        DOMElements.vehicleModal.classList.remove('hidden');
+    });
+    // 各タブ描画
+    await renderMaintenanceLogs(vehicleId, DOMElements);
+    await renderCustomizations(vehicleId, DOMElements);
+    await renderKanban(vehicleId, DOMElements);
+    await renderSetups(vehicleId, DOMElements);
+    await renderSpareParts(vehicleId, DOMElements);
+}
+
+// --- 内部用描画関数 ---
+
+async function renderMaintenanceLogs(vehicleId, DOMElements) {
+    const container = DOMElements.maintenanceLogsContainer;
+    container.innerHTML = '';
+    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('maintenance_logs').orderBy('date', 'desc').get();
+    
+    if(snapshot.empty) {
+        container.innerHTML = '<p>整備履歴はありません。</p>';
+        return; // ★ 追加: 空の場合はここで処理終了
     }
     
-    /* 日付ヘッダー (祝日名と日付のコンテナ) */
-    .calendar-day-header-container {
-        min-height: 1.2em; /* 高さを詰める */
-    }
+    snapshot.forEach(doc => {
+        const log = doc.data();
+        const item = document.createElement('div');
+        item.className = 'history-item log-item'; 
+        item.dataset.id = doc.id; 
+        
+        item.innerHTML = `
+            <p><strong>${new Date(log.date.replace(/-/g, '/')).toLocaleDateString()}</strong> - ${log.task}</p>
+            <p>メモ: ${log.notes || 'なし'}</p>
+            `;
+        container.appendChild(item);
+    });
+}
+
+async function renderCustomizations(vehicleId, DOMElements) {
+    const container = DOMElements.customizationsContainer;
+    container.innerHTML = '';
+    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('customizations').orderBy('part').get();
+    if(snapshot.empty) container.innerHTML = '<p>カスタマイズ情報はありません。</p>';
+    snapshot.forEach(doc => {
+        const custom = doc.data();
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `<p><strong>${custom.part}</strong> (${custom.category || 'その他'})</p><p>${custom.details || '詳細なし'}</p><div class="card-actions"><button class="delete-button" data-id="${doc.id}">削除</button></div>`;
+        container.appendChild(item);
+    });
+}
+
+async function renderKanban(vehicleId, DOMElements) {
+    ['todo', 'inprogress', 'waiting', 'done'].forEach(status => {
+        const col = document.getElementById(`kanban-${status}`);
+        if(col) col.innerHTML = '';
+    });
+
+    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('tasks').orderBy('updatedAt', 'desc').get();
     
-    /* 日付 (右上) */
-    .calendar-day-header {
-        font-size: 0.8rem; /* 日付の数字を小さく */
-        padding: 1px 2px;
-    }
-    /* 'today' (今日) の丸 */
-    .calendar-day.today .calendar-day-header {
-        width: 1.5em;
-        height: 1.5em;
-        line-height: 1.5em;
-    }
+    snapshot.forEach(doc => {
+        const task = doc.data();
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        card.dataset.id = doc.id;
+        const assigneeInitial = task.assignee ? task.assignee.charAt(0) : '?';
+        
+        // 日付の表示 (MM/DD形式)
+        let dateHtml = '';
+        if (task.dueDate) {
+            const dateStr = task.dueDate.replace(/-/g, '/').slice(5); // "2023-11-15" -> "11/15"
+            dateHtml = `<span class="task-date" title="期限: ${task.dueDate}">📅 ${dateStr}</span>`;
+        }
 
-    /* 祝日名 (左上) */
-    .calendar-holiday-name {
-        /* スマホでは祝日名は非表示にし、日曜判定の赤文字（sundayクラス）に任せます */
-        /* これにより、限られたスペースでの情報過多を防ぎます */
-        display: none; 
-    }
+        let notesHtml = '';
+        if (task.notes) {
+            notesHtml = `<span class="task-notes-icon" title="備考あり">📝</span>`;
+        }
+
+        card.innerHTML = `
+            <div class="task-title">${task.title}</div>
+            <div class="task-meta">
+                <span><span class="task-assignee-icon">${assigneeInitial}</span>${task.assignee || '未割当'}</span>
+                ${dateHtml}
+            </div>
+        `;
+        const column = document.getElementById(`kanban-${task.status}`);
+        if (column) column.appendChild(card);
+    });
+}
+
+async function renderSetups(vehicleId, DOMElements) {
+    const container = DOMElements.setupLogContainer;
+    container.innerHTML = '';
+    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('setups').orderBy('date', 'desc').get();
     
-    /* 予定イベント */
-    .calendar-event {
-        padding: 2px;
-        font-size: 0.7rem; /* 予定の文字をかなり小さく */
-        border-radius: 2px;
-    }
-    .calendar-event .event-title {
-        margin-bottom: 1px;
-    }
-    .calendar-event .event-detail {
-        font-size: 0.65rem;
+    if (snapshot.empty) {
+        container.innerHTML = '<p>セッティング記録はまだありません。</p>';
+        return;
     }
 
-    /* カレンダーヘッダー (月移動) */
-    #calendar-header {
-        flex-wrap: wrap; /* ボタンが折り返すように */
-        gap: 0.5rem;
+    snapshot.forEach(doc => {
+        const s = doc.data();
+        const el = document.createElement('div');
+        el.className = 'setup-item'; // このクラスがクリック対象
+        el.dataset.id = doc.id;      // ★ data-id を追加
+        el.style.cursor = 'pointer'; // ★ クリック可能であることを示す
+        
+        el.innerHTML = `
+            <div class="setup-header">
+                <span>${s.date} @ ${s.course}</span>
+            </div>
+            <div class="setup-grid">
+                <div>
+                    <strong>足回り</strong><br>
+                    減衰: F ${s.suspension.damperF || '-'} / R ${s.suspension.damperR || '-'}<br>
+                    バネ: ${s.suspension.spring || '-'}, キャンバー: ${s.suspension.camber || '-'}
+                </div>
+                <div>
+                    <strong>タイヤ</strong><br>
+                    銘柄: ${s.tire.name || '-'}<br>
+                    内圧: F ${s.tire.airF || '-'} / R ${s.tire.airR || '-'}
+                </div>
+            </div>
+            <div class="setup-comment-box">
+                ドライバー: ${s.comment || 'なし'}
+            </div>
+        `;
+        container.appendChild(el);
+    });
+}
+
+// 予備部品編集モーダルを開く
+async function openPartModalForEdit(partId, DOMElements) {
+    if (!currentVehicleId) return;
+    try {
+        const doc = await db.collection('vehicles').doc(currentVehicleId).collection('spare_parts').doc(partId).get();
+        if (!doc.exists) {
+            alert("部品が見つかりません。");
+            return;
+        }
+        const part = doc.data();
+        DOMElements.sparePartForm.reset();
+        DOMElements.sparePartModal.dataset.editingId = partId;
+        DOMElements.sparePartModal.querySelector('h3').textContent = '予備部品を編集';
+        
+        DOMElements.sparePartForm.querySelector('#part-name').value = part.name || '';
+        DOMElements.sparePartForm.querySelector('#part-number').value = part.partNumber || '';
+        DOMElements.sparePartForm.querySelector('#part-quantity').value = part.quantity || '';
+        DOMElements.sparePartForm.querySelector('#part-location').value = part.location || '';
+        DOMElements.sparePartForm.querySelector('#part-notes').value = part.notes || '';
+
+        DOMElements.deletePartButton.classList.remove('hidden');
+        DOMElements.sparePartModal.classList.remove('hidden');
+    } catch (err) {
+        console.error("予備部品の読み込みエラー:", err);
+        alert("部品の読み込みに失敗しました。");
     }
-    #calendar-month-year {
-        font-size: 1.2rem; /* 月表示を小さく */
-        width: 100%;
-        text-align: center;
-        order: -1; /* 月表示を一番上に持ってくる */
-    }
-    #prev-month-button, #next-month-button {
-        flex-grow: 1; /* 月移動ボタンを幅いっぱいに広げる */
-        padding: 0.5rem;
-    }
-
-    /* --- モーダル --- */
-    .modal-content {
-        width: 95%; /* 画面幅いっぱいに近く */
-        padding: 1.5rem;
-        max-height: 90vh; /* 高さがはみ出ないように */
-        overflow-y: auto; /* はみ出た場合はスクロール */
-    }
-    .modal-buttons {
-        flex-direction: column-reverse; /* ボタンを縦積みに（決定ボタンを下に） */
-        align-items: stretch; /* ボタンを幅いっぱいに */
-    }
-    .modal-buttons-right {
-        display: flex;
-        flex-direction: column-reverse; /* キャンセルと保存を縦に */
-        gap: 0.5rem;
-    }
-    .modal-buttons [type="submit"], .cancel-button, .delete-button {
-        width: 100%;
-    }
-
-    /* --- カンバン --- */
-    .kanban-column {
-        min-width: 250px; /* カンバンの列幅を少し広げて見やすく */
-    }
-
-    /* --- 便利ツール (グリッド) --- */
-    .location-list {
-        /* 1列表示にする (auto-fitだと2列になる場合があるため) */
-        grid-template-columns: 1fr; 
-    }
 }
 
-/* 末尾に追加 */
-
-/* カンバンボード */
-#kanban-container {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    min-height: 300px;
-}
-.kanban-column {
-    flex: 1;
-    min-width: 200px;
-    background-color: #f4f5f7;
-    border-radius: 8px;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-}
-.kanban-column h4 {
-    margin: 0 0 0.5rem 0;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #5e6c84;
-    border-bottom: 2px solid #ccc;
-    padding-bottom: 5px;
-}
-/* ステータス別のヘッダー色 */
-.kanban-column[data-status="todo"] h4 { border-color: #6c757d; }
-.kanban-column[data-status="inprogress"] h4 { border-color: #007bff; color: #007bff; }
-.kanban-column[data-status="waiting"] h4 { border-color: #dc3545; color: #dc3545; }
-.kanban-column[data-status="done"] h4 { border-color: #28a745; color: #28a745; }
-
-.task-card {
-    background: white;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    border: 1px solid #e1e4e8;
-    cursor: pointer;
-}
-.task-card:hover { background-color: #fafbfc; }
-.task-title { font-weight: bold; margin-bottom: 4px; font-size: 0.95rem; }
-.task-meta { font-size: 0.8rem; color: #666; display: flex; justify-content: space-between; }
-.task-assignee-icon { 
-    background: #6c757d; color: white; 
-    border-radius: 50%; width: 20px; height: 20px; 
-    display: inline-flex; align-items: center; justify-content: center; 
-    font-size: 0.7rem; margin-right: 4px;
-}
-
-/* セッティングログ */
-.setup-item {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-left: 5px solid #17a2b8; /* シアン色で区別 */
-    border-radius: 4px;
-    padding: 1rem;
-    margin-bottom: 0.8rem;
-}
-.setup-header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-.setup-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-.setup-comment-box {
-    margin-top: 0.5rem;
-    background: #f9f9f9;
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-/* Wiki難易度バッジ */
-.wiki-difficulty {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background-color: #eee;
-    font-size: 0.8rem;
-    margin-right: 5px;
-}
-
-/* カンバンの日付スタイル */
-.task-date {
-    font-size: 0.75rem;
-    color: #e74c3c; /* 少し目立つ赤色 */
-    background-color: #fdf0ed;
-    padding: 1px 4px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-}
-
-/* 外部ツールリンク (情報共有タブ用) */
-#external-tools {
-    background-color: #fff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 1.5rem;
-}
-#external-tools h3 {
-    margin-top: 0;
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 0.5rem;
-}
-.tool-links {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-.tool-button {
-    flex: 1;
-    min-width: 120px;
-    display: inline-block;
-    padding: 0.8rem;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    color: white;
-    transition: opacity 0.2s;
-}
-.tool-button:hover {
-    opacity: 0.8;
-}
-.tool-note {
-    font-size: 0.8rem;
-    color: #888;
-    margin-bottom: 0;
-    margin-top: 0.5rem;
-    text-align: right;
-}
-
-/* 各サイトのイメージカラー（仮） */
-.epc-data {
-    background-color: #2c3e50; /* 落ち着いた紺色 */
-}
-.parts-fan {
-    background-color: #e67e22; /* オレンジ色 */
-}
-
-/* フッター */
-footer {
-    /* ★ 変更: '3rem' から 'auto' に変更 */
-    margin-top: auto; 
+// 予備部品リストを描画
+async function renderSpareParts(vehicleId, DOMElements) {
+    const container = DOMElements.sparePartsContainer;
+    container.innerHTML = '';
+    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('spare_parts').orderBy('name', 'asc').get();
     
-    padding: 2rem 1rem;
-    text-align: center;
-    border-top: 1px solid #e9ecef;
-    background-color: #f8f9fa;
-    color: #6c757d;
-    flex-shrink: 0; /* ★ 追加: フッターが縮まないようにする */
+    if (snapshot.empty) {
+        container.innerHTML = '<p>予備部品はまだ登録されていません。</p>';
+        return;
+    }
+
+    snapshot.forEach(doc => {
+        const part = doc.data();
+        const item = document.createElement('div');
+        // 既存の .history-item スタイルを流用しつつ、クリック用に .spare-part-item を追加
+        item.className = 'history-item spare-part-item'; 
+        item.dataset.id = doc.id;
+        
+        // .spare-part-layout (CSSで定義) を使ってレイアウトする
+        item.innerHTML = `
+            <div class="spare-part-layout">
+                <div class="part-main-info">
+                    <span class="part-name">${part.name}</span>
+                    <span class="part-number">${part.partNumber || '品番なし'}</span>
+                </div>
+                <div class="part-stock-info">
+                    <span class="part-quantity">数量: ${part.quantity || 'N/A'}</span>
+                    <span class="part-location">📍 ${part.location || '場所不明'}</span>
+                </div>
+            </div>
+            ${part.notes ? `<p class="part-notes">メモ: ${part.notes}</p>` : ''}
+        `;
+        container.appendChild(item);
+    });
 }
 
-.contact-link {
-    display: inline-block;
-    color: #6c757d;
-    text-decoration: none;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-    border-bottom: 1px dashed #adb5bd; /* 点線の下線で控えめにリンクっぽく */
-    transition: color 0.2s, border-bottom-color 0.2s;
-}
+async function openLogModalForEdit(logId, DOMElements) {
+    if (!currentVehicleId) return;
+    try {
+        const doc = await db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs').doc(logId).get();
+        if (!doc.exists) {
+            alert("履歴が見つかりません。");
+            return;
+        }
+        const log = doc.data();
+        DOMElements.maintenanceLogForm.reset();
+        DOMElements.maintenanceLogModal.querySelector('h3').textContent = '整備履歴を編集';
+        
+        // フォームにデータを設定
+        DOMElements.maintenanceLogForm.querySelector('#log-id').value = logId;
+        DOMElements.maintenanceLogForm.querySelector('#log-date').value = log.date;
+        DOMElements.maintenanceLogForm.querySelector('#log-task').value = log.task;
+        DOMElements.maintenanceLogForm.querySelector('#log-notes').value = log.notes || '';
 
-.contact-link:hover {
-    color: #0056b3;
-    border-bottom-color: #0056b3;
-}
-
-.copyright {
-    font-size: 0.8rem;
-    margin: 0;
-    color: #adb5bd;
-}
-
-/* ★ 変更: 祝日名 (左上) */
-.calendar-holiday-name {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #dc3545; /* 赤色 */
-    padding: 3px 4px; /* 余白を調整 */
-    text-align: left; /* 左揃え */
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    
-    /* 背景色やマージンは不要になったので削除・リセット */
-    background-color: transparent; 
-    border-radius: 0;
-    margin: 0;
-}
-
-/* ★ 追加: カレンダーヘッダーのレイアウト */
-.calendar-day-header-container {
-    display: flex;
-    justify-content: space-between; /* 祝日名(左)と日付(右)を振り分け */
-    align-items: flex-start; /* 上揃え */
-    min-height: 1.5em; /* 祝日名がない日も高さを揃える */
-}
-
-/* ★ 追加: 練習会 会場リスト */
-#practice-locations {
-    margin-top: 1.5rem;
-}
-
-#practice-locations h3 {
-    margin-top: 0;
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 0.5rem;
-    padding-bottom: 5px;
-    border-bottom: 2px solid #007bff;
-}
-
-.location-list {
-    display: grid;
-    /* 画面幅に応じて、250px以上のカードを自動で折り返して並べる */
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
-.location-card {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-}
-
-.location-card h4 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
-    color: #333;
-}
-
-.location-address {
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 0;
-    margin-bottom: 1rem;
-    flex-grow: 1; /* ボタンがカードの最下部に揃うように */
-}
-
-.location-link-button {
-    display: block;
-    text-align: center;
-    padding: 0.75rem;
-    background-color: #28a745; /* 目を引く緑色 */
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.2s;
-}
-
-.location-link-button:hover {
-    background-color: #218838; /* ホバー色 */
-}
-
-/* ★ 追加: 会場マップのh4リンクのスタイル */
-.location-name-link {
-    text-decoration: none; /* 下線を消す */
-    color: inherit; /* 親要素(h4)の色を継承する (黒っぽい色になる) */
-    transition: color 0.2s;
-}
-.location-name-link:hover {
-    color: #0056b3; /* ホバー時に色を変える */
-    text-decoration: underline; /* ホバー時に下線を出す */
-}
-
-/* 予備部品リストのアイテム (クリック可能にする) */
-.spare-part-item {
-    cursor: pointer;
-}
-.spare-part-item:hover {
-    background-color: #f8f9fa; /* 既存のホバー色 */
-}
-
-/* 予備部品リストのレイアウト */
-.spare-part-layout {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap; /* スマホで折り返す */
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-.part-main-info {
-    flex-basis: 300px; /* メイン情報はある程度の幅を確保 */
-    flex-grow: 2;
-}
-.part-stock-info {
-    flex-basis: 200px;
-    flex-grow: 1;
-    text-align: right;
-    color: #495057;
-}
-
-.part-name {
-    font-size: 1.1rem;
-    font-weight: bold;
-    display: block;
-}
-.part-number {
-    font-size: 0.85rem;
-    color: #6c757d;
-}
-.part-quantity {
-    font-weight: bold;
-    margin-right: 1rem;
-}
-.part-notes {
-    font-size: 0.9rem;
-    color: #333;
-    background: #f9f9f9;
-    padding: 0.5rem;
-    border-radius: 4px;
-    margin-top: 0.5rem;
-    margin-bottom: 0;
-}
-
-/* スマホ表示の調整 */
-@media (max-width: 600px) {
-    .part-stock-info {
-        text-align: left; /* スマホでは左揃え */
-        margin-top: 0.5rem;
+        // 削除ボタンを表示
+        DOMElements.deleteLogButton.classList.remove('hidden');
+        DOMElements.maintenanceLogModal.classList.remove('hidden');
+    } catch (err) {
+        console.error("整備履歴の読み込みエラー:", err);
+        alert("履歴の読み込みに失敗しました。");
     }
 }
 
-/* タスクカード: 右側のアイコン類 (備考・日付) */
-.task-meta-right {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem; /* 備考アイコンと日付の隙間 */
-}
-.task-notes-icon {
-    font-size: 0.75rem;
-    cursor: default; /* クリック不可であることを示す */
-}
+async function openSetupModalForEdit(setupId, DOMElements) {
+    if (!currentVehicleId) return;
+    try {
+        const doc = await db.collection('vehicles').doc(currentVehicleId).collection('setups').doc(setupId).get();
+        if (!doc.exists) {
+            alert("セッティング記録が見つかりません。");
+            return;
+        }
+        const s = doc.data();
+        const form = DOMElements.setupForm;
+        form.reset();
+        DOMElements.setupModal.querySelector('h3').textContent = 'セッティングを編集';
+        
+        // フォームにデータを設定
+        form.querySelector('#setup-id').value = setupId;
+        form.querySelector('#setup-date').value = s.date;
+        form.querySelector('#setup-course').value = s.course;
+        
+        if (s.suspension) {
+            form.querySelector('#setup-damper-f').value = s.suspension.damperF || '';
+            form.querySelector('#setup-damper-r').value = s.suspension.damperR || '';
+            form.querySelector('#setup-spring').value = s.suspension.spring || '';
+            form.querySelector('#setup-camber').value = s.suspension.camber || '';
+        }
+        if (s.tire) {
+            form.querySelector('#setup-tire').value = s.tire.name || '';
+            form.querySelector('#setup-air-f').value = s.tire.airF || '';
+            form.querySelector('#setup-air-r').value = s.tire.airR || '';
+        }
+        form.querySelector('#setup-comment').value = s.comment || '';
 
-.wiki-list-item {
-    padding: 0.75rem 1rem;
-}
-
-.wiki-list-title {
-    font-size: 1.15rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-
-.wiki-list-meta {
-    font-size: 0.85rem;
-    color: #555;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap; /* スマホで折り返す */
-}
-
-.wiki-list-updater {
-    color: #dc3545; /* 更新日は赤色で目立たせる */
-    font-weight: bold;
-    margin-left: auto; /* ★ 右寄せにする */
-}
-
-/* スマホ表示の調整 */
-@media (max-width: 600px) {
-    .wiki-list-meta {
-        gap: 0.5rem;
-    }
-    .wiki-list-updater {
-        margin-left: 0; /* スマホでは右寄せ解除 */
-        width: 100%; /* 幅いっぱいで改行させる */
-        margin-top: 0.25rem;
+        // 削除ボタンを表示
+        DOMElements.deleteSetupButton.classList.remove('hidden');
+        DOMElements.setupModal.classList.remove('hidden');
+    } catch (err) {
+        console.error("セッティングの読み込みエラー:", err);
+        alert("記録の読み込みに失敗しました。");
     }
 }
