@@ -112,6 +112,3 @@ async function showWikiArticle(id, DOMElements) {
             <button class="delete-button" data-id="${doc.id}">削除</button>
         </div>`;
 }
-
-// ★ 変更点: renderCalendar 関数をすべて削除 ★
-// export async function renderCalendar(DOMElements) { ... }

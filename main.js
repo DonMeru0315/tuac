@@ -58,10 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
         customizationModal: document.getElementById('customization-modal'),
         customizationForm: document.getElementById('customization-form'),
         
-        // ★ 変更点: info-module のタブ関連DOMを削除
-        // infoNavButtons: document.querySelectorAll('.info-nav-button'),
-        // infoTabContents: document.querySelectorAll('.info-tab-content'),
-        
         // 情報共有 (Wiki)
         showAddWikiButton: document.getElementById('show-add-wiki-button'),
         wikiModal: document.getElementById('wiki-modal'),

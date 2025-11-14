@@ -178,7 +178,7 @@ export function setupPracticeHandlers(DOMElements) {
                 return; 
             }
             
-            // ★ 新規追加モーダルを開く (変更なし)
+            // 新規追加モーダルを開く
             openEventModalForNew(dateStr, DOMElements);
         }
     });
@@ -186,7 +186,7 @@ export function setupPracticeHandlers(DOMElements) {
 
 // --- データ取得・描画関数 ---
 
-// カレンダーを描画 (この関数自体は変更なし)
+// カレンダーを描画
 export async function renderCalendar(DOMElements) {
     if (!DOMElements || !DOMElements.calendarMonthYear) {
         return; 

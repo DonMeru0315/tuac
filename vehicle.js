@@ -124,7 +124,7 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
             title: DOMElements.taskForm.querySelector('#task-title').value,
             assignee: DOMElements.taskForm.querySelector('#task-assignee').value,
             status: DOMElements.taskForm.querySelector('#task-status').value,
-            dueDate: DOMElements.taskForm.querySelector('#task-due-date').value, // ★追加: 日付保存
+            dueDate: DOMElements.taskForm.querySelector('#task-due-date').value, // 日付保存
             updatedAt: new Date() // ソート用
         };
 
@@ -151,7 +151,7 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
         DOMElements.taskForm.querySelector('#task-title').value = task.title;
         DOMElements.taskForm.querySelector('#task-assignee').value = task.assignee;
         DOMElements.taskForm.querySelector('#task-status').value = task.status;
-        DOMElements.taskForm.querySelector('#task-due-date').value = task.dueDate || ''; // ★追加: 日付セット
+        DOMElements.taskForm.querySelector('#task-due-date').value = task.dueDate || ''; // 日付セット
         
         DOMElements.taskModal.dataset.editingId = taskId;
         DOMElements.taskModal.querySelector('h3').textContent = 'タスクを編集';
