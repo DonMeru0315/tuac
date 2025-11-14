@@ -88,6 +88,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showAddSetupButton: document.getElementById('show-add-setup-button'),
         setupModal: document.getElementById('setup-modal'),
         setupForm: document.getElementById('setup-form'),
+
+        showAddPartButton: document.getElementById('show-add-part-button'),
+        sparePartsContainer: document.getElementById('spare-parts-container'),
+        sparePartModal: document.getElementById('spare-part-modal'),
+        sparePartForm: document.getElementById('spare-part-form'),
+        deletePartButton: document.getElementById('delete-part-button'),
     };
 
     // --- グローバル関数 (ここで定義し、必要なモジュールに渡す) ---
