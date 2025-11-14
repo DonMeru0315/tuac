@@ -143,9 +143,134 @@ main { padding: 1rem; }
 
 /* レスポンシブ対応 */
 @media (max-width: 600px) {
-    header { flex-direction: column; gap: 1rem; }
-    #main-nav, #info-nav, #detail-nav { flex-direction: column; }
-    .nav-button, .info-nav-button, .detail-nav-button { border-bottom: 1px solid #dee2e6; border-right: none; }
+    /* --- 基本 --- */
+    body {
+        font-size: 16px; /* 基本フォントサイズを少し小さく */
+    }
+
+    /* --- ヘッダー --- */
+    header { 
+        flex-direction: column; 
+        gap: 1rem; 
+    }
+    header h1 {
+        font-size: 1.2rem; /* スマホではタイトルを少し小さく */
+    }
+    #auth-form input {
+        width: 100%; /* 認証フォームの入力欄を幅いっぱいに */
+        box-sizing: border-box; /* paddingを含めて幅100%にするため */
+    }
+
+    /* --- ナビゲーション --- */
+    #main-nav, #info-nav, #detail-nav { 
+        flex-direction: column; 
+    }
+    .nav-button, .info-nav-button, .detail-nav-button { 
+        border-bottom: 1px solid #dee2e6; 
+        border-right: none; 
+        padding-top: 0.8rem; /* 少しパディングを調整 */
+        padding-bottom: 0.8rem;
+    }
+
+    /* --- メインコンテンツ --- */
+    main {
+        padding: 0.5rem; /* スマホでは余白を減らす */
+    }
+    
+    /* --- カレンダー (重要) --- */
+    #calendar-grid {
+        gap: 2px; /* セルの隙間を詰める */
+    }
+    .calendar-day {
+        min-height: 80px; /* セルの最低限の高さを低くする */
+        padding: 3px;     /* セル内の余白を詰める */
+        gap: 2px;       /* セル内の要素の隙間を詰める */
+        font-size: 0.8rem; /* セル内のフォントを小さく */
+    }
+    
+    /* 日付ヘッダー (祝日名と日付のコンテナ) */
+    .calendar-day-header-container {
+        min-height: 1.2em; /* 高さを詰める */
+    }
+    
+    /* 日付 (右上) */
+    .calendar-day-header {
+        font-size: 0.8rem; /* 日付の数字を小さく */
+        padding: 1px 2px;
+    }
+    /* 'today' (今日) の丸 */
+    .calendar-day.today .calendar-day-header {
+        width: 1.5em;
+        height: 1.5em;
+        line-height: 1.5em;
+    }
+
+    /* 祝日名 (左上) */
+    .calendar-holiday-name {
+        /* スマホでは祝日名は非表示にし、日曜判定の赤文字（sundayクラス）に任せます */
+        /* これにより、限られたスペースでの情報過多を防ぎます */
+        display: none; 
+    }
+    
+    /* 予定イベント */
+    .calendar-event {
+        padding: 2px;
+        font-size: 0.7rem; /* 予定の文字をかなり小さく */
+        border-radius: 2px;
+    }
+    .calendar-event .event-title {
+        margin-bottom: 1px;
+    }
+    .calendar-event .event-detail {
+        font-size: 0.65rem;
+    }
+
+    /* カレンダーヘッダー (月移動) */
+    #calendar-header {
+        flex-wrap: wrap; /* ボタンが折り返すように */
+        gap: 0.5rem;
+    }
+    #calendar-month-year {
+        font-size: 1.2rem; /* 月表示を小さく */
+        width: 100%;
+        text-align: center;
+        order: -1; /* 月表示を一番上に持ってくる */
+    }
+    #prev-month-button, #next-month-button {
+        flex-grow: 1; /* 月移動ボタンを幅いっぱいに広げる */
+        padding: 0.5rem;
+    }
+
+    /* --- モーダル --- */
+    .modal-content {
+        width: 95%; /* 画面幅いっぱいに近く */
+        padding: 1.5rem;
+        max-height: 90vh; /* 高さがはみ出ないように */
+        overflow-y: auto; /* はみ出た場合はスクロール */
+    }
+    .modal-buttons {
+        flex-direction: column-reverse; /* ボタンを縦積みに（決定ボタンを下に） */
+        align-items: stretch; /* ボタンを幅いっぱいに */
+    }
+    .modal-buttons-right {
+        display: flex;
+        flex-direction: column-reverse; /* キャンセルと保存を縦に */
+        gap: 0.5rem;
+    }
+    .modal-buttons [type="submit"], .cancel-button, .delete-button {
+        width: 100%;
+    }
+
+    /* --- カンバン --- */
+    .kanban-column {
+        min-width: 250px; /* カンバンの列幅を少し広げて見やすく */
+    }
+
+    /* --- 便利ツール (グリッド) --- */
+    .location-list {
+        /* 1列表示にする (auto-fitだと2列になる場合があるため) */
+        grid-template-columns: 1fr; 
+    }
 }
 
 /* 末尾に追加 */
