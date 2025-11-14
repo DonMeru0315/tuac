@@ -1,10 +1,6 @@
-// firebase-init.js から auth インスタンスをインポート
 import { auth } from './firebase-init.js'
 let isLoginMode = true;
-
-// ★ 引数で DOMElements, initializeMainContent, stopVehicleUpdates を受け取る ★
 export function setupAuthListeners(DOMElements, initializeMainContent, stopVehicleUpdates) {
-
     // 認証状態の監視
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -14,17 +10,14 @@ export function setupAuthListeners(DOMElements, initializeMainContent, stopVehic
             DOMElements.userEmail.textContent = user.displayName ? `${user.displayName} (${user.email})` : user.email;
             DOMElements.mainContent.classList.remove('hidden');
             DOMElements.loginPrompt.classList.add('hidden');
-            
             // 引数で受け取った関数を呼び出す
             initializeMainContent();
-
         } else {
             // ログアウト時の処理
             DOMElements.loginRegisterArea.classList.remove('hidden');
             DOMElements.userInfo.classList.add('hidden');
             DOMElements.mainContent.classList.add('hidden');
             DOMElements.loginPrompt.classList.remove('hidden');
-            
             // ログアウトしたら、車両リストのリアルタイム監視を停止
             if (stopVehicleUpdates) stopVehicleUpdates();
         }
@@ -35,7 +28,6 @@ export function setupAuthListeners(DOMElements, initializeMainContent, stopVehic
         e.preventDefault();
         const email = document.getElementById('auth-email').value;
         const password = document.getElementById('auth-password').value;
-
         if (isLoginMode) {
             // ログイン処理
             auth.signInWithEmailAndPassword(email, password)
@@ -51,7 +43,7 @@ export function setupAuthListeners(DOMElements, initializeMainContent, stopVehic
                     });
                 })
                 .then(() => {
-                    // プロファイル更新成功 (onAuthStateChanged が自動で発火)
+                    // プロファイル更新成功
                 })
                 .catch(error => alert("新規登録失敗: " + error.message));
         }
