@@ -1,8 +1,5 @@
 // firebase-init.js から auth インスタンスをインポート
-import { auth } from './firebase-init.js';
-// ★ main.js からの import をすべて削除 ★
-// import { DOMElements, initializeMainContent } from './main.js';
-
+import { auth } from './firebase-init.js'
 let isLoginMode = true;
 
 // ★ 引数で DOMElements, initializeMainContent, stopVehicleUpdates を受け取る ★
