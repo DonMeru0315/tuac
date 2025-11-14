@@ -54,6 +54,7 @@
                     <button class="detail-nav-button" data-detailtab="customizations">カスタマイズ</button>
                     <button class="detail-nav-button" data-detailtab="kanban-board">タスク管理</button>
                     <button class="detail-nav-button" data-detailtab="setup-log">セッティング</button>
+                    <button class="detail-nav-button" data-detailtab="spare-parts">予備部品</button>
                 </nav>
 
                 <div id="basic-info-tab" class="detail-tab-content">
@@ -79,6 +80,10 @@
                 <div id="setup-log-tab" class="detail-tab-content hidden">
                     <button id="show-add-setup-button" class="primary-button">＋ セッティングを記録</button>
                     <div id="setup-log-container"></div>
+                </div>
+                <div id="spare-parts-tab" class="detail-tab-content hidden">
+                    <button id="show-add-part-button" class="primary-button">＋ 予備部品を登録</button>
+                    <div id="spare-parts-container"></div>
                 </div>
             </div>
             
@@ -321,12 +326,14 @@
                 <label for="task-assignee">担当者</label>
                 <input type="text" id="task-assignee" placeholder="例: 山田">
                 <label for="task-status">ステータス</label>
-                <select id="task-status">
-                    <option value="todo">未着手</option>
-                    <option value="inprogress">作業中</option>
-                    <option value="waiting">部品待ち</option>
-                    <option value="done">完了</option>
-                </select>
+                    <select id="task-status">
+                        <option value="todo">未着手</option>
+                        <option value="inprogress">作業中</option>
+                        <option value="waiting">部品待ち</option>
+                        <option value="done">完了</option>
+                    </select>
+                <label for="task-notes">備考 (任意)</label>
+                <textarea id="task-notes" rows="3" placeholder="作業の注意点や、部品待ちの経緯などを記載"></textarea>
                 
                 <div class="modal-buttons">
                     <button type="button" id="delete-task-button" class="delete-button hidden">削除</button>
@@ -367,6 +374,41 @@
                 <div class="modal-buttons">
                     <button type="button" class="cancel-button">キャンセル</button>
                     <button type="submit">保存する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="spare-part-modal" class="modal-background hidden">
+        <div class="modal-content">
+            <h3>予備部品を登録</h3>
+            <form id="spare-part-form">
+                <label for="part-name">部品名</label>
+                <input type="text" id="part-name" required placeholder="例: フロント ブレーキパッド (Dixcel Z)">
+                
+                <label for="part-number">品番 (任意)</label>
+                <input type="text" id="part-number" placeholder="例: Z-331120">
+
+                <div style="display:flex; gap:1rem;">
+                    <div style="flex:1;">
+                        <label for="part-quantity">数量</label>
+                        <input type="text" id="part-quantity" placeholder="例: 1セット, 2L">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="part-location">保管場所 (任意)</label>
+                        <input type="text" id="part-location" placeholder="例: 部室 奥の棚B">
+                    </div>
+                </div>
+
+                <label for="part-notes">メモ (任意)</label>
+                <textarea id="part-notes" rows="3"></textarea>
+                
+                <div class="modal-buttons">
+                    <button type="button" id="delete-part-button" class="delete-button hidden">削除</button>
+                    <div class="modal-buttons-right">
+                        <button type="button" class="cancel-button">キャンセル</button>
+                        <button type="submit">保存する</button>
+                    </div>
                 </div>
             </form>
         </div>
