@@ -62,6 +62,9 @@
                 </div>
                 <div id="maintenance-logs-tab" class="detail-tab-content hidden">
                     <button id="show-add-log-button" class="primary-button">＋ 整備履歴を追加</button>
+                    <button id="sync-done-tasks-button" class="primary-button" style="background-color: #6c757d;">
+                        🔄 完了タスクを履歴に反映
+                    </button>
                     <div id="maintenance-logs-container"></div>
                 </div>
                 <div id="customizations-tab" class="detail-tab-content hidden">
@@ -130,11 +133,10 @@
                         
                         <div class="location-card">
                             <h4>
-                                <a href="https://maps.app.goo.gl/PbQ6cT7zH4PVjni99" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                <a href="https://www.google.com/maps?q=ドライビングパレット那須" target="_blank" rel="noopener noreferrer" class="location-name-link">
                                     ドライビングパレット那須
                                 </a>
                             </h4>
-                            <p class="location-address">📍 栃木県那須塩原市</p>
                             <a href="http://dp-nasu.com/04calender/index.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
                                 空き状況を見る
                             </a>
@@ -142,11 +144,10 @@
 
                         <div class="location-card">
                             <h4>
-                                <a href="https://maps.app.goo.gl/eFsiaBr18v5bZVMi8" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                <a href="https://www.google.com/maps?q=筑波サーキット+ジムカーナ場" target="_blank" rel="noopener noreferrer" class="location-name-link">
                                     筑波サーキット (ジムカーナ場)
                                 </a>
                             </h4>
-                            <p class="location-address">📍 茨城県下妻市</p>
                             <a href="https://www.tsukuba-circuit.jp/more-info/reserve.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
                                 コースの貸し出し・通常予約
                             </a>
@@ -154,11 +155,10 @@
                         
                         <div class="location-card">
                             <h4>
-                                <a href="https://maps.app.goo.gl/QEd4JTXnfUmLNo6r9" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                <a href="https://www.google.com/maps?q=モビリティリゾートもてぎ+北ショートコース" target="_blank" rel="noopener noreferrer" class="location-name-link">
                                     もてぎ北ショート
                                 </a>
                             </h4>
-                            <p class="location-address">📍 栃木県芳賀郡茂木町</p>
                             <a href="https://apps.mobilityland.co.jp/info/download/bYUmdv" target="_blank" rel="noopener noreferrer" class="location-link-button">
                                 スポーツ走行情報
                             </a>
@@ -166,17 +166,82 @@
                         
                         <div class="location-card">
                             <h4>
-                                <a href="https://maps.app.goo.gl/knbHutqVu4xcAB2P8" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                <a href="https://www.google.com/maps?q=富士スピードウェイ+ジムカーナコース" target="_blank" rel="noopener noreferrer" class="location-name-link">
                                     富士スピードウェイ
                                 </a>
                             </h4>
-                            <p class="location-address">📍 静岡県駿東郡小山町</p>
                             <a href="https://www.fsw.tv/driving/howto/courserental.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
                                 WEBサイト
                             </a>
                         </div>
+
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=本庄サーキット" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    本庄サーキット
+                                </a>
+                            </h4>
+                            <a href="https://honjo-circuit.com/rents_schedule" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                日程表を見る
+                            </a>
+                        </div>
                         
-                    </div>
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=群馬サイクルスポーツセンター" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    群馬サイクルスポーツセンター
+                                </a>
+                            </h4>
+                            <a href="https://www.gunsai.jp/about_rental/#calender" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                予約/カレンダー
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://maps.app.goo.gl/pkCHWWfe6ohExNhs6" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    宝台樹スキー場 駐車場
+                                </a>
+                            </h4>
+                            <a href="http://www.quality-jp.net/saigun/practice.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                JMRC埼群ジムカーナOFFICIALホームページ
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://maps.app.goo.gl/EzkAXJnSCn9sb4wM9" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    南千葉サーキット
+                                </a>
+                            </h4>
+                            <a href="https://reserve.minami-chiba-circuit.com/" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                南千葉サーキット予約サイト
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=ナリタモーターランド" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    ナリタモーターランド
+                                </a>
+                            </h4>
+                            <a href="https://narita-motorland.sakura.ne.jp/schedule-1.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                コーススケジュール
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=茨城中央サーキット" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    茨城中央サーキット
+                                </a>
+                            </h4>
+                            <a href="http://clear.la.coocan.jp/" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                WEBサイト
+                            </a>
+                        </div>
+                        
+                        </div>
                 </div>
                 </div>
             
@@ -212,20 +277,29 @@
 
     <div id="maintenance-log-modal" class="modal-background hidden">
         <div class="modal-content">
-            <h3>整備履歴を追加</h3>
+            <h3>整備履歴を追加</h3> 
             <form id="maintenance-log-form">
+                
+                <input type="hidden" id="log-id"> 
+                
                 <label for="log-date">日付</label>
                 <input type="date" id="log-date" required>
+                
                 <label for="log-task">作業内容</label>
-                <input type="text" id="log-task" required>
+                <input type="text" id="log-task" required placeholder="例: オイル交換, ブレーキパッド交換">
+                
                 <label for="log-notes">メモ</label>
                 <textarea id="log-notes" rows="4"></textarea>
+                
                 <div class="modal-buttons">
-                    <button type="button" class="cancel-button">キャンセル</button>
-                    <button type="submit">保存する</button>
+                    <button type="button" id="delete-log-button" class="delete-button hidden">削除</button>
+                    <div class="modal-buttons-right">
+                        <button type="button" class="cancel-button">キャンセル</button>
+                        <button type="submit">保存する</button>
+                    </div>
                 </div>
-            </form>
-        </div>
+
+            </form> </div>
     </div>
 
     <div id="customization-modal" class="modal-background hidden">
@@ -298,7 +372,6 @@
                 
                 <label for="wiki-tags">タグ (カンマ区切り)</label>
                 <input type="text" id="wiki-tags" placeholder="例: DC2, クラッチ, エンジン">
-
                 <label for="wiki-content">内容 (Markdown対応)</label>
                 <textarea id="wiki-content" rows="10" placeholder="## 必要な工具
 ...
@@ -350,6 +423,7 @@
         <div class="modal-content">
             <h3>セッティングを記録</h3>
             <form id="setup-form">
+                <input type="hidden" id="setup-id">
                 <label for="setup-date">日付</label>
                 <input type="date" id="setup-date" required>
                 <label for="setup-course">コース / コンディション</label>
@@ -364,16 +438,20 @@
                     <input type="text" id="setup-camber" placeholder="キャンバー">
                 </div>
                 <h4>タイヤ</h4>
-                <input type="text" id="setup-tire" placeholder="銘柄 (例: A052)">
+                <input type="text" id="setup-tire" placeholder="タイヤ銘柄 (例: A052)">
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="setup-air-f" placeholder="空気圧 F (温間)">
                     <input type="text" id="setup-air-r" placeholder="空気圧 R (温間)">
                 </div>
                 <label for="setup-comment">ドライバーコメント</label>
                 <textarea id="setup-comment" rows="3" placeholder="リアが出やすい、など"></textarea>
+
                 <div class="modal-buttons">
-                    <button type="button" class="cancel-button">キャンセル</button>
-                    <button type="submit">保存する</button>
+                    <button type="button" id="delete-setup-button" class="delete-button hidden">削除</button>
+                    <div class="modal-buttons-right">
+                        <button type="button" class="cancel-button">キャンセル</button>
+                        <button type="submit">保存する</button>
+                    </div>
                 </div>
             </form>
         </div>
