@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showAddTaskButton: document.getElementById('show-add-task-button'),
         taskModal: document.getElementById('task-modal'),
         taskForm: document.getElementById('task-form'),
-        
+        deleteTaskButton: document.getElementById('delete-task-button'),
         setupLogContainer: document.getElementById('setup-log-container'),
         showAddSetupButton: document.getElementById('show-add-setup-button'),
         setupModal: document.getElementById('setup-modal'),

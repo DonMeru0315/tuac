@@ -1,5 +1,6 @@
-// db をインポート
+// db と auth をインポート
 import { db } from './firebase-init.js';
+import { auth } from './firebase-init.js'; // ★ auth をインポート
 
 let currentVehicleId = null;
 let unsubscribeVehicles = null; // リアルタイム監視を解除するための変数
@@ -108,13 +109,28 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
     });
 
     // --- ★ カンバン (タスク管理) ---
+    
+    // 「＋ タスクを追加」ボタン
     DOMElements.showAddTaskButton.addEventListener('click', () => {
         DOMElements.taskForm.reset();
         DOMElements.taskModal.querySelector('h3').textContent = 'タスクを追加';
-        delete DOMElements.taskModal.dataset.editingId; // 編集IDクリア
+        delete DOMElements.taskModal.dataset.editingId;
+        
+        // ★ 変更点: ログインユーザー名を担当者に自動入力
+        const user = auth.currentUser;
+        if (user && user.displayName) {
+            DOMElements.taskForm.querySelector('#task-assignee').value = user.displayName;
+        }
+        
+        // ★ 変更点: 削除ボタンを隠す
+        if (DOMElements.deleteTaskButton) {
+            DOMElements.deleteTaskButton.classList.add('hidden');
+        }
+        
         DOMElements.taskModal.classList.remove('hidden');
     });
 
+    // タスクフォームの送信（保存）
     DOMElements.taskForm.addEventListener('submit', async e => {
         e.preventDefault();
         if (!currentVehicleId) return;
@@ -124,7 +140,7 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
             title: DOMElements.taskForm.querySelector('#task-title').value,
             assignee: DOMElements.taskForm.querySelector('#task-assignee').value,
             status: DOMElements.taskForm.querySelector('#task-status').value,
-            dueDate: DOMElements.taskForm.querySelector('#task-due-date').value, // 日付保存
+            dueDate: DOMElements.taskForm.querySelector('#task-due-date').value,
             updatedAt: new Date() // ソート用
         };
 
@@ -136,13 +152,31 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
         DOMElements.taskModal.classList.add('hidden');
         renderKanban(currentVehicleId, DOMElements);
     });
+
+    // ★ 変更点: 削除ボタンのクリックイベント
+    if (DOMElements.deleteTaskButton) {
+        DOMElements.deleteTaskButton.addEventListener('click', async () => {
+            const taskId = DOMElements.taskModal.dataset.editingId;
+            if (!taskId || !currentVehicleId) return;
+
+            if (confirm('このタスクを本当に削除しますか？')) {
+                try {
+                    await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).delete();
+                    DOMElements.taskModal.classList.add('hidden');
+                    renderKanban(currentVehicleId, DOMElements); // カンバンを再描画
+                } catch (err) {
+                    console.error("削除エラー:", err);
+                    alert("削除に失敗しました。");
+                }
+            }
+        });
+    }
     
-    // タスク移動・編集・削除 (Event Delegation)
+    // タスクカードのクリック（編集モーダルを開く）
     DOMElements.kanbanContainer.addEventListener('click', async e => {
         const card = e.target.closest('.task-card');
         if (!card) return;
         
-        // カードクリックで編集
         const taskId = card.dataset.id;
         const doc = await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).get();
         const task = doc.data();
@@ -151,10 +185,16 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
         DOMElements.taskForm.querySelector('#task-title').value = task.title;
         DOMElements.taskForm.querySelector('#task-assignee').value = task.assignee;
         DOMElements.taskForm.querySelector('#task-status').value = task.status;
-        DOMElements.taskForm.querySelector('#task-due-date').value = task.dueDate || ''; // 日付セット
+        DOMElements.taskForm.querySelector('#task-due-date').value = task.dueDate || '';
         
         DOMElements.taskModal.dataset.editingId = taskId;
         DOMElements.taskModal.querySelector('h3').textContent = 'タスクを編集';
+        
+        // ★ 変更点: 編集時は削除ボタンを表示
+        if (DOMElements.deleteTaskButton) {
+            DOMElements.deleteTaskButton.classList.remove('hidden');
+        }
+
         DOMElements.taskModal.classList.remove('hidden');
     });
 
@@ -312,7 +352,7 @@ async function renderKanban(vehicleId, DOMElements) {
         card.dataset.id = doc.id;
         const assigneeInitial = task.assignee ? task.assignee.charAt(0) : '?';
         
-        // ★追加: 日付の表示 (MM/DD形式)
+        // 日付の表示 (MM/DD形式)
         let dateHtml = '';
         if (task.dueDate) {
             const dateStr = task.dueDate.replace(/-/g, '/').slice(5); // "2023-11-15" -> "11/15"
