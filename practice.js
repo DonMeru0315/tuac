@@ -1,10 +1,7 @@
-// db, firestore(Timestamp用) をインポート
-import { db, firestore } from './firebase-init.js';
-
-// --- グローバル（モジュール）変数 ---
+import { db, firestore, auth } from './firebase-init.js';
 let currentMonth = new Date(); 
 let eventGroupsCache = new Set();
-let allHolidaysCache = null; // 祝日データをキャッシュ (例: {"2025-01-01": "元日"})
+let allHolidaysCache = null; // 祝日データをキャッシュ
 
 // --- 祝日データを一度だけ取得する関数 ---
 async function fetchAllHolidays() {
@@ -35,7 +32,7 @@ function ensureDOMElements(DOMElements) {
     }
 }
 
-// イベントグループを読み込み (変更なし)
+// イベントグループを読み込み
 async function loadEventGroups(DOMElements) { 
     if (eventGroupsCache.size > 0) {
         DOMElements.eventGroupList.innerHTML = '';
@@ -47,7 +44,7 @@ async function loadEventGroups(DOMElements) {
     loadEventGroups(DOMElements);
 }
 
-// 新規グループを追加 (変更なし)
+// 新規グループを追加
 async function addNewGroup(groupName, DOMElements) { 
     if (eventGroupsCache.has(groupName)) return;
     eventGroupsCache.add(groupName);
@@ -55,7 +52,7 @@ async function addNewGroup(groupName, DOMElements) {
     await db.collection('event_groups').doc(groupName).set({ name: groupName });
 }
 
-// 新規予定モーダル (変更なし)
+// 新規予定モーダル
 function openEventModalForNew(dateStr, DOMElements) {
     ensureDOMElements(DOMElements);
     DOMElements.eventForm.reset();
@@ -66,7 +63,7 @@ function openEventModalForNew(dateStr, DOMElements) {
     DOMElements.eventModal.classList.remove('hidden');
 }
 
-// 編集モーダル (変更なし)
+// 編集モーダル
 async function openEventModalForEdit(eventId, DOMElements) {
     ensureDOMElements(DOMElements);
     try {
@@ -91,12 +88,10 @@ async function openEventModalForEdit(eventId, DOMElements) {
     }
 }
 
-
 // カレンダー (部活日程) 関連のリスナーをセットアップ
 export function setupPracticeHandlers(DOMElements) {
     ensureDOMElements(DOMElements);
-    
-    // 削除ボタン (変更なし)
+    // 削除ボタン
     DOMElements.deleteEventButton.addEventListener('click', async () => {
         const eventId = DOMElements.eventModal.dataset.editingId;
         if (!eventId) return;
@@ -135,6 +130,7 @@ export function setupPracticeHandlers(DOMElements) {
     // フォーム送信 (変更なし)
     DOMElements.eventForm.addEventListener('submit', async e => {
         e.preventDefault();
+        const user = auth.currentUser;
         const eventId = DOMElements.eventModal.dataset.editingId || null;
         const title = DOMElements.eventForm.querySelector('#event-title').value;
         const dateStr = DOMElements.eventForm.querySelector('#event-date').value;
@@ -148,10 +144,16 @@ export function setupPracticeHandlers(DOMElements) {
             time: timeStr || null,
             location: location,
             group: group,
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedBy: user ? user.displayName : '不明',
+            updatedById: user ? user.uid : '不明',
         };
         if (eventId) {
             await db.collection('events').doc(eventId).update(data);
         } else {
+            data.createdAt = firestore.FieldValue.serverTimestamp();
+            data.createdBy = user ? user.displayName : '不明';
+            data.createdById = user ? user.uid : '不明';
             await db.collection('events').add(data);
         }
         if (group) {
@@ -181,21 +183,15 @@ export function setupPracticeHandlers(DOMElements) {
     });
 }
 
-// --- データ取得・描画関数 ---
-
 // カレンダーを描画
 export async function renderCalendar(DOMElements) {
     if (!DOMElements || !DOMElements.calendarMonthYear) {
         return; 
     }
-
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     DOMElements.calendarMonthYear.textContent = `${year}年 ${month + 1}月`;
-    
-    // 祝日データを取得
-    const holidays = await fetchAllHolidays();
-    
+    const holidays = await fetchAllHolidays(); // 祝日データを取得
     // Firestoreからイベント取得 (変更なし)
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
@@ -207,48 +203,37 @@ export async function renderCalendar(DOMElements) {
         .orderBy('date', 'asc')
         .get();
     const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-    
     DOMElements.calendarGrid.innerHTML = '';
-    
     const today = new Date();
     const todayDate = today.getDate();
     const todayMonth = today.getMonth();
     const todayYear = today.getFullYear();
-
-    // 前月の日付セル (変更なし)
+    // 前月の日付セル
     for (let i = 0; i < firstDay.getDay(); i++) {
         DOMElements.calendarGrid.insertAdjacentHTML('beforeend', '<div class="calendar-day not-current-month"></div>');
     }
-    
     // 今月の日付セル
     for (let day = 1; day <= lastDay.getDate(); day++) {
         const currentDate = new Date(year, month, day); 
         const dayOfWeek = currentDate.getDay(); // 0=日, 6=土
-
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day';
-        
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         dayDiv.dataset.date = dateStr;
-
         const holidayName = holidays[dateStr]; // 祝日名を取得
-
-        // 日曜または祝日 (変更なし)
+        // 日曜または祝日
         if (dayOfWeek === 0 || holidayName) {
             dayDiv.classList.add('sunday');
         } else if (dayOfWeek === 6) {
             dayDiv.classList.add('saturday');
-        }
-        
+        }        
         // 今日 (変更なし)
         if (day === todayDate && month === todayMonth && year === todayYear) {
             dayDiv.classList.add('today');
         }
-
-        // --- ★ 変更点: ヘッダーコンテナを作成 ---
+        // --- ヘッダーコンテナを作成 ---
         const headerContainer = document.createElement('div');
         headerContainer.className = 'calendar-day-header-container';
-
         // 祝日名 (左上)
         if (holidayName) {
             const holidayDiv = document.createElement('div');
@@ -256,17 +241,13 @@ export async function renderCalendar(DOMElements) {
             holidayDiv.textContent = holidayName;
             headerContainer.appendChild(holidayDiv); // 祝日名を先に追加
         }
-
         // 日付 (右上)
         const dayHeader = document.createElement('div');
         dayHeader.className = 'calendar-day-header';
         dayHeader.textContent = day;
-        headerContainer.appendChild(dayHeader); // 日付を後に追加
-        
-        dayDiv.appendChild(headerContainer); // コンテナをセルに追加
-        // --- ★ 変更ここまで ---
-        
-        // イベント描画 (変更なし)
+        headerContainer.appendChild(dayHeader); // 日付を後に追加        
+        dayDiv.appendChild(headerContainer); // コンテナをセルに追加       
+        // イベント描画
         const dayEvents = events.filter(e => {
             const eventDate = e.date.toDate();
             return eventDate.getDate() === day &&
