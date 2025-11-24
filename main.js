@@ -5,7 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const DOMElements = {
         loginRegisterArea: document.getElementById('login-register-area'),
         userInfo: document.getElementById('user-info'),
-        userEmail: document.getElementById('user-email'),
+        userMenuButton: document.getElementById('user-menu-button'),
+        userDropdown: document.getElementById('user-dropdown'),
+        dropdownUserName: document.getElementById('dropdown-user-name'),
+        dropdownUserEmail: document.getElementById('dropdown-user-email'),
         authForm: document.getElementById('auth-form'),
         logoutButton: document.getElementById('logout-button'),
         toggleModeButton: document.getElementById('toggle-mode-button'),
@@ -74,10 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // モジュールが初期化済みか管理するフラグ
-    let practiceModule, vehicleModule, infoModule;
+    let practiceModule, vehicleModule, infoModule, attendanceModule;
     let isVehicleSetupDone = false;
     let isInfoSetupDone = false;
     let isPracticeSetupDone = false;
+    let isAttendanceSetupDone = false;
 
     // メインモジュール切り替え
     function showModule(moduleId) {
@@ -121,6 +125,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // vehicle.js が読み込み済みの場合のみ、停止処理を呼び出す
         if (vehicleModule && vehicleModule.stopVehicleUpdates) {
             vehicleModule.stopVehicleUpdates();
+        }
+        // 出退勤の監視も停止
+        if (attendanceModule && attendanceModule.stopAttendanceUpdates) {
+            attendanceModule.stopAttendanceUpdates();
         }
     }
     
@@ -169,6 +177,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     // カレンダーを再描画
                     practiceModule.renderCalendar(DOMElements);
+                } else if (moduleId === 'attendance-module'){
+                    if (!attendanceModule) {
+                        attendanceModule = await import('./attendance.js');
+                    }
+                    if (!isAttendanceSetupDone) {
+                        attendanceModule.setupAttendanceHandlers(DOMElements);
+                        isAttendanceSetupDone = true;
+                    } else {
+                    }
+                }　else if (moduleId === 'tools-module') {
+                    const toolsModule = await import('./tools.js');
+                    toolsModule.setupToolsHandlers(DOMElements);
                 }
             } catch (err) {
                 console.error("モジュールの動的インポートに失敗しました:", moduleId, err);
