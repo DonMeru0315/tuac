@@ -77,11 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // モジュールが初期化済みか管理するフラグ
-    let practiceModule, vehicleModule, infoModule, attendanceModule;
+    let practiceModule, vehicleModule, infoModule, attendanceModule, toolsModule;
     let isVehicleSetupDone = false;
     let isInfoSetupDone = false;
     let isPracticeSetupDone = false;
     let isAttendanceSetupDone = false;
+    let isToolsSetupDone = false;
 
     // メインモジュール切り替え
     function showModule(moduleId) {
@@ -187,8 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                     }
                 }　else if (moduleId === 'tools-module') {
-                    const toolsModule = await import('./tools.js');
-                    toolsModule.setupToolsHandlers(DOMElements);
+                    if (!toolsModule) {
+                        toolsModule = await import('./tools.js');
+                    }
+                    if (!isToolsSetupDone) {
+                        toolsModule.setupToolsHandlers(DOMElements);
+                        isToolsSetupDone = true;
+                    }
                 }
             } catch (err) {
                 console.error("モジュールの動的インポートに失敗しました:", moduleId, err);

@@ -1,4 +1,5 @@
 import { db, firestore, auth } from './firebase-init.js'; 
+// ★ あなたのCloudinary設定等はそのまま維持してください
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/deeafjoya/image/upload";
 const UPLOAD_PRESET = "club_auto_log_preset"; 
 
@@ -27,14 +28,12 @@ export function setupToolsHandlers(DOMElements) {
         addBtn.disabled = true;
 
         try {
-            // 1. 画像圧縮 (以前のコードのまま)
             const compressedBlob = await compressImageToBlob(file);
             
-            // 2. Cloudinaryへアップロード (FormDataを使う)
             const formData = new FormData();
             formData.append('file', compressedBlob);
-            formData.append('upload_preset', UPLOAD_PRESET); // 設定したプリセット名
-            formData.append('folder', 'tool_photos'); // フォルダ分けも可能
+            formData.append('upload_preset', UPLOAD_PRESET);
+            formData.append('folder', 'tool_photos');
 
             const res = await fetch(CLOUDINARY_URL, {
                 method: 'POST',
@@ -44,7 +43,6 @@ export function setupToolsHandlers(DOMElements) {
             if (!res.ok) throw new Error('Upload failed');
             const cloudData = await res.json();
             
-            // 3. 取得した画像URLをFirestoreに保存
             const user = auth.currentUser;
             const todayStr = getTodayString();
 
@@ -52,8 +50,9 @@ export function setupToolsHandlers(DOMElements) {
                 date: todayStr,
                 uid: user.uid,
                 displayName: user.displayName || '名称未設定',
-                photoURL: cloudData.secure_url, // ★ CloudinaryのURL
-                timestamp: firestore.FieldValue.serverTimestamp()
+                photoURL: cloudData.secure_url,
+                // 即座に表示させるため、serverTimestamp() ではなく端末の時間を使う
+                timestamp: new Date() 
             };
 
             await db.collection('tool_logs').add(data);
@@ -72,7 +71,6 @@ export function setupToolsHandlers(DOMElements) {
     subscribeTodayToolLogs(listContainer);
 }
 
-// 読み込み部分 (URLを表示するだけなので、Base64でもURLでも動くように互換性を持たせる)
 function subscribeTodayToolLogs(container) {
     if (unsubscribeToolLogs) unsubscribeToolLogs();
     const todayStr = getTodayString();
@@ -94,11 +92,16 @@ function subscribeTodayToolLogs(container) {
                 
                 let timeStr = '';
                 if (log.timestamp) {
-                    const date = log.timestamp.toDate();
-                    timeStr = `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                    // FirestoreのTimestamp型か、JSのDate型かを判定して処理
+                    let dateObj;
+                    if (typeof log.timestamp.toDate === 'function') {
+                        dateObj = log.timestamp.toDate(); // Firestoreから来たデータ
+                    } else {
+                        dateObj = new Date(log.timestamp); // 今保存したばかりのデータ
+                    }
+                    timeStr = `${dateObj.getHours()}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
                 }
 
-                // URLがある場合はそれを、なければ(古いデータ)Base64を表示
                 const imgSrc = log.photoURL || log.photoBase64 || '';
 
                 card.innerHTML = `
@@ -113,20 +116,17 @@ function subscribeTodayToolLogs(container) {
                 `;
                 container.appendChild(card);
             });
-            // 削除ボタンのイベント処理...（Firestoreのデータを消すだけでOK）
+
              container.querySelectorAll('.tool-log-delete').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if (confirm("この写真を削除しますか？")) {
                         await db.collection('tool_logs').doc(e.target.dataset.id).delete();
-                        // Cloudinary側の画像削除はクライアントからはセキュリティ上できない設定が一般的なので、
-                        // Firestoreのリンク削除だけで十分（無料枠も広いので放置でOK）です。
                     }
                 });
             });
         });
 }
 
-// 画像圧縮関数 (Canvasを使ってBlobを返す)
 function compressImageToBlob(file) {
     return new Promise((resolve, reject) => {
         const maxWidth = 800; 
@@ -147,7 +147,6 @@ function compressImageToBlob(file) {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                // JPEG, 品質0.7
                 canvas.toBlob((blob) => {
                     if(blob) resolve(blob);
                     else reject(new Error("Compression failed"));
