@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Club Auto Log</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=1.2">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
 </head>
 <body>
     <header>
@@ -22,21 +23,30 @@
                 <button id="toggle-mode-button">新規登録はこちら</button>
             </div>
             <div id="user-info" class="hidden">
-                <span id="user-email"></span>
-                <button id="logout-button">ログアウト</button>
+                <button id="user-menu-button" class="icon-button" aria-label="ユーザーメニュー">👤 </button>                            
+                <div id="user-dropdown" class="dropdown-menu hidden">
+                    <div class="dropdown-header">
+                        <p id="dropdown-user-name" class="dropdown-name"></p>
+                        <p id="dropdown-user-email" class="dropdown-email"></p>
+                    </div>
+                    <hr>
+                    <button id="logout-button" class="logout-button-small">ログアウト</button>
+                </div>
             </div>
         </div>
     </header>
 
     <div id="main-content" class="hidden">
         <nav id="main-nav">
-            <button class="nav-button active" data-module="maintenance-module">整備管理</button>
-            <button class="nav-button" data-module="practice-module">部活日程</button>
-            <button class="nav-button" data-module="info-module">情報共有</button>
+            <button class="nav-button" data-module="maintenance-module">整備<br class="sp-br">管理</button> 
+            <button class="nav-button" data-module="practice-module">部活<br class="sp-br">日程</button>
+            <button class="nav-button" data-module="info-module">情報<br class="sp-br">共有</button>
+            <button class="nav-button" data-module="attendance-module">出退勤</button>
+            <button class="nav-button" data-module="tools-module">便利<br class="sp-br">ツール</button>
         </nav>
 
         <main>
-            <div id="maintenance-module" class="module-content">
+            <div id="maintenance-module" class="module-content hidden">
                 <h2>部車リスト</h2>
                 <button id="show-add-vehicle-button" class="primary-button">＋ 部車を新規登録</button>
                 <div id="vehicle-list-container"></div>
@@ -52,47 +62,39 @@
                     <button class="detail-nav-button" data-detailtab="customizations">カスタマイズ</button>
                     <button class="detail-nav-button" data-detailtab="kanban-board">タスク管理</button>
                     <button class="detail-nav-button" data-detailtab="setup-log">セッティング</button>
+                    <button class="detail-nav-button" data-detailtab="spare-parts">予備部品</button>
                 </nav>
 
                 <div id="basic-info-tab" class="detail-tab-content">
                     <div id="basic-info-content"></div>
                 </div>
-
                 <div id="maintenance-logs-tab" class="detail-tab-content hidden">
                     <button id="show-add-log-button" class="primary-button">＋ 整備履歴を追加</button>
+                    <button id="sync-done-tasks-button" class="primary-button" style="background-color: #6c757d;">
+                        🔄 完了タスクを履歴に反映
+                    </button>
                     <div id="maintenance-logs-container"></div>
                 </div>
-
                 <div id="customizations-tab" class="detail-tab-content hidden">
                     <button id="show-add-custom-button" class="primary-button">＋ カスタマイズを追加</button>
                     <div id="customizations-container"></div>
                 </div>
-
                 <div id="kanban-board-tab" class="detail-tab-content hidden">
                     <button id="show-add-task-button" class="primary-button">＋ タスクを追加</button>
                     <div id="kanban-container">
-                        <div class="kanban-column" data-status="todo">
-                            <h4>未着手</h4>
-                            <div class="kanban-list" id="kanban-todo"></div>
-                        </div>
-                        <div class="kanban-column" data-status="inprogress">
-                            <h4>作業中</h4>
-                            <div class="kanban-list" id="kanban-inprogress"></div>
-                        </div>
-                        <div class="kanban-column" data-status="waiting">
-                            <h4>部品待ち</h4>
-                            <div class="kanban-list" id="kanban-waiting"></div>
-                        </div>
-                        <div class="kanban-column" data-status="done">
-                            <h4>完了</h4>
-                            <div class="kanban-list" id="kanban-done"></div>
-                        </div>
+                        <div class="kanban-column" data-status="todo"><h4>未着手</h4><div class="kanban-list" id="kanban-todo"></div></div>
+                        <div class="kanban-column" data-status="inprogress"><h4>作業中</h4><div class="kanban-list" id="kanban-inprogress"></div></div>
+                        <div class="kanban-column" data-status="waiting"><h4>部品待ち</h4><div class="kanban-list" id="kanban-waiting"></div></div>
+                        <div class="kanban-column" data-status="done"><h4>完了</h4><div class="kanban-list" id="kanban-done"></div></div>
                     </div>
                 </div>
-
                 <div id="setup-log-tab" class="detail-tab-content hidden">
                     <button id="show-add-setup-button" class="primary-button">＋ セッティングを記録</button>
                     <div id="setup-log-container"></div>
+                </div>
+                <div id="spare-parts-tab" class="detail-tab-content hidden">
+                    <button id="show-add-part-button" class="primary-button">＋ 予備部品を登録</button>
+                    <div id="spare-parts-container"></div>
                 </div>
             </div>
             
@@ -109,6 +111,15 @@
 
             <div id="info-module" class="module-content hidden">
                 <h2>情報共有 (Wiki)</h2>
+                <div id="wiki-tab-content">
+                    <button id="show-add-wiki-button" class="primary-button">＋ Wikiを新規作成</button>
+                    <div id="wiki-list-container"></div>
+                    <div id="wiki-article-view" class="hidden"></div>
+                </div>
+            </div>
+
+            <div id="tools-module" class="module-content hidden">
+                <h2>便利ツール</h2>
                 
                 <div id="external-tools">
                     <h3>部品検索ツール</h3>
@@ -122,13 +133,170 @@
                     </div>
                     <p class="tool-note">※外部サイトが新しいタブで開きます</p>
                 </div>
+
+                <div id="tool-check-section">
+                    <h3>🛠️ 本日の工具使用記録</h3>
+                    <p class="tool-note" style="text-align: left; margin-bottom: 1rem;">
+                        使用した工具の写真を撮ってアップロードしてください。<br>
+                        「誰が」「何を」使ったかを記録し、紛失を防ぎましょう。
+                    </p>
+                    
+                    <button id="add-tool-photo-button" class="primary-button" style="background-color: #6610f2;">
+                        📷 工具の写真を記録
+                    </button>
+                    <input type="file" id="tool-photo-input-tools" accept="image/*" capture="environment" style="display: none;">
+
+                    <div id="tool-log-list" class="tool-log-grid">
+                        </div>
+                </div>
+
                 <hr>
-                <div id="wiki-tab-content">
-                    <button id="show-add-wiki-button" class="primary-button">＋ Wikiを新規作成</button>
-                    <div id="wiki-list-container"></div>
-                    <div id="wiki-article-view" class="hidden"></div>
+                <div id="practice-locations">
+                    <h3>練習会 会場マップ</h3>
+                    <div class="location-list">
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=ドライビングパレット那須" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    ドライビングパレット那須
+                                </a>
+                            </h4>
+                            <a href="http://dp-nasu.com/04calender/index.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                空き状況を見る
+                            </a>
+                        </div>
+
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=筑波サーキット+ジムカーナ場" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    筑波サーキット (ジムカーナ場)
+                                </a>
+                            </h4>
+                            <a href="https://www.tsukuba-circuit.jp/more-info/reserve.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                コースの貸し出し・通常予約
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=モビリティリゾートもてぎ+北ショートコース" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    もてぎ北ショート
+                                </a>
+                            </h4>
+                            <a href="https://apps.mobilityland.co.jp/info/download/bYUmdv" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                スポーツ走行情報
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=富士スピードウェイ+ジムカーナコース" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    富士スピードウェイ
+                                </a>
+                            </h4>
+                            <a href="https://www.fsw.tv/driving/howto/courserental.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                WEBサイト
+                            </a>
+                        </div>
+
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=本庄サーキット" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    本庄サーキット
+                                </a>
+                            </h4>
+                            <a href="https://honjo-circuit.com/rents_schedule" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                日程表を見る
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=群馬サイクルスポーツセンター" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    群馬サイクルスポーツセンター
+                                </a>
+                            </h4>
+                            <a href="https://www.gunsai.jp/about_rental/#calender" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                予約/カレンダー
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://maps.app.goo.gl/pkCHWWfe6ohExNhs6" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    宝台樹スキー場 駐車場
+                                </a>
+                            </h4>
+                            <a href="http://www.quality-jp.net/saigun/practice.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                JMRC埼群ジムカーナOFFICIALホームページ
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://maps.app.goo.gl/EzkAXJnSCn9sb4wM9" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    南千葉サーキット
+                                </a>
+                            </h4>
+                            <a href="https://reserve.minami-chiba-circuit.com/" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                南千葉サーキット予約サイト
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=ナリタモーターランド" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    ナリタモーターランド
+                                </a>
+                            </h4>
+                            <a href="https://narita-motorland.sakura.ne.jp/schedule-1.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                コーススケジュール
+                            </a>
+                        </div>
+                        
+                        <div class="location-card">
+                            <h4>
+                                <a href="https://www.google.com/maps?q=茨城中央サーキット" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                    茨城中央サーキット
+                                </a>
+                            </h4>
+                            <a href="http://clear.la.coocan.jp/" target="_blank" rel="noopener noreferrer" class="location-link-button">
+                                WEBサイト
+                            </a>
+                        </div>
+                        
+                        </div>
                 </div>
             </div>
+
+            <div id="attendance-module" class="module-content hidden">
+                <h2>出退勤打刻</h2>
+
+                <div class="attendance-panel">
+                    <p id="attendance-message">読み込み中...</p>
+                    <div class="attendance-buttons">
+                        <button id="clock-in-button" class="attendance-btn clock-in hidden">出 席</button>
+                        <button id="clock-out-button" class="attendance-btn clock-out hidden">退 席</button>
+                    </div>
+                    <p id="attendance-status-text"></p>
+                </div>
+            
+                <hr>
+            
+                <h3>本日の参加状況 (<span id="today-date-display"></span>)</h3>
+                <hr style="margin: 2rem 0;"> 
+                <div id="attendance-history-section" style="text-align: center;">
+                    <button id="load-history-button" class="primary-button" style="background-color: #6c757d;">
+                        📅 過去1ヶ月の履歴を表示
+                    </button>
+                    <div id="attendance-history-container" class="history-list-container hidden">
+                        </div>
+                    </div>
+                </div>
+                <div id="attendance-list-container">
+            </div>
+    </div>
+            
         </main>
     </div>
     
@@ -161,20 +329,29 @@
 
     <div id="maintenance-log-modal" class="modal-background hidden">
         <div class="modal-content">
-            <h3>整備履歴を追加</h3>
+            <h3>整備履歴を追加</h3> 
             <form id="maintenance-log-form">
+                
+                <input type="hidden" id="log-id"> 
+                
                 <label for="log-date">日付</label>
                 <input type="date" id="log-date" required>
+                
                 <label for="log-task">作業内容</label>
-                <input type="text" id="log-task" required>
+                <input type="text" id="log-task" required placeholder="例: オイル交換, ブレーキパッド交換">
+                
                 <label for="log-notes">メモ</label>
                 <textarea id="log-notes" rows="4"></textarea>
+                
                 <div class="modal-buttons">
-                    <button type="button" class="cancel-button">キャンセル</button>
-                    <button type="submit">保存する</button>
+                    <button type="button" id="delete-log-button" class="delete-button hidden">削除</button>
+                    <div class="modal-buttons-right">
+                        <button type="button" class="cancel-button">キャンセル</button>
+                        <button type="submit">保存する</button>
+                    </div>
                 </div>
-            </form>
-        </div>
+
+            </form> </div>
     </div>
 
     <div id="customization-modal" class="modal-background hidden">
@@ -247,9 +424,11 @@
                 
                 <label for="wiki-tags">タグ (カンマ区切り)</label>
                 <input type="text" id="wiki-tags" placeholder="例: DC2, クラッチ, エンジン">
-
                 <label for="wiki-content">内容 (Markdown対応)</label>
-                <textarea id="wiki-content" rows="10" placeholder="## 必要な工具&#13;&#10;...&#13;&#10;## 手順&#13;&#10;..."></textarea>
+                <textarea id="wiki-content" rows="10" placeholder="## 必要な工具
+...
+## 手順
+..."></textarea>
                 
                 <div class="modal-buttons">
                     <button type="button" class="cancel-button">キャンセル</button>
@@ -272,12 +451,14 @@
                 <label for="task-assignee">担当者</label>
                 <input type="text" id="task-assignee" placeholder="例: 山田">
                 <label for="task-status">ステータス</label>
-                <select id="task-status">
-                    <option value="todo">未着手</option>
-                    <option value="inprogress">作業中</option>
-                    <option value="waiting">部品待ち</option>
-                    <option value="done">完了</option>
-                </select>
+                    <select id="task-status">
+                        <option value="todo">未着手</option>
+                        <option value="inprogress">作業中</option>
+                        <option value="waiting">部品待ち</option>
+                        <option value="done">完了</option>
+                    </select>
+                <label for="task-notes">備考 (任意)</label>
+                <textarea id="task-notes" rows="3" placeholder="作業の注意点や、部品待ちの経緯などを記載"></textarea>
                 
                 <div class="modal-buttons">
                     <button type="button" id="delete-task-button" class="delete-button hidden">削除</button>
@@ -294,6 +475,7 @@
         <div class="modal-content">
             <h3>セッティングを記録</h3>
             <form id="setup-form">
+                <input type="hidden" id="setup-id">
                 <label for="setup-date">日付</label>
                 <input type="date" id="setup-date" required>
                 <label for="setup-course">コース / コンディション</label>
@@ -305,30 +487,69 @@
                 </div>
                 <div style="display:flex; gap:10px; margin-top:5px;">
                     <input type="text" id="setup-spring" placeholder="バネレート">
-                    <input type="text" id="setup-camber" placeholder="バネレート">
+                    <input type="text" id="setup-camber" placeholder="キャンバー">
                 </div>
                 <h4>タイヤ</h4>
-                <input type="text" id="setup-tire" placeholder="銘柄 (例: A052)">
+                <input type="text" id="setup-tire" placeholder="タイヤ銘柄 (例: A052)">
                 <div style="display:flex; gap:10px;">
                     <input type="text" id="setup-air-f" placeholder="空気圧 F (温間)">
                     <input type="text" id="setup-air-r" placeholder="空気圧 R (温間)">
                 </div>
                 <label for="setup-comment">ドライバーコメント</label>
                 <textarea id="setup-comment" rows="3" placeholder="リアが出やすい、など"></textarea>
+
                 <div class="modal-buttons">
-                    <button type="button" class="cancel-button">キャンセル</button>
-                    <button type="submit">保存する</button>
+                    <button type="button" id="delete-setup-button" class="delete-button hidden">削除</button>
+                    <div class="modal-buttons-right">
+                        <button type="button" class="cancel-button">キャンセル</button>
+                        <button type="submit">保存する</button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 
+    <div id="spare-part-modal" class="modal-background hidden">
+        <div class="modal-content">
+            <h3>予備部品を登録</h3>
+            <form id="spare-part-form">
+                <label for="part-name">部品名</label>
+                <input type="text" id="part-name" required placeholder="例: フロント ブレーキパッド (Dixcel Z)">
+                
+                <label for="part-number">品番 (任意)</label>
+                <input type="text" id="part-number" placeholder="例: Z-331120">
+
+                <div style="display:flex; gap:1rem;">
+                    <div style="flex:1;">
+                        <label for="part-quantity">数量</label>
+                        <input type="text" id="part-quantity" placeholder="例: 1セット, 2L">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="part-location">保管場所 (任意)</label>
+                        <input type="text" id="part-location" placeholder="例: 部室 奥の棚B">
+                    </div>
+                </div>
+
+                <label for="part-notes">メモ (任意)</label>
+                <textarea id="part-notes" rows="3"></textarea>
+                
+                <div class="modal-buttons">
+                    <button type="button" id="delete-part-button" class="delete-button hidden">削除</button>
+                    <div class="modal-buttons-right">
+                        <button type="button" class="cancel-button">キャンセル</button>
+                        <button type="submit">保存する</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <footer>
         <div class="footer-content">
             <a href="https://docs.google.com/forms/d/e/1FAIpQLScdIjBBcYN6DvGw99G-qUEBCJHQd0gmG6gJp5HdK1aN7KWaIg/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="contact-link">
                 📧 お問い合わせ・バグ報告
             </a>
-            <p class="copyright">&copy; 2025 Takushoku Univ. Auto Club</p>
+            <p class="copyright">© 2025 Takushoku Univ. Auto Club</p>
         </div>
     </footer>
 

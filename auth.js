@@ -1,32 +1,47 @@
-// firebase-init.js から auth インスタンスをインポート
 import { auth } from './firebase-init.js'
 let isLoginMode = true;
-
-// ★ 引数で DOMElements, initializeMainContent, stopVehicleUpdates を受け取る ★
 export function setupAuthListeners(DOMElements, initializeMainContent, stopVehicleUpdates) {
-
     // 認証状態の監視
     auth.onAuthStateChanged(user => {
         if (user) {
             // ログイン成功時の処理
             DOMElements.loginRegisterArea.classList.add('hidden');
             DOMElements.userInfo.classList.remove('hidden');
-            DOMElements.userEmail.textContent = user.displayName ? `${user.displayName} (${user.email})` : user.email;
+            // ★変更: ドロップダウン内に名前とメールアドレスを表示
+            DOMElements.dropdownUserName.textContent = user.displayName || '名称未設定';
+            DOMElements.dropdownUserEmail.textContent = user.email;
             DOMElements.mainContent.classList.remove('hidden');
             DOMElements.loginPrompt.classList.add('hidden');
-            
             // 引数で受け取った関数を呼び出す
             initializeMainContent();
-
         } else {
             // ログアウト時の処理
             DOMElements.loginRegisterArea.classList.remove('hidden');
             DOMElements.userInfo.classList.add('hidden');
+            // ドロップダウンが開いたままにならないように隠す
+            DOMElements.userDropdown.classList.add('hidden');
             DOMElements.mainContent.classList.add('hidden');
             DOMElements.loginPrompt.classList.remove('hidden');
-            
             // ログアウトしたら、車両リストのリアルタイム監視を停止
             if (stopVehicleUpdates) stopVehicleUpdates();
+        }
+    });
+
+    // ユーザーアイコンクリックでメニューの表示/非表示を切り替え
+    if (DOMElements.userMenuButton) {
+        DOMElements.userMenuButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // 親要素へのイベント伝播を止める
+            DOMElements.userDropdown.classList.toggle('hidden');
+        });
+    }
+
+    // メニューの外側をクリックしたら閉じる
+    document.addEventListener('click', (e) => {
+        // ドロップダウンが表示されていて、かつクリックした場所がドロップダウン内部でなければ閉じる
+        if (DOMElements.userDropdown && !DOMElements.userDropdown.classList.contains('hidden')) {
+            if (!DOMElements.userDropdown.contains(e.target) && e.target !== DOMElements.userMenuButton) {
+                DOMElements.userDropdown.classList.add('hidden');
+            }
         }
     });
 
@@ -35,7 +50,6 @@ export function setupAuthListeners(DOMElements, initializeMainContent, stopVehic
         e.preventDefault();
         const email = document.getElementById('auth-email').value;
         const password = document.getElementById('auth-password').value;
-
         if (isLoginMode) {
             // ログイン処理
             auth.signInWithEmailAndPassword(email, password)
@@ -51,7 +65,7 @@ export function setupAuthListeners(DOMElements, initializeMainContent, stopVehic
                     });
                 })
                 .then(() => {
-                    // プロファイル更新成功 (onAuthStateChanged が自動で発火)
+                    // プロファイル更新成功
                 })
                 .catch(error => alert("新規登録失敗: " + error.message));
         }
