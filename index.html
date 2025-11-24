@@ -23,18 +23,26 @@
                 <button id="toggle-mode-button">新規登録はこちら</button>
             </div>
             <div id="user-info" class="hidden">
-                <span id="user-email"></span>
-                <button id="logout-button">ログアウト</button>
+                <button id="user-menu-button" class="icon-button" aria-label="ユーザーメニュー">👤 </button>                            
+                <div id="user-dropdown" class="dropdown-menu hidden">
+                    <div class="dropdown-header">
+                        <p id="dropdown-user-name" class="dropdown-name"></p>
+                        <p id="dropdown-user-email" class="dropdown-email"></p>
+                    </div>
+                    <hr>
+                    <button id="logout-button" class="logout-button-small">ログアウト</button>
+                </div>
             </div>
         </div>
     </header>
 
     <div id="main-content" class="hidden">
         <nav id="main-nav">
-            <button class="nav-button" data-module="maintenance-module">整備管理</button> 
-            <button class="nav-button" data-module="practice-module">部活日程</button>
-            <button class="nav-button" data-module="info-module">情報共有</button>
-            <button class="nav-button" data-module="tools-module">便利ツール</button>
+            <button class="nav-button" data-module="maintenance-module">整備<br class="sp-br">管理</button> 
+            <button class="nav-button" data-module="practice-module">部活<br class="sp-br">日程</button>
+            <button class="nav-button" data-module="info-module">情報<br class="sp-br">共有</button>
+            <button class="nav-button" data-module="attendance-module">出退勤</button>
+            <button class="nav-button" data-module="tools-module">便利<br class="sp-br">ツール</button>
         </nav>
 
         <main>
@@ -114,7 +122,7 @@
                 <h2>便利ツール</h2>
                 
                 <div id="external-tools">
-                    <h3>🛠 部品検索ツール</h3>
+                    <h3>部品検索ツール</h3>
                     <div class="tool-links">
                         <a href="https://epc-data.com/" target="_blank" rel="noopener noreferrer" class="tool-button epc-data">
                             EPC-data
@@ -125,10 +133,26 @@
                     </div>
                     <p class="tool-note">※外部サイトが新しいタブで開きます</p>
                 </div>
-                <hr>
 
+                <div id="tool-check-section">
+                    <h3>🛠️ 本日の工具使用記録</h3>
+                    <p class="tool-note" style="text-align: left; margin-bottom: 1rem;">
+                        使用した工具の写真を撮ってアップロードしてください。<br>
+                        「誰が」「何を」使ったかを記録し、紛失を防ぎましょう。
+                    </p>
+                    
+                    <button id="add-tool-photo-button" class="primary-button" style="background-color: #6610f2;">
+                        📷 工具の写真を記録
+                    </button>
+                    <input type="file" id="tool-photo-input-tools" accept="image/*" capture="environment" style="display: none;">
+
+                    <div id="tool-log-list" class="tool-log-grid">
+                        </div>
+                </div>
+
+                <hr>
                 <div id="practice-locations">
-                    <h3>📍 練習会 会場マップ</h3>
+                    <h3>練習会 会場マップ</h3>
                     <div class="location-list">
                         
                         <div class="location-card">
@@ -243,7 +267,35 @@
                         
                         </div>
                 </div>
+            </div>
+
+            <div id="attendance-module" class="module-content hidden">
+                <h2>出退勤打刻</h2>
+
+                <div class="attendance-panel">
+                    <p id="attendance-message">読み込み中...</p>
+                    <div class="attendance-buttons">
+                        <button id="clock-in-button" class="attendance-btn clock-in hidden">出 席</button>
+                        <button id="clock-out-button" class="attendance-btn clock-out hidden">退 席</button>
+                    </div>
+                    <p id="attendance-status-text"></p>
                 </div>
+            
+                <hr>
+            
+                <h3>本日の参加状況 (<span id="today-date-display"></span>)</h3>
+                <hr style="margin: 2rem 0;"> 
+                <div id="attendance-history-section" style="text-align: center;">
+                    <button id="load-history-button" class="primary-button" style="background-color: #6c757d;">
+                        📅 過去1ヶ月の履歴を表示
+                    </button>
+                    <div id="attendance-history-container" class="history-list-container hidden">
+                        </div>
+                    </div>
+                </div>
+                <div id="attendance-list-container">
+            </div>
+    </div>
             
         </main>
     </div>
