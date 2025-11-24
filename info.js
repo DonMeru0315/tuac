@@ -1,223 +1,133 @@
-import { setupAuthListeners } from './auth.js';
-import { auth } from './firebase-init.js';
-document.addEventListener('DOMContentLoaded', () => {
-    // DOM要素の取得
-    const DOMElements = {
-        loginRegisterArea: document.getElementById('login-register-area'),
-        userInfo: document.getElementById('user-info'),
-        userMenuButton: document.getElementById('user-menu-button'),
-        userDropdown: document.getElementById('user-dropdown'),
-        dropdownUserName: document.getElementById('dropdown-user-name'),
-        dropdownUserEmail: document.getElementById('dropdown-user-email'),
-        authForm: document.getElementById('auth-form'),
-        logoutButton: document.getElementById('logout-button'),
-        toggleModeButton: document.getElementById('toggle-mode-button'),
-        formTitle: document.getElementById('form-title'),
-        authButton: document.getElementById('auth-button'),
-        loginPrompt: document.getElementById('login-prompt'),
-        // ナビゲーション
-        mainContent: document.getElementById('main-content'),
-        navButtons: document.querySelectorAll('.nav-button'),
-        moduleContents: document.querySelectorAll('.module-content'),
-        // 車両管理
-        vehicleListContainer: document.getElementById('vehicle-list-container'),
-        showAddVehicleButton: document.getElementById('show-add-vehicle-button'),
-        vehicleModal: document.getElementById('vehicle-modal'),
-        vehicleForm: document.getElementById('vehicle-form'),
-        // 車両詳細
-        vehicleDetailView: document.getElementById('vehicle-detail-view'),
-        backToListButton: document.getElementById('back-to-list-button'),
-        detailVehicleName: document.getElementById('detail-vehicle-name'),
-        detailNavButtons: document.querySelectorAll('.detail-nav-button'),
-        detailTabContents: document.querySelectorAll('.detail-tab-content'),
-        basicInfoContent: document.getElementById('basic-info-content'),
-        maintenanceLogsContainer: document.getElementById('maintenance-logs-container'),
-        customizationsContainer: document.getElementById('customizations-container'),
-        showAddLogButton: document.getElementById('show-add-log-button'),
-        syncDoneTasksButton: document.getElementById('sync-done-tasks-button'),
-        showAddCustomButton: document.getElementById('show-add-custom-button'),
-        maintenanceLogModal: document.getElementById('maintenance-log-modal'),
-        maintenanceLogForm: document.getElementById('maintenance-log-form'),
-        deleteLogButton: document.getElementById('delete-log-button'),
-        customizationModal: document.getElementById('customization-modal'),
-        customizationForm: document.getElementById('customization-form'),
-        // 情報共有 (Wiki)
-        showAddWikiButton: document.getElementById('show-add-wiki-button'),
-        wikiModal: document.getElementById('wiki-modal'),
-        wikiForm: document.getElementById('wiki-form'),
-        wikiListContainer: document.getElementById('wiki-list-container'),
-        wikiArticleView: document.getElementById('wiki-article-view'),
-        // 部活日程 (カレンダー)
-        calendarGrid: document.getElementById('calendar-grid'),
-        calendarMonthYear: document.getElementById('calendar-month-year'),
-        prevMonthButton: document.getElementById('prev-month-button'),
-        nextMonthButton: document.getElementById('next-month-button'),
-        showAddEventButton: document.getElementById('show-add-event-button'),
-        eventModal: document.getElementById('event-modal'),
-        eventForm: document.getElementById('event-form'),
-        eventGroupList: document.getElementById('event-group-list'),
-        // 共通
-        cancelButtons: document.querySelectorAll('.cancel-button'),
-        // カンバン・セッティング関連
-        kanbanContainer: document.getElementById('kanban-container'),
-        showAddTaskButton: document.getElementById('show-add-task-button'),
-        taskModal: document.getElementById('task-modal'),
-        taskForm: document.getElementById('task-form'),
-        deleteTaskButton: document.getElementById('delete-task-button'),
-        setupLogContainer: document.getElementById('setup-log-container'),
-        showAddSetupButton: document.getElementById('show-add-setup-button'),
-        setupModal: document.getElementById('setup-modal'),
-        setupForm: document.getElementById('setup-form'),
-        deleteSetupButton: document.getElementById('delete-setup-button'),
-        showAddPartButton: document.getElementById('show-add-part-button'),
-        sparePartsContainer: document.getElementById('spare-parts-container'),
-        sparePartModal: document.getElementById('spare-part-modal'),
-        sparePartForm: document.getElementById('spare-part-form'),
-        deletePartButton: document.getElementById('delete-part-button'),
-    };
+import { db, firestore, auth } from './firebase-init.js';
+export function setupInfoHandlers(DOMElements) {
+    DOMElements.showAddWikiButton.addEventListener('click', () => {
+        DOMElements.wikiForm.reset();
+        DOMElements.wikiForm.querySelector('#wiki-id').value = '';
+        DOMElements.wikiModal.querySelector('h3').textContent = 'Wikiを新規作成';
+        DOMElements.wikiModal.classList.remove('hidden');
+    });
 
-    // モジュールが初期化済みか管理するフラグ
-    let practiceModule, vehicleModule, infoModule, attendanceModule;
-    let isVehicleSetupDone = false;
-    let isInfoSetupDone = false;
-    let isPracticeSetupDone = false;
-    let isAttendanceSetupDone = false;
+    DOMElements.wikiForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const user = auth.currentUser;
+        const id = DOMElements.wikiForm.querySelector('#wiki-id').value;
+        const data = {
+            title: DOMElements.wikiForm.querySelector('#wiki-title').value,
+            content: DOMElements.wikiForm.querySelector('#wiki-content').value,
+            difficulty: DOMElements.wikiForm.querySelector('#wiki-difficulty').value,
+            time: DOMElements.wikiForm.querySelector('#wiki-time').value,
+            tags: DOMElements.wikiForm.querySelector('#wiki-tags').value.split(',').map(t => t.trim()).filter(t=>t), // 配列化
+            updatedAt: firestore.FieldValue.serverTimestamp(),
+            updatedBy: user ? user.displayName : '不明',
+            updatedById: user ? user.uid : '不明',
+        };
+        if (id) {
+            await db.collection('wiki').doc(id).update(data);
+            showWikiArticle(id, DOMElements); // DOMElements を渡す
+        } else {
+            data.createdAt = firestore.FieldValue.serverTimestamp();
+            data.createdBy = user ? user.displayName : '不明';
+            data.createdById = user ? user.uid : '不明';
+            await db.collection('wiki').add(data);
+            showWikiList(DOMElements); // DOMElements を渡す
+        }
+        DOMElements.wikiModal.classList.add('hidden');
+    });
 
-    // メインモジュール切り替え
-    function showModule(moduleId) {
-        DOMElements.moduleContents.forEach(m => m.classList.add('hidden'));
-        DOMElements.navButtons.forEach(b => b.classList.remove('active'));
-        const moduleToShow = document.getElementById(moduleId);
-        if (moduleToShow) moduleToShow.classList.remove('hidden');
-        const activeButton = document.querySelector(`.nav-button[data-module="${moduleId}"]`);
-        if (activeButton) activeButton.classList.add('active');
-    }
+    // Wikiリストのクリック
+    DOMElements.wikiListContainer.addEventListener('click', e => {
+        if (e.target.matches('.wiki-list-item')) showWikiArticle(e.target.dataset.id, DOMElements); // DOMElements を渡す
+    });
 
-    // 車両詳細タブ切り替え
-    function showDetailTab(tabId) {
-        DOMElements.detailTabContents.forEach(c => c.classList.add('hidden'));
-        DOMElements.detailNavButtons.forEach(b => b.classList.remove('active'));
-        const tabToShow = document.getElementById(`${tabId}-tab`);
-        if (tabToShow) tabToShow.classList.remove('hidden');
-        const activeButton = document.querySelector(`.detail-nav-button[data-detailtab="${tabId}"]`);
-        if (activeButton) activeButton.classList.add('active');
-    }
-
-    // ログイン成功時の処理
-    async function initializeMainContent() {
-        showModule('practice-module'); 
-        // デフォルトの「部活日程」モジュールを動的インポート
-        if (!practiceModule) {
-            practiceModule = await import('./practice.js');
+    // Wiki記事内のクリック（戻る、編集、削除）
+    DOMElements.wikiArticleView.addEventListener('click', async e => {
+        const id = e.target.dataset.id;
+        if (e.target.matches('#back-to-wiki-list')) showWikiList(DOMElements); // DOMElements を渡す
+        if (e.target.matches('.edit-button')) {
+            const doc = await db.collection('wiki').doc(id).get();
+            const article = doc.data();
+            const form = DOMElements.wikiForm;
+            form.querySelector('#wiki-id').value = doc.id;
+            form.querySelector('#wiki-title').value = article.title;
+            form.querySelector('#wiki-content').value = article.content;
+            DOMElements.wikiModal.querySelector('h3').textContent = 'Wikiを編集';
+            DOMElements.wikiModal.classList.remove('hidden');
         }
-        // カレンダーを描画
-        practiceModule.renderCalendar(DOMElements);
-        // イベントハンドラをセットアップ (初回のみ)
-        if (!isPracticeSetupDone) {
-            practiceModule.setupPracticeHandlers(DOMElements);
-            isPracticeSetupDone = true;
-        }
-        // ここで車両管理モジュールをバックグラウンドで読み込む
-        loadVehicleModuleInBackground(); 
-    }
-    // ログアウト時の車両監視停止
-    function stopVehicleUpdatesWrapper() {
-        // vehicle.js が読み込み済みの場合のみ、停止処理を呼び出す
-        if (vehicleModule && vehicleModule.stopVehicleUpdates) {
-            vehicleModule.stopVehicleUpdates();
-        }
-        // 出退勤の監視も停止
-        if (attendanceModule && attendanceModule.stopAttendanceUpdates) {
-            attendanceModule.stopAttendanceUpdates();
-        }
-    }
-    
-    // --- セットアップ ---
-    setupAuthListeners(DOMElements, initializeMainContent, stopVehicleUpdatesWrapper);
-    
-    // --- メインのナビゲーション ---
-    DOMElements.navButtons.forEach(b => {
-        b.addEventListener('click', async () => {
-            const moduleId = b.dataset.module;
-            showModule(moduleId);
-            
-            try {
-                if (moduleId === 'maintenance-module') {
-                    if (!vehicleModule) {
-                        vehicleModule = await import('./vehicle.js');
-                    }
-                    if (!isVehicleSetupDone) {
-                        const onVehicleClick = (vehicleId) => vehicleModule.showVehicleDetail(DOMElements, showModule, showDetailTab, vehicleId);
-                        vehicleModule.setupVehicleHandlers(DOMElements, showModule, showDetailTab, onVehicleClick);
-                        isVehicleSetupDone = true;
-                    }
-                    // 車両リストを読み込む
-                    vehicleModule.fetchVehicles(DOMElements, (vehicleId) => vehicleModule.showVehicleDetail(DOMElements, showModule, showDetailTab, vehicleId));                
-                } else if (moduleId === 'info-module') {
-                    // 「情報共有」が押されたら、ここで初めて info.js を読み込む
-                    if (!infoModule) {
-                        infoModule = await import('./info.js');
-                    }
-                    // ハンドラをセットアップ (初回のみ)
-                    if (!isInfoSetupDone) {
-                        infoModule.setupInfoHandlers(DOMElements);
-                        isInfoSetupDone = true;
-                    }
-                    // Wikiリストを表示
-                    infoModule.showWikiList(DOMElements);
-                } else if (moduleId === 'practice-module') {
-                    // 「部活日程」は読み込み済みのはず (デフォルトのため)
-                    if (!practiceModule) {
-                        practiceModule = await import('./practice.js');
-                    }
-                    // ハンドラをセットアップ (初回のみ)
-                    if (!isPracticeSetupDone) {
-                        practiceModule.setupPracticeHandlers(DOMElements);
-                        isPracticeSetupDone = true;
-                    }
-                    // カレンダーを再描画
-                    practiceModule.renderCalendar(DOMElements);
-                } else if (moduleId === 'attendance-module'){
-                    if (!attendanceModule) {
-                        attendanceModule = await import('./attendance.js');
-                    }
-                    if (!isAttendanceSetupDone) {
-                        attendanceModule.setupAttendanceHandlers(DOMElements);
-                        isAttendanceSetupDone = true;
-                    } else {
-                    }
-                }　else if (moduleId === 'tools-module') {
-                    const toolsModule = await import('./tools.js');
-                    toolsModule.setupToolsHandlers(DOMElements);
-                }
-            } catch (err) {
-                console.error("モジュールの動的インポートに失敗しました:", moduleId, err);
-                alert("機能の読み込みに失敗しました。ページをリロードしてください。");
+        if (e.target.matches('.delete-button')) {
+            if (confirm('この記事を削除しますか？')) {
+                await db.collection('wiki').doc(id).delete();
+                showWikiList(DOMElements); // DOMElements を渡す
             }
-        });
-    });
-
-    // --- モーダルの「キャンセル」ボタン --- 
-    DOMElements.cancelButtons.forEach(b => {
-        b.addEventListener('click', () => {
-            b.closest('.modal-background').classList.add('hidden');
-        });
-    });
-
-    // 車両管理モジュールをバックグラウンドでプリロードする関数
-    async function loadVehicleModuleInBackground() {
-        if (vehicleModule || isVehicleSetupDone) return; // 既に読み込み済み、またはセットアップ済み
-        console.log("車両モジュールをバックグラウンドで読み込み開始...");
-        try {
-            // vehicle.js をダウンロード
-            vehicleModule = await import('./vehicle.js');
-            const onVehicleClick = (vehicleId) => vehicleModule.showVehicleDetail(DOMElements, showModule, showDetailTab, vehicleId);
-            vehicleModule.setupVehicleHandlers(DOMElements, showModule, showDetailTab, onVehicleClick);
-            isVehicleSetupDone = true;
-            console.log("車両モジュールのバックグラウンド読み込み＆セットアップ完了。");
-        } catch (err) {
-            // 失敗してもアプリは停止させない
-            console.warn("車両モジュールのバックグラウンド読み込み失敗:", err);
         }
+    });
+
+    
+}
+
+// Wikiリストを表示
+export async function showWikiList(DOMElements) {
+    DOMElements.wikiArticleView.classList.add('hidden');
+    DOMElements.wikiListContainer.classList.remove('hidden');
+    DOMElements.wikiListContainer.innerHTML = '';
+    
+    // ★ 変更: updatedBy もソートキーに（念のため）
+    const snapshot = await db.collection('wiki').orderBy('updatedAt', 'desc').get();
+    
+    if (snapshot.empty) {
+        DOMElements.wikiListContainer.innerHTML = '<p>Wiki記事はまだありません。</p>';
+        return; // ★ 空の場合はここで処理終了 (追加)
     }
-});
+    
+    snapshot.forEach(doc => {
+        const article = doc.data(); // ★ データを取得
+        const item = document.createElement('div');
+        item.className = 'wiki-list-item';
+        item.dataset.id = doc.id;
+        
+        // ★ 変更: タイムスタンプと更新者を表示
+        
+        let updateInfo = '更新情報なし';
+        if (article.updatedAt) {
+            // FirestoreのTimestampをJavaScriptのDateオブジェクトに変換
+            const date = article.updatedAt.toDate(); 
+            // YYYY/MM/DD 形式にフォーマット
+            const dateString = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+            updateInfo = `( ${dateString} 更新 - ${article.updatedBy || '不明'} )`;
+        }
+        
+        // ★ 変更: HTML構造を変更
+        item.innerHTML = `
+            <div class="wiki-list-title">${article.title}</div>
+            <div class="wiki-list-meta">
+                <span class="wiki-difficulty">${article.difficulty || '難易度不明'}</span>
+                <span>⏱ ${article.time || '時間不明'}</span>
+                <span class="wiki-list-updater">${updateInfo}</span>
+            </div>
+        `;
+        
+        DOMElements.wikiListContainer.appendChild(item);
+    });
+}
+
+// Wiki記事を個別表示
+async function showWikiArticle(id, DOMElements) {
+    const doc = await db.collection('wiki').doc(id).get();
+    if (!doc.exists) { showWikiList(DOMElements); return; }
+    const article = doc.data();
+    DOMElements.wikiListContainer.classList.add('hidden');
+    DOMElements.wikiArticleView.classList.remove('hidden');
+    const tagsHtml = (article.tags || []).map(t => `<span style="background:#eee; padding:2px 5px; border-radius:4px; margin-right:4px; font-size:0.8rem;">#${t}</span>`).join('');
+    DOMElements.wikiArticleView.innerHTML = `
+        <button id="back-to-wiki-list">＜ 記事一覧に戻る</button>
+        <h2>${article.title}</h2>
+        <div style="margin-bottom: 1rem; color: #555;">
+            <span class="wiki-difficulty">${article.difficulty || '難易度不明'}</span>
+            <span>⏱ ${article.time || '時間不明'}</span>
+            <div style="margin-top:5px;">${tagsHtml}</div>
+        </div>
+        <div class="article-content">${marked.parse(article.content)}</div>
+        <div class="article-actions">
+            <button class="edit-button" data-id="${doc.id}">編集</button>
+            <button class="delete-button" data-id="${doc.id}">削除</button>
+        </div>`;
+}
