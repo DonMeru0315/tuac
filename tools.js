@@ -1,4 +1,6 @@
-import { db, firestore, auth } from './firebase-init.js';
+import { db, firestore, auth } from './firebase-init.js'; 
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/deeafjoya/image/upload";
+const UPLOAD_PRESET = "club_auto_log_preset"; 
 
 let unsubscribeToolLogs = null;
 
@@ -7,7 +9,6 @@ export function setupToolsHandlers(DOMElements) {
     const addBtn = document.getElementById('add-tool-photo-button');
     const listContainer = document.getElementById('tool-log-list');
 
-    // ボタンを押したらカメラ/ファイル選択を起動
     addBtn.addEventListener('click', () => {
         const user = auth.currentUser;
         if (!user) {
@@ -17,28 +18,41 @@ export function setupToolsHandlers(DOMElements) {
         fileInput.click();
     });
 
-    // 写真が選択されたら圧縮して保存
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // ボタンをロード中に
         const originalText = addBtn.textContent;
-        addBtn.textContent = "圧縮＆保存中...";
+        addBtn.textContent = "アップロード中...";
         addBtn.disabled = true;
 
         try {
-            // 圧縮 & Base64変換
-            const base64String = await compressImageToBase64(file);
+            // 1. 画像圧縮 (以前のコードのまま)
+            const compressedBlob = await compressImageToBlob(file);
+            
+            // 2. Cloudinaryへアップロード (FormDataを使う)
+            const formData = new FormData();
+            formData.append('file', compressedBlob);
+            formData.append('upload_preset', UPLOAD_PRESET); // 設定したプリセット名
+            formData.append('folder', 'tool_photos'); // フォルダ分けも可能
+
+            const res = await fetch(CLOUDINARY_URL, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) throw new Error('Upload failed');
+            const cloudData = await res.json();
+            
+            // 3. 取得した画像URLをFirestoreに保存
             const user = auth.currentUser;
             const todayStr = getTodayString();
 
-            // tool_logs コレクションに保存
             const data = {
                 date: todayStr,
                 uid: user.uid,
                 displayName: user.displayName || '名称未設定',
-                photoBase64: base64String,
+                photoURL: cloudData.secure_url, // ★ CloudinaryのURL
                 timestamp: firestore.FieldValue.serverTimestamp()
             };
 
@@ -51,18 +65,16 @@ export function setupToolsHandlers(DOMElements) {
         } finally {
             addBtn.textContent = originalText;
             addBtn.disabled = false;
-            fileInput.value = ''; // 入力をリセット
+            fileInput.value = '';
         }
     });
 
-    // 今日のログをリアルタイム監視
     subscribeTodayToolLogs(listContainer);
 }
 
-// リアルタイム監視を開始
+// 読み込み部分 (URLを表示するだけなので、Base64でもURLでも動くように互換性を持たせる)
 function subscribeTodayToolLogs(container) {
     if (unsubscribeToolLogs) unsubscribeToolLogs();
-
     const todayStr = getTodayString();
 
     unsubscribeToolLogs = db.collection('tool_logs')
@@ -80,16 +92,18 @@ function subscribeTodayToolLogs(container) {
                 const card = document.createElement('div');
                 card.className = 'tool-log-card';
                 
-                // 時間のフォーマット
                 let timeStr = '';
                 if (log.timestamp) {
                     const date = log.timestamp.toDate();
                     timeStr = `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
                 }
 
+                // URLがある場合はそれを、なければ(古いデータ)Base64を表示
+                const imgSrc = log.photoURL || log.photoBase64 || '';
+
                 card.innerHTML = `
                     <div class="tool-log-img-box">
-                        <img src="${log.photoBase64}" alt="工具写真" onclick="window.open(this.src)">
+                        <img src="${imgSrc}" alt="工具写真" onclick="window.open(this.src)" loading="lazy">
                     </div>
                     <div class="tool-log-info">
                         <div class="tool-log-user">${log.displayName}</div>
@@ -99,22 +113,23 @@ function subscribeTodayToolLogs(container) {
                 `;
                 container.appendChild(card);
             });
-
-            // 削除ボタンのイベント設定
-            container.querySelectorAll('.tool-log-delete').forEach(btn => {
+            // 削除ボタンのイベント処理...（Firestoreのデータを消すだけでOK）
+             container.querySelectorAll('.tool-log-delete').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if (confirm("この写真を削除しますか？")) {
                         await db.collection('tool_logs').doc(e.target.dataset.id).delete();
+                        // Cloudinary側の画像削除はクライアントからはセキュリティ上できない設定が一般的なので、
+                        // Firestoreのリンク削除だけで十分（無料枠も広いので放置でOK）です。
                     }
                 });
             });
         });
 }
 
-// 画像圧縮関数 (attendance.jsと同じロジック)
-function compressImageToBase64(file) {
+// 画像圧縮関数 (Canvasを使ってBlobを返す)
+function compressImageToBlob(file) {
     return new Promise((resolve, reject) => {
-        const maxWidth = 600; 
+        const maxWidth = 800; 
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
@@ -132,9 +147,11 @@ function compressImageToBase64(file) {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                // JPEG, 品質0.5
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
-                resolve(dataUrl);
+                // JPEG, 品質0.7
+                canvas.toBlob((blob) => {
+                    if(blob) resolve(blob);
+                    else reject(new Error("Compression failed"));
+                }, 'image/jpeg', 0.7);
             };
             img.onerror = (err) => reject(err);
         };
