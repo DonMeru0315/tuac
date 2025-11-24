@@ -94,8 +94,6 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
 
             snapshot.forEach(doc => {
                 const task = doc.data();
-
-                // ★★★ 変更点 ②: ここで「コピー済みか」をチェックします ★★★
                 if (task.copiedToLogs === true) {
                     return; // 既に反映済みのタスクはスキップ
                 }
@@ -116,7 +114,6 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
                 copiedCount++;
             });
 
-            // ★★★ 変更点 ③: 実際にコピーした件数が 0 の場合のアラート ★★★
             if (copiedCount === 0) {
                 alert('履歴に反映する完了タスクはありません。\n(すべて反映済みです)');
                 btn.disabled = false;
@@ -495,7 +492,18 @@ export function fetchVehicles(DOMElements, onVehicleClick) {
             const card = document.createElement('div');
             card.className = 'vehicle-card';
             card.dataset.id = doc.id;
-            card.innerHTML = `<h3>${vehicle.manufacturer || ''} ${vehicle.name}</h3><p>${vehicle.modelCode || ''}</p>`;
+            card.innerHTML = `
+                <div class="vehicle-info">
+                    <h3>${vehicle.name}</h3>
+                    <div class="vehicle-meta">
+                        <span class="maker-badge">${vehicle.manufacturer || '未設定'}</span>
+                        <span class="model-code">${vehicle.modelCode || ''}</span>
+                    </div>
+                </div>
+
+                <div class="vehicle-arrow">›</div>
+            `;
+            
             DOMElements.vehicleListContainer.appendChild(card);
         });
     }, err => console.error(err));
