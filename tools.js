@@ -1,6 +1,6 @@
 import { db, firestore, auth } from './firebase-init.js'; 
 // ★ あなたのCloudinary設定等はそのまま維持してください
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/deeafjoya/image/upload";
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/tuac/image/upload";
 const UPLOAD_PRESET = "club_auto_preset"; 
 
 let unsubscribeToolLogs = null;

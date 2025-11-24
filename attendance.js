@@ -1,8 +1,8 @@
 import { db, firestore, auth } from './firebase-init.js';
 
 // ★ Cloudinary設定 (tools.jsと同じものを使用)
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/deeafjoya/image/upload";
-const UPLOAD_PRESET = "club_auto_log_preset"; 
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/tuac/image/upload";
+const UPLOAD_PRESET = "club_auto_preset"; 
 
 let unsubscribeTodayList = null;
 let currentDocId = null; 
