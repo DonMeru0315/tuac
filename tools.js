@@ -1,7 +1,7 @@
 import { db, firestore, auth } from './firebase-init.js'; 
 // ★ あなたのCloudinary設定等はそのまま維持してください
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/deeafjoya/image/upload";
-const UPLOAD_PRESET = "club_auto_log_preset"; 
+const UPLOAD_PRESET = "club_auto_preset"; 
 
 let unsubscribeToolLogs = null;
 
@@ -102,7 +102,15 @@ function subscribeTodayToolLogs(container) {
                     timeStr = `${dateObj.getHours()}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
                 }
 
-                const imgSrc = log.photoURL || log.photoBase64 || '';
+                // undefined チェックを厳密に行い、空の場合は画像タグを出さない、またはプレースホルダーを出す
+                const imgSrc = (log.photoURL && log.photoURL.startsWith('http')) 
+                                ? log.photoURL 
+                                : (log.photoBase64 || ''); // 古いデータへの互換性
+
+                // 画像がある場合のみ img タグを表示、なければ「画像なし」と表示
+                const imgHtml = imgSrc 
+                    ? `<img src="${imgSrc}" alt="工具写真" onclick="window.open(this.src)" loading="lazy">`
+                    : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#ccc;">画像なし</div>`;
 
                 card.innerHTML = `
                     <div class="tool-log-img-box">
