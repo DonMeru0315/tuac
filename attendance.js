@@ -10,7 +10,7 @@ let currentDocId = null;
 // 拓殖大学 八王子キャンパス (GPS設定)
 const CLUB_LAT = 35.623911; 
 const CLUB_LON = 139.277921;
-const ALLOWED_RADIUS = 1000; 
+const ALLOWED_RADIUS = 300; 
 
 export function setupAttendanceHandlers(DOMElements) {
     // ... (日付表示、履歴ボタンなどの既存コードはそのまま) ...
