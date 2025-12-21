@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Club Auto Log</title>
-    <link rel="stylesheet" href="style.css?v=1.2">
+    <link rel="stylesheet" href="style.css?v=1.4">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 </head>
@@ -135,14 +135,14 @@
                 </div>
 
                 <div id="tool-check-section">
-                    <h3>🛠️ 本日の工具使用記録</h3>
+                    <h3>本日の工具使用記録</h3>
                     <p class="tool-note" style="text-align: left; margin-bottom: 1rem;">
                         使用した工具の写真を撮ってアップロードしてください。<br>
                         「誰が」「何を」使ったかを記録し、紛失を防ぎましょう。
                     </p>
                     
                     <button id="add-tool-photo-button" class="primary-button" style="background-color: #6610f2;">
-                        📷 工具の写真を記録
+                        工具の写真を記録
                     </button>
                     <input type="file" id="tool-photo-input-tools" accept="image/*" capture="environment" style="display: none;">
 
@@ -402,39 +402,67 @@
         <div class="modal-content">
             <h3>整備手順書 (Wiki)</h3>
             <form id="wiki-form">
-                <input type="hidden" id="wiki-id">
-                <label for="wiki-title">タイトル</label>
-                <input type="text" id="wiki-title" required placeholder="例: インテグラ DC2 クラッチ交換">
-                
-                <div style="display:flex; gap:1rem;">
-                    <div style="flex:1;">
-                        <label for="wiki-difficulty">難易度</label>
-                        <select id="wiki-difficulty">
-                            <option value="★☆☆">★☆☆ (簡単)</option>
-                            <option value="★★☆">★★☆ (普通)</option>
-                            <option value="★★★">★★★ (難しい)</option>
-                            <option value="💀💀💀">💀💀💀 (要注意)</option>
-                        </select>
-                    </div>
-                    <div style="flex:1;">
-                        <label for="wiki-time">所要時間目安</label>
-                        <input type="text" id="wiki-time" placeholder="例: 3時間">
-                    </div>
-                </div>
-                
-                <label for="wiki-tags">タグ (カンマ区切り)</label>
-                <input type="text" id="wiki-tags" placeholder="例: DC2, クラッチ, エンジン">
-                <label for="wiki-content">内容 (Markdown対応)</label>
-                <textarea id="wiki-content" rows="10" placeholder="## 必要な工具
-...
-## 手順
-..."></textarea>
-                
-                <div class="modal-buttons">
-                    <button type="button" class="cancel-button">キャンセル</button>
-                    <button type="submit">保存する</button>
-                </div>
-            </form>
+    <input type="hidden" id="wiki-id">
+    
+    <label for="wiki-title">タイトル <span style="color:red">*</span></label>
+    <input type="text" id="wiki-title" required placeholder="例: インテグラ DC2 クラッチ交換">
+    
+    <div style="display:flex; gap:1rem;">
+        <div style="flex:1;">
+            <label for="wiki-target-vehicle">対象車両</label>
+            <input type="text" id="wiki-target-vehicle" placeholder="例: DC2, 軽トラ全般">
+        </div>
+        <div style="flex:1;">
+            <label for="wiki-time">所要時間</label>
+            <input type="text" id="wiki-time" placeholder="例: 3時間">
+        </div>
+    </div>
+
+    <div style="display:flex; gap:1rem;">
+        <div style="flex:1;">
+            <label for="wiki-difficulty">難易度</label>
+            <select id="wiki-difficulty">
+                <option value="★☆☆">★☆☆ (簡単)</option>
+                <option value="★★☆">★★☆ (普通)</option>
+                <option value="★★★">★★★ (難しい)</option>
+                <option value="💀💀💀">💀💀💀 (要注意)</option>
+            </select>
+        </div>
+        <div style="flex:1;">
+            <label for="wiki-tags">タグ (カンマ区切り)</label>
+            <input type="text" id="wiki-tags" placeholder="例: 足回り, 消耗品">
+        </div>
+    </div>
+
+    <label for="wiki-tools">必要工具リスト (一行に一つ)</label>
+    <textarea id="wiki-tools" rows="3" placeholder="・10, 12, 14, 17mm ソケット&#13;&#10;・スピンナーハンドル&#13;&#10;・トルクレンチ"></textarea>
+
+    <label for="wiki-parts">必要部品・油脂類 (品番・数量)</label>
+    <textarea id="wiki-parts" rows="3" placeholder="・オイルフィルター (H1540-RTA-515) ×1&#13;&#10;・エンジンオイル 5w-30 (3.5L)"></textarea>
+
+    <label>画像を本文に挿入</label>
+    <div style="display:flex; gap:10px; align-items: center; margin-bottom: 0.5rem;">
+        <button type="button" id="btn-upload-wiki-image" class="primary-button" style="margin:0; font-size:0.9rem; padding: 0.5rem 1rem; background-color: #6610f2;">
+            📷 画像を選択してアップロード
+        </button>
+        <span id="wiki-upload-status" style="font-size:0.8rem; color:#666;"></span>
+    </div>
+    <input type="file" id="wiki-image-file" accept="image/*" style="display:none;">
+
+    <label for="wiki-content">手順・本文 (Markdown対応)</label>
+    <textarea id="wiki-content" rows="8" placeholder="ここに手順を記載... 画像ボタンを押すとここに画像コードが挿入されます。"></textarea>
+
+    <label for="wiki-notices" style="color:#dc3545;">注意点・コツ</label>
+    <textarea id="wiki-notices" rows="3" placeholder="・ボルトが固着しやすいのでラスペネ必須&#13;&#10;・ジャッキアップポイントに注意"></textarea>
+
+    <label for="wiki-links">参考リンク (タイトル | URL)</label>
+    <textarea id="wiki-links" rows="3" placeholder="みんカラ整備手帳 | https://minkara...&#13;&#10;締め付けトルク参考 | https://..."></textarea>
+    
+    <div class="modal-buttons">
+        <button type="button" class="cancel-button">キャンセル</button>
+        <button type="submit">保存する</button>
+    </div>
+</form>
         </div>
     </div>
 
