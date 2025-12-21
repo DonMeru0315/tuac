@@ -176,7 +176,7 @@ footer {
 }
 
 #auth-button {
-    background-color: #E65C00;
+    background-color: #17a2b8;
 }
 
 #logout-button {
@@ -309,7 +309,7 @@ footer {
     padding: 15px; /* 指で押しやすい広さを確保 */
     border-radius: 12px; /* 最近のアプリっぽい丸み */
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* 薄い影で浮き上がらせる */
-    border: 1px solid #f0f0f0; /* 境界線をうっすら */
+    border: 2px solid #f0f0f0; /* 境界線をうっすら */
     border-left: 5px solid #D66000; /* 【重要】拓大オレンジのアクセントバー */
     
     /* 横並びレイアウト (アイコン | 文字 | 矢印) */
@@ -1248,196 +1248,267 @@ footer {
 }
 
 /* ==========================================================================
-   10. スマホ対応 (Media Query: max-width 600px)
-   ※ すべてのレスポンシブ設定をここに集約
+   10. スマホ最適化 / アプリ風デザイン (Media Query: max-width 600px)
    ========================================================================== */
 @media (max-width: 600px) {
-    /* --- 基本 --- */
+    /* --- 基本設定 --- */
     body {
-        font-size: 16px;
+        font-size: 16px; /* 文字サイズ調整 */
+        padding-bottom: 80px; /* 下部ナビゲーションの分だけ余白を空ける */
+        background-color: #f0f2f5; /* アプリっぽい背景色 */
     }
 
-    /* --- ヘッダー & 認証 --- */
+    /* --- ヘッダー周り --- */
     header {
-        flex-direction: row; 
-        align-items: center;
-        flex-wrap: wrap; 
+        position: sticky; /* ヘッダーを上に固定 */
+        top: 0;
+        z-index: 900;
+        padding: 0.8rem;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         gap: 0.5rem;
     }
 
     header h1 {
-        font-size: 1.2rem;
-        margin-right: auto;
+        font-size: 1.1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    h2 {
-        text-align: center;
-        margin-top: 0.5rem;
-    }
-
-    .sp-br {
-        display: block;
-    }
-
-    #auth-form input {
+    /* --- 【重要】ボトムナビゲーション化 (アプリ風) --- */
+    #main-nav {
+        position: fixed; /* 画面下に固定 */
+        bottom: 0;
+        left: 0;
         width: 100%;
+        background-color: #fff;
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom); /* iPhoneの下部バー対応 */
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: space-around; /* 均等配置 */
+    }
+
+    .nav-button {
+        flex: 1;
+        border: none; /* 線を消す */
+        background: transparent;
+        color: #888;
+        padding: 0.5rem 0;
+        font-size: 0.7rem; /* 文字は小さく */
+        height: 60px; /* タップしやすい高さ */
+        border-radius: 0;
+    }
+
+    .nav-button.active {
+        color: #E65C00;
+        background-color: transparent; /* 背景色はつけない */
+        position: relative;
+    }
+
+    /* アクティブ時に上部にオレンジの線を表示 */
+    .nav-button.active::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 20%;
+        width: 60%;
+        height: 3px;
+        background-color: #E65C00;
+        border-radius: 0 0 4px 4px;
+    }
+
+    .sp-br { display: block; } /* 改行有効化 */
+
+    /* --- 入力フォーム最適化 --- */
+    input, select, textarea {
+        font-size: 16px !important; /* iOSでズームされないサイズ */
+        padding: 12px; /* タップ領域を広げる */
+        width: 100% !important; /* 横幅いっぱいに */
         box-sizing: border-box;
+        border: 1px solid #ddd;
+        background-color: #fff;
     }
 
-    /* --- ナビゲーション --- */
-    #main-nav,
-    #info-nav,
-    #detail-nav {
-        flex-direction: row;
+    label {
+        margin-top: 1.2rem;
+        color: #555;
     }
 
-    .nav-button,
-    .info-nav-button,
-    .detail-nav-button {
-        border-bottom: 1px solid #dee2e6;
-        border-right: none;
-        padding-top: 0.8rem;
-        padding-bottom: 0.8rem;
+    /* --- メインコンテンツ余白調整 --- */
+    main {
+        padding: 10px;
+    }
+
+    .module-content h2 {
+        font-size: 1.3rem;
+        margin-top: 1rem;
+        border-left: 5px solid #E65C00;
+        padding-left: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    /* --- 横スクロールナビ (詳細・Wikiタブ) --- */
+    #detail-nav, #info-nav {
+        background: #fff;
+        padding: 5px 0;
+        margin: 0 -10px 1rem -10px; /* 画面端まで広げる */
+        padding-left: 10px;
+        position: sticky;
+        top: 60px; /* ヘッダーの下に固定 */
+        z-index: 800;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    /* 横スクロールNavのための調整 */
-    .detail-nav-button {
-        padding: 0.6rem 1rem;
+    .detail-nav-button, .info-nav-button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
     }
 
-    /* --- メインコンテンツ --- */
-    main {
-        padding: 0.5rem;
-    }
-
-    /* --- カレンダー (スマホ調整) --- */
-    #calendar-grid {
-        gap: 2px;
-    }
-
-    .calendar-day {
-        min-height: 80px;
-        padding: 3px;
-        gap: 2px;
-        font-size: 0.8rem;
-    }
-
-    .calendar-day-header-container {
-        min-height: 1.2em;
-    }
-
-    .calendar-day-header {
-        font-size: 0.8rem;
-        padding: 1px 2px;
-    }
-
-    .calendar-day.today .calendar-day-header {
-        width: 1.5em;
-        height: 1.5em;
-        line-height: 1.5em;
-    }
-
-    .calendar-holiday-name {
-        display: none; /* スマホでは祝日名非表示 */
-    }
-
-    .calendar-event {
-        padding: 2px;
-        font-size: 0.7rem;
-        border-radius: 2px;
-    }
-
-    .calendar-event .event-title {
-        margin-bottom: 1px;
-    }
-
-    .calendar-event .event-detail {
-        font-size: 0.65rem;
-    }
-
-    #calendar-header {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    #calendar-month-year {
-        font-size: 1.2rem;
-        width: 100%;
-        text-align: center;
-        order: -1;
-    }
-
-    #prev-month-button,
-    #next-month-button {
-        flex-grow: 1;
-        padding: 0.5rem;
-    }
-
-    /* --- モーダル --- */
+    /* --- モーダル (全画面っぽく) --- */
     .modal-content {
         width: 95%;
+        height: auto;
+        max-height: 85vh; /* キーボードが出ても隠れないように */
         padding: 1.5rem;
-        max-height: 90vh;
+        border-radius: 12px 12px 0 0; /* 上だけ角丸 */
+        position: absolute;
+        bottom: 0; /* 下からせり出す感じに */
+        top: auto;
         overflow-y: auto;
+    }
+    
+    .modal-background {
+        align-items: flex-end; /* 下揃え */
     }
 
     .modal-buttons {
-        flex-direction: column-reverse;
-        align-items: stretch;
+        flex-direction: column-reverse; /* 保存ボタンを上に */
+        gap: 10px;
+        margin-top: 2rem;
     }
 
+    .modal-buttons button, 
+    .modal-buttons-right button {
+        width: 100%;
+        padding: 14px; /* 指で押しやすく */
+        font-size: 1rem;
+        margin: 0;
+    }
+    
     .modal-buttons-right {
         display: flex;
         flex-direction: column-reverse;
-        gap: 0.5rem;
-    }
-
-    .modal-buttons [type="submit"],
-    .cancel-button,
-    .delete-button {
+        gap: 10px;
         width: 100%;
     }
 
-    /* --- カンバン & 部品リスト --- */
-    .kanban-column {
-        min-width: 250px;
+    /* --- リスト・カードデザイン調整 --- */
+    /* 車両リスト */
+    #vehicle-list-container {
+        gap: 15px;
+    }
+    .vehicle-card {
+        padding: 15px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* 影を強めに */
     }
 
-    .part-stock-info {
-        text-align: left;
-        margin-top: 0.5rem;
+    /* 履歴リスト */
+    .history-item, .wiki-list-item, .setup-item {
+        padding: 15px;
+        background: #fff;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
     }
 
-    /* --- Wikiリスト --- */
-    .wiki-list-meta {
-        gap: 0.5rem;
+    /* セッティング (2列を1列に) */
+    .setup-grid {
+        grid-template-columns: 1fr; /* 縦積み */
     }
 
-    .wiki-list-updater {
-        margin-left: 0;
-        width: 100%;
-        margin-top: 0.25rem;
+    /* Wiki記事内のテーブル (横スクロールさせる) */
+    .article-content table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
     }
     
-    /* --- 練習場所リスト --- */
-    .location-list {
+    /* 出退勤ボタン */
+    .attendance-btn {
+        width: 130px;
+        height: 130px;
+        font-size: 1.3rem;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+}
+
+/* ==========================================================================
+   Wiki拡張デザイン (マニュアル用)
+   ========================================================================== */
+
+/* 準備セクションのグリッド (PCで2列、スマホで1列) */
+.wiki-prep-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+    .wiki-prep-grid {
         grid-template-columns: 1fr;
     }
+}
 
-    /* --- 出退勤 --- */
-    .attendance-btn {
-        width: 120px;
-        height: 120px;
-        font-size: 1.2rem;
-    }
+.wiki-section {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 1rem;
+}
 
-    .attendance-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
+.wiki-section h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: #495057;
+    border-bottom: 1px dashed #ced4da;
+    padding-bottom: 5px;
+}
 
-    .att-status {
-        align-self: flex-end;
-    }
+.wiki-section-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* 注意書きボックス */
+.wiki-notice-box {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+/* 参考リンクボタン */
+.wiki-ref-link {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
+    text-decoration: none;
+    color: #007bff;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.wiki-ref-link:hover {
+    background-color: #e2e6ea;
 }
