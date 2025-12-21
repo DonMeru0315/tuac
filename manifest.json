@@ -1,0 +1,21 @@
+{
+  "name": "拓殖大学 自動車部",
+  "short_name": "ClubAutoLog",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f4f9",
+  "theme_color": "#D66000",
+  "description": "部車管理・活動記録アプリ",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
