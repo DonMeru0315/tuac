@@ -1,1514 +1,345 @@
 /* ==========================================================================
-   1. ベーススタイル / レイアウト
+   設定 & ベーススタイル
    ========================================================================== */
+:root {
+    --primary: #17a2b8;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --accent: #D66000; /* 拓大オレンジ */
+    --text: #333;
+    --text-light: #6c757d;
+    --bg-gray: #f4f4f9;
+    --border: #dee2e6;
+}
+
 body {
     font-family: "Meiryo", "Hiragino Kaku Gothic ProN", "MS PGothic", sans-serif;
     font-size: 18px;
-    background-color: #f4f4f9;
-    color: #333;
+    background-color: var(--bg-gray);
+    color: var(--text);
     margin: 0;
-    /* フッターを最下部に固定するための設定 */
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    display: flex; flex-direction: column; min-height: 100vh;
 }
 
+/* ==========================================================================
+   ヘッダー / フッター
+   ========================================================================== */
 header {
-    background-color: #D66000;
+    background-color: var(--accent);
     color: white;
     padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
 }
-
-header h1 {
-    margin: 0;
-    font-size: 1.5rem;
-}
-
-main {
-    padding: 1rem;
-}
+header h1 { margin: 0; font-size: 1.5rem; }
 
 footer {
-    margin-top: auto; /* コンテンツが短い場合でも最下部に配置 */
-    padding: 2rem 1rem;
-    text-align: center;
-    border-top: 1px solid #e9ecef;
-    background-color: #f8f9fa;
-    color: #6c757d;
-    flex-shrink: 0;
+    margin-top: auto; padding: 2rem 1rem; text-align: center;
+    border-top: 1px solid #e9ecef; background-color: #f8f9fa; color: var(--text-light); flex-shrink: 0;
 }
-
-.copyright {
-    font-size: 0.8rem;
-    margin: 0;
-    color: #adb5bd;
-}
-
+.copyright { font-size: 0.8rem; margin: 0; color: #adb5bd; }
 .contact-link {
-    display: inline-block;
-    color: #6c757d;
-    text-decoration: none;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-    border-bottom: 1px dashed #adb5bd;
-    transition: color 0.2s, border-bottom-color 0.2s;
+    display: inline-block; color: var(--text-light); text-decoration: none; font-size: 0.9rem;
+    margin-bottom: 0.5rem; border-bottom: 1px dashed #adb5bd; transition: 0.2s;
 }
-
-.contact-link:hover {
-    color: #D66000;
-    border-bottom-color: #D66000;
-}
+.contact-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* ==========================================================================
-   2. ナビゲーション
+   ナビゲーション
    ========================================================================== */
-/* メインナビゲーション */
-#main-nav {
-    display: flex;
-    background-color: #e9ecef;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.sp-br {
-    display: none;
-}
+#main-nav { display: flex; background-color: #e9ecef; border-bottom: 1px solid var(--border); }
+.sp-br { display: none; }
 
 .nav-button {
-    flex-grow: 1;
-    font-size: 0.8rem;      /* 文字を少し小さくして収まりよく */
-    line-height: 1.3;       /* 改行したときの行間を狭める */
-    padding: 0.5rem 0.2rem; /* 余白を調整してボタンが縦に伸びすぎないように */
-    
-    /* 既存のボーダー設定などは維持 */
-    border-bottom: 1px solid #dee2e6;
-    border-right: none;
-    display: flex;          /* 上下中央揃えのためにFlex化 */
-    align-items: center;
-    justify-content: center;
-    flex-direction: column; /* 中身を縦積みに */
-    height: auto;           /* 高さを行揃え */
+    flex-grow: 1; font-size: 0.8rem; line-height: 1.3; padding: 0.5rem 0.2rem;
+    border-bottom: 1px solid var(--border); border-right: none;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; height: auto;
 }
+.nav-button:last-child { border-right: none; }
+.nav-button.active { background-color: #E65C00; color: white; font-weight: bold; }
 
-.nav-button:last-child {
-    border-right: none;
+/* サブナビ (横スクロール) */
+#info-nav, #detail-nav {
+    display: flex; margin-bottom: 1rem; border-bottom: 1px solid #ddd;
+    overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
+#info-nav::-webkit-scrollbar, #detail-nav::-webkit-scrollbar { display: none; }
 
-.nav-button.active {
-    background-color: #E65C00;
-    color: white;
-    font-weight: bold;
+.info-nav-button, .detail-nav-button {
+    padding: 0.6rem 0.8rem; border: none; background: transparent; cursor: pointer;
+    font-size: 0.95rem; color: var(--text-light); flex: 0 0 auto;
+    border-bottom: 3px solid transparent; transition: 0.2s;
 }
-
-/* サブナビゲーション (情報共有 & 車両詳細) */
-#info-nav,
-#detail-nav {
-    display: flex;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #ddd;
-    /* 横スクロール対応 */
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-}
-
-#info-nav::-webkit-scrollbar,
-#detail-nav::-webkit-scrollbar {
-    display: none; /* Chrome, Safari */
-}
-
-.info-nav-button,
-.detail-nav-button {
-    padding: 0.6rem 0.8rem;
-    border: none;
-    background-color: transparent;
-    cursor: pointer;
-    font-size: 0.95rem;
-    color: #6c757d;
-    flex: 0 0 auto; /* ボタンを潰さない */
-    border-bottom: 3px solid transparent;
-    transition: color 0.2s, border-bottom-color 0.2s;
-}
-
-.info-nav-button.active,
-.detail-nav-button.active {
-    color: #D66000;
-    font-weight: bold;
-    border-bottom: 3px solid #D66000;
-    background-color: #f8f9fa;
+.info-nav-button.active, .detail-nav-button.active {
+    color: var(--accent); font-weight: bold; border-bottom: 3px solid var(--accent); background-color: #f8f9fa;
 }
 
 /* ==========================================================================
-   3. 認証エリア (ログイン/登録)
+   UIコンポーネント (ボタン, 入力, モーダル)
    ========================================================================== */
-#login-register-area {
-    text-align: center;
+/* 入力フォーム共通 */
+input, select, textarea {
+    width: 100%; padding: 0.5rem; margin-bottom: 0.5rem;
+    border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
 }
+label { display: block; margin: 1rem 0 0.25rem; font-weight: bold; }
 
-#login-register-area h3 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
+/* ボタン共通 */
+button { cursor: pointer; font-family: inherit; }
+.primary-button, #auth-button, #logout-button, .modal-buttons button {
+    padding: 0.75rem 1.5rem; border: none; border-radius: 5px; font-size: 1rem; color: white;
 }
+.primary-button { background-color: var(--primary); margin-bottom: 1rem; }
+.cancel-button { background-color: var(--text-light); }
+.delete-button { background-color: var(--danger); color: white;}
+.edit-button { background-color: var(--warning); }
 
-#auth-form input {
-    display: block;
-    width: 200px;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-#auth-button,
-#logout-button {
-    width: 100%;
-    padding: 0.75rem;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-#auth-button {
-    background-color: #17a2b8;
-}
-
-#logout-button {
-    background-color: #dc3545;
-}
-
-#toggle-mode-button {
-    background: none;
-    border: none;
-    color: white;
-    text-decoration: underline;
-    cursor: pointer;
-    padding: 0.5rem;
-}
-
-/* ==========================================================================
-   4. UIコンポーネント (ボタン, モーダル, カード)
-   ========================================================================== */
-/* 汎用ボタン */
-.primary-button {
-    background-color: #17a2b8;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-bottom: 1rem;
-}
-
-#show-add-vehicle-button { background-color: #28a745; }
-#show-add-wiki-button,
-#show-add-event-button,
-#show-add-log-button,
-#show-add-custom-button { background-color: #17a2b8; }
+/* 色の個別指定 */
+#show-add-vehicle-button, .attendance-btn.clock-in { background-color: var(--success); }
+#logout-button, .attendance-btn.clock-out { background-color: var(--danger); }
+#auth-button { background-color: var(--primary); }
 
 #back-to-list-button {
-    background: none;
-    border: 1px solid #6c757d;
-    color: #6c757d;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    margin-bottom: 1rem;
+    background: none; border: 1px solid var(--text-light); color: var(--text-light);
+    padding: 0.5rem 1rem; margin-bottom: 0; flex-shrink: 0;
 }
+
+/* 認証エリア */
+#login-register-area { text-align: center; }
+#login-register-area h3 { margin: 0 0 0.5rem; }
+#auth-form input { display: inline-block; width: 200px; } /* 特定の上書き */
+#auth-button, #logout-button { width: 100%; }
+#toggle-mode-button { background: none; border: none; color: white; text-decoration: underline; padding: 0.5rem; }
 
 /* モーダル */
 .modal-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;
 }
-
 .modal-content {
-    background-color: white;
-    padding: 2rem;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    background: white; padding: 2rem; border-radius: 8px;
+    width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
-
-.modal-content label {
-    display: block;
-    margin-top: 1rem;
-    margin-bottom: 0.25rem;
-    font-weight: bold;
-}
-
-.modal-content input,
-.modal-content textarea {
-    width: 100%;
-    padding: 0.5rem;
-    box-sizing: border-box;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.modal-buttons {
-    margin-top: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-}
-
-.modal-buttons-right {
-    display: flex;
-    gap: 1rem;
-}
-
-.modal-buttons button {
-    padding: 0.75rem 1.5rem;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-}
-
-.modal-buttons [type="submit"] {
-    background-color: #17a2b8;
-    color: white;
-}
-
-.cancel-button {
-    background-color: #6c757d;
-    color: white;
-}
+.modal-buttons { margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.modal-buttons-right { display: flex; gap: 1rem; }
+.modal-buttons [type="submit"] { background-color: var(--primary); }
 
 /* ==========================================================================
-   [スマホ最適化] 5. モジュール: 車両管理 (アプリ風リストデザイン)
+   カード & リストスタイル (共通化)
    ========================================================================== */
-
-/* コンテナ: スマホで見やすい縦一列のリスト */
-#vehicle-list-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* カード間の隙間 */
-    padding-bottom: 20px; /* 下部の余白 */
+/* 全てのカード要素に共通するスタイル */
+.vehicle-card, .history-item, .wiki-list-item, .setup-item, .attendance-item, .location-card {
+    background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;
+    border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative;
 }
 
-/* カード本体: タップしやすい大きさと形状 */
+/* 車両カード */
+#vehicle-list-container { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
 .vehicle-card {
-    background: #fff;
-    padding: 15px; /* 指で押しやすい広さを確保 */
-    border-radius: 12px; /* 最近のアプリっぽい丸み */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05); /* 薄い影で浮き上がらせる */
-    border: 2px solid #f0f0f0; /* 境界線をうっすら */
-    border-left: 5px solid #D66000; /* 【重要】拓大オレンジのアクセントバー */
-    
-    /* 横並びレイアウト (アイコン | 文字 | 矢印) */
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    
-    cursor: pointer;
-    position: relative; /* 波紋エフェクト等の基準（今回は簡易版） */
-    transition: background-color 0.1s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent; /* スマホ特有のタップ時の青背景を消す */
+    margin-bottom: 0; padding: 15px; border-radius: 12px; border: 2px solid #f0f0f0; border-left: 5px solid var(--accent);
+    display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.1s;
+    -webkit-tap-highlight-color: transparent;
 }
-
-/* タップした瞬間のフィードバック (重要: 押した感が出る) */
-.vehicle-card:active {
-    background-color: #fafafa;
-    transform: scale(0.98); /* ほんの少し縮む */
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-/* 左側のアイコンボックス */
+.vehicle-card:active { background-color: #fafafa; transform: scale(0.98); }
 .vehicle-icon-box {
-    width: 45px;
-    height: 45px;
-    background-color: #fff5eb; /* ごく薄いオレンジ背景 */
-    border-radius: 50%; /* 丸 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    flex-shrink: 0;
+    width: 45px; height: 45px; background: #fff5eb; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;
+}
+.vehicle-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+.vehicle-info h3 { margin: 0; font-size: 1.05rem; font-weight: bold; line-height: 1.4; }
+.vehicle-meta { font-size: 0.8rem; color: #888; margin-top: 3px; display: flex; align-items: center; gap: 8px; }
+.maker-badge { background: #eee; color: #555; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+.vehicle-arrow { color: #ccc; font-size: 1.2rem; font-weight: bold; }
+.detail-header-group {
+    display: flex;           /* 横並びにする */
+    align-items: center;     /* 上下中央揃え */
+    gap: 15px;               /* ボタンと名前の間隔 */
+    margin-bottom: 1rem;     /* 下（タブナビゲーション）との余白 */
 }
 
-/* 真ん中の情報エリア */
-.vehicle-info {
-    flex-grow: 1; /* 余白を埋める */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.vehicle-info h3 {
-    margin: 0;
-    font-size: 1.05rem;
-    color: #333;
-    font-weight: bold;
-    line-height: 1.4;
-}
-
-/* メーカー名などの補足情報 */
-.vehicle-meta {
-    font-size: 0.8rem;
-    color: #888;
-    margin-top: 3px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.maker-badge {
-    background-color: #eee;
-    color: #555;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: bold;
-}
-
-/* 右側の矢印「＞」 (タップできることを示唆) */
-.vehicle-arrow {
-    color: #ccc;
-    font-size: 1.2rem;
-    font-weight: bold;
-}
-
-/* 基本情報表示エリア */
-#basic-info-content {
-    background: #fff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #eee;
-}
-
+/* 詳細・履歴・Wiki・セッティング等のパーツ */
+#basic-info-content { background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #eee; }
 #basic-info-content p {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    margin: 0.5rem 0;
-    border-bottom: 1px dashed #eee;
-    padding-bottom: 0.25rem;
-    display: flex;
-    justify-content: space-between;
+    font-size: 1.1rem; margin: 0.5rem 0; border-bottom: 1px dashed #eee; padding-bottom: 0.25rem;
+    display: flex; justify-content: space-between;
 }
+#basic-info-content strong { color: #555; font-size: 0.9rem; }
 
-#basic-info-content strong {
-    color: #555;
-    font-size: 0.9rem;
-    width: auto;
-}
+.card-actions { position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; }
+.card-actions button { padding: 0.5rem 1rem; font-size: 0.9rem; }
 
-/* 履歴リストアイテム */
-.history-item {
-    background: #fff;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    margin-bottom: 0.5rem;
-    border-radius: 5px;
-    position: relative;
-}
+.spare-part-item { cursor: pointer; }
+.spare-part-item:hover { background-color: #f8f9fa; }
+.spare-part-layout { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+.part-main-info { flex-basis: 300px; flex-grow: 2; }
+.part-stock-info { flex-basis: 200px; flex-grow: 1; text-align: right; color: #495057; }
+.part-name { font-size: 1.1rem; font-weight: bold; display: block; }
+.part-notes { font-size: 0.9rem; background: #f9f9f9; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; }
 
-.card-actions {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    display: flex;
-    gap: 0.5rem;
-}
+.wiki-list-item:hover { background: #f8f9fa; cursor: pointer; }
+.wiki-list-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 0.5rem; }
+.wiki-list-meta { font-size: 0.85rem; color: #555; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.wiki-difficulty { padding: 2px 6px; border-radius: 4px; background: #eee; font-size: 0.8rem; }
+.wiki-list-updater { color: var(--danger); font-weight: bold; margin-left: auto; }
 
-.card-actions button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
+#wiki-article-view .article-content { background: #fff; padding: 1.5rem; border: 1px solid #ddd; min-height: 200px; line-height: 1.7; }
+.article-actions { margin-top: 1rem; }
 
-.edit-button { background-color: #ffc107; }
-.delete-button { background-color: #dc3545; color: white; }
-
-/* 予備部品 */
-.spare-part-item {
-    cursor: pointer;
-}
-
-.spare-part-item:hover {
-    background-color: #f8f9fa;
-}
-
-.spare-part-layout {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.part-main-info {
-    flex-basis: 300px;
-    flex-grow: 2;
-}
-
-.part-stock-info {
-    flex-basis: 200px;
-    flex-grow: 1;
-    text-align: right;
-    color: #495057;
-}
-
-.part-name {
-    font-size: 1.1rem;
-    font-weight: bold;
-    display: block;
-}
-
-.part-number {
-    font-size: 0.85rem;
-    color: #6c757d;
-}
-
-.part-quantity {
-    font-weight: bold;
-    margin-right: 1rem;
-}
-
-.part-notes {
-    font-size: 0.9rem;
-    color: #333;
-    background: #f9f9f9;
-    padding: 0.5rem;
-    border-radius: 4px;
-    margin-top: 0.5rem;
-    margin-bottom: 0;
-}
+/* 便利ツール・場所 */
+#external-tools, #tool-check-section { background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 1.5rem; }
+h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D66000; padding-bottom: 5px; }
+.tool-links { display: flex; gap: 1rem; flex-wrap: wrap; }
+.tool-button { flex: 1; min-width: 120px; padding: 0.8rem; text-align: center; text-decoration: none; border-radius: 5px; font-weight: bold; color: white; transition: 0.2s; }
+.epc-data { background: #2c3e50; } .parts-fan { background: #e67e22; }
+.location-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+.location-link-button { display: block; text-align: center; padding: 0.75rem; background: var(--success); color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: auto; }
+.location-name-link { color: var(--text); text-decoration: none; transition: color 0.2s;}
+.location-name-link:hover { color: var(--accent); text-decoration: underline; }
 
 /* ==========================================================================
-   6. モジュール: Wiki (情報共有)
+   カレンダー & ユーザーメニュー
    ========================================================================== */
-.wiki-list-item {
-    background: #fff;
-    padding: 0.75rem 1rem;
-    border: 1px solid #ddd;
-    margin-bottom: 0.5rem;
-    border-radius: 5px;
-    position: relative;
-    cursor: pointer;
-}
-
-.wiki-list-item:hover {
-    background: #f8f9fa;
-}
-
-.wiki-list-title {
-    font-size: 1.15rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-
-.wiki-list-meta {
-    font-size: 0.85rem;
-    color: #555;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.wiki-difficulty {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background-color: #eee;
-    font-size: 0.8rem;
-    margin-right: 5px;
-}
-
-.wiki-list-updater {
-    color: #dc3545;
-    font-weight: bold;
-    margin-left: auto;
-}
-
-/* Wiki記事詳細ビュー */
-#wiki-article-view h2 {
-    margin-top: 0;
-}
-
-#wiki-article-view .article-content {
-    background: #fff;
-    padding: 1.5rem;
-    border: 1px solid #ddd;
-    min-height: 200px;
-    line-height: 1.7;
-}
-
-#wiki-article-view .article-actions {
-    margin-top: 1rem;
-}
-
-.article-actions button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-/* 便利ツール（外部リンク） */
-#external-tools {
-    background-color: #fff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 1.5rem;
-}
-
-#external-tools h3,
-#practice-locations h3 {
-    margin-top: 0;
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 0.5rem;
-    padding-bottom: 5px;
-    border-bottom: 2px solid #007bff;
-}
-
-.tool-links {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.tool-button {
-    flex: 1;
-    min-width: 120px;
-    display: inline-block;
-    padding: 0.8rem;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    color: white;
-    transition: opacity 0.2s;
-}
-
-.tool-button:hover { opacity: 0.8; }
-.epc-data { background-color: #2c3e50; }
-.parts-fan { background-color: #e67e22; }
-
-.tool-note {
-    font-size: 0.8rem;
-    color: #888;
-    margin-bottom: 0;
-    margin-top: 0.5rem;
-    text-align: right;
-}
-
-/* 練習場所リスト */
-#practice-locations {
-    margin-top: 1.5rem;
-}
-
-.location-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-}
-
-.location-card {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-}
-
-.location-card h4 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
-    color: #333;
-}
-
-.location-name-link {
-    text-decoration: none;
-    color: inherit;
-    transition: color 0.2s;
-}
-
-.location-name-link:hover {
-    color: #0056b3;
-    text-decoration: underline;
-}
-
-.location-link-button {
-    display: block;
-    text-align: center;
-    padding: 0.75rem;
-    background-color: #28a745;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    transition: background-color 0.2s;
-    margin-top: auto; /* カード下部へ押し下げ */
-}
-
-.location-link-button:hover {
-    background-color: #218838;
-}
-
-/* ==========================================================================
-   7. モジュール: カレンダー
-   ========================================================================== */
-
-/* ユーザー情報のコンテナ（ドロップダウンの基準点にする） */
-#user-info {
-    position: relative; /* 子要素の absolute 配置の基準 */
-    display: flex;
-    align-items: center;
-}
-
-/* ユーザーアイコンボタン */
+#user-info { position: relative; display: flex; align-items: center; }
 .icon-button {
-    background: rgba(255, 255, 255, 0.6); /* 薄い半透明背景 */
-    border: none;
-    border-radius: 50%; /* 丸くする */
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.2s;
+    background: rgba(255,255,255,0.6); border-radius: 50%; width: 40px; height: 40px; border: none;
+    font-size: 1.2rem; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center;
 }
-
-.icon-button:hover {
-    background-color: rgba(255, 255, 255, 0.4);
-}
-
-/* ドロップダウンメニュー本体 */
 .dropdown-menu {
-    position: absolute;
-    top: 120%; /* アイコンの下に配置 */
-    right: 0;   /* 右寄せ */
-    background-color: white;
-    color: #333;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* 影をつけて浮かせる */
-    width: 260px;
-    z-index: 2000; /* 最前面に */
-    text-align: left;
-    border: 1px solid #dee2e6;
+    position: absolute; top: 120%; right: 0; background: white; padding: 1rem;
+    border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 260px; z-index: 2000; text-align: left; border: 1px solid var(--border);
 }
-
-/* ドロップダウン内のテキスト */
-.dropdown-name {
-    font-weight: bold;
-    font-size: 1rem;
-    margin: 0 0 0.3rem 0;
-    color: #333;
-}
-
-.dropdown-email {
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin: 0;
-    word-break: break-all; /* 長いメアドも折り返す */
-}
-
-.dropdown-menu hr {
-    margin: 1rem 0;
-    border: none;
-    border-top: 1px solid #eee;
-}
-
-/* ドロップダウン内のログアウトボタン */
 .logout-button-small {
-    width: 100%;
-    padding: 0.6rem;
-    background-color: #fff;
-    color: #dc3545;
-    border: 1px solid #dc3545;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: bold;
-    transition: background-color 0.2s, color 0.2s;
+    width: 100%; padding: 0.6rem; background: #fff; color: var(--danger); border: 1px solid var(--danger);
+    border-radius: 4px; cursor: pointer; font-weight: bold;
 }
+.logout-button-small:hover { background: var(--danger); color: white; }
 
-.logout-button-small:hover {
-    background-color: #dc3545;
-    color: white;
-}
-
-#calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-#calendar-month-year {
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-#calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr)); /* 幅制御付き */
-    gap: 5px;
-}
-
-.calendar-day {
-    border: 1px solid #ddd;
-    background: #fff;
-    min-height: 100px;
-    padding: 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    overflow: hidden;
-}
-
-.calendar-day.not-current-month {
-    background: #f8f9fa;
-    color: #ccc;
-}
-
-.calendar-day-header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    min-height: 1.5em;
-}
-
-.calendar-day-header {
-    font-weight: bold;
-    margin-bottom: 0;
-    padding: 2px 4px;
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.calendar-holiday-name {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #dc3545;
-    padding: 3px 4px;
-    text-align: left;
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* 曜日の色 */
+#calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+#calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.calendar-day { border: 1px solid #ddd; background: #fff; min-height: 100px; padding: 5px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+.calendar-day.not-current-month { background: #f8f9fa; color: #ccc; }
+.calendar-day-header { font-weight: bold; text-align: right; }
 .calendar-day.saturday .calendar-day-header { color: #007bff; }
-.calendar-day.sunday .calendar-day-header { color: #dc3545; }
-
-/* 今日のスタイル */
-.calendar-day.today .calendar-day-header {
-    display: inline-block;
-    width: 1.8em;
-    height: 1.8em;
-    line-height: 1.8em;
-    text-align: center;
-    border-radius: 50%;
-    background-color: #ffc107;
-    color: #333;
-    padding: 0;
-}
-
-/* イベントバッジ */
-.calendar-event {
-    background: #007bff;
-    color: white;
-    padding: 4px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    cursor: pointer;
-}
-
-.calendar-event .event-title,
-.calendar-event .event-detail {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.calendar-event .event-title {
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.calendar-event .event-detail {
-    font-size: 0.75rem;
-    color: #e0eaff;
-}
+.calendar-day.sunday .calendar-day-header { color: var(--danger); }
+.calendar-day.today .calendar-day-header { display: inline-block; width: 1.8em; text-align: center; border-radius: 50%; background: var(--warning); color: #333; }
+.calendar-event { background: #007bff; color: white; padding: 4px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+.calendar-holiday-name { font-size: 1rem; font-weight: bold; color: var(--danger); }
 
 /* ==========================================================================
-   8. モジュール: カンバン / セッティング / 出退勤
+   カンバン / セッティング / 出退勤
    ========================================================================== */
-/* カンバンボード */
-#kanban-container {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    min-height: 300px;
-}
-
-.kanban-column {
-    flex: 1;
-    min-width: 200px;
-    background-color: #f4f5f7;
-    border-radius: 8px;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-}
-
-.kanban-column h4 {
-    margin: 0 0 0.5rem 0;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #5e6c84;
-    border-bottom: 2px solid #ccc;
-    padding-bottom: 5px;
-}
-
-/* ステータス別のヘッダー色 */
-.kanban-column[data-status="todo"] h4 { border-color: #6c757d; }
+#kanban-container { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; min-height: 300px; }
+.kanban-column { flex: 1; min-width: 200px; background: #f4f5f7; border-radius: 8px; padding: 0.5rem; border: 1px solid #ddd; }
+.kanban-column h4 { margin: 0 0 0.5rem 0; text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
+/* カンバン色設定 */
+.kanban-column[data-status="todo"] h4 { border-color: var(--text-light); }
 .kanban-column[data-status="inprogress"] h4 { border-color: #007bff; color: #007bff; }
-.kanban-column[data-status="waiting"] h4 { border-color: #dc3545; color: #dc3545; }
-.kanban-column[data-status="done"] h4 { border-color: #28a745; color: #28a745; }
+.kanban-column[data-status="waiting"] h4 { border-color: var(--danger); color: var(--danger); }
+.kanban-column[data-status="done"] h4 { border-color: var(--success); color: var(--success); }
+.task-card { background: white; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #e1e4e8; cursor: pointer; }
+.task-meta { font-size: 0.8rem; color: #666; display: flex; justify-content: space-between; }
+.task-date { font-size: 0.75rem; color: #e74c3c; background: #fdf0ed; padding: 1px 4px; border-radius: 3px; }
 
-.task-card {
-    background: white;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    border-radius: 4px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e1e4e8;
-    cursor: pointer;
-}
+.setup-item { border-left: 5px solid var(--primary); }
+.setup-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; }
 
-.task-card:hover { background-color: #fafbfc; }
-
-.task-title {
-    font-weight: bold;
-    margin-bottom: 4px;
-    font-size: 0.95rem;
-}
-
-.task-meta {
-    font-size: 0.8rem;
-    color: #666;
-    display: flex;
-    justify-content: space-between;
-}
-
-.task-meta-right {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.task-assignee-icon {
-    background: #6c757d;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    margin-right: 4px;
-}
-
-.task-date {
-    font-size: 0.75rem;
-    color: #e74c3c;
-    background-color: #fdf0ed;
-    padding: 1px 4px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-}
-
-.task-notes-icon {
-    font-size: 0.75rem;
-    cursor: default;
-}
-
-/* セッティングログ */
-.setup-item {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-left: 5px solid #17a2b8;
-    border-radius: 4px;
-    padding: 1rem;
-    margin-bottom: 0.8rem;
-}
-
-.setup-header {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.setup-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.setup-comment-box {
-    margin-top: 0.5rem;
-    background: #f9f9f9;
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-/* 出退勤 */
-.attendance-panel {
-    background-color: #fff;
-    padding: 1.5rem;
-    border-radius: 8px;
-    text-align: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    margin-bottom: 2rem;
-}
-
-#attendance-message {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-.attendance-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 1rem;
-}
-
-.attendance-btn {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    border: none;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    transition: transform 0.1s, box-shadow 0.1s;
-}
-
-.attendance-btn:active {
-    transform: scale(0.95);
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
-}
-
+.attendance-panel { background: #fff; padding: 1.5rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 2rem; }
+.attendance-buttons { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; }
+.attendance-btn { width: 150px; height: 150px; border-radius: 50%; border: none; font-size: 1.5rem; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 .clock-in { background: linear-gradient(135deg, #28a745, #218838); }
 .clock-out { background: linear-gradient(135deg, #dc3545, #c82333); }
+#attendance-list-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.attendance-item.active { border-left: 5px solid var(--success); background: #f0fff4; }
+.attendance-item.left { border-left: 5px solid var(--text-light); opacity: 0.7; }
 
-#attendance-status-text {
-    font-size: 1rem;
-    color: #666;
-}
-
-#attendance-list-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
-}
-
-.attendance-item {
-    background: #fff;
-    padding: 1rem;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.attendance-item.active {
-    border-left: 5px solid #28a745;
-    background-color: #f0fff4;
-}
-
-.attendance-item.left {
-    border-left: 5px solid #6c757d;
-    opacity: 0.7;
-}
-
-.att-name {
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.att-times {
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.badge {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    color: white;
-    margin-left: 5px;
-}
-
-.badge-active { background-color: #28a745; }
-.badge-left { background-color: #6c757d; }
-
-/* ==========================================================================
-   9. ユーティリティ
-   ========================================================================== */
+/* ユーティリティ & ツール記録 */
 .hidden { display: none !important; }
+.center-message { text-align: center; margin-top: 5rem; color: #777; }
+.tool-photo-thumb { height: 60px; width: auto; border-radius: 4px; border: 1px solid #ddd; cursor: pointer; display: block; }
+.tool-log-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 1rem; }
+.tool-log-card { border: 1px solid #eee; border-radius: 8px; overflow: hidden; background: #f9f9f9; }
+.tool-log-img-box { width: 100%; height: 120px; background: #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.tool-log-img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+.tool-log-img-box img:hover { transform: scale(1.1); }
+.tool-log-delete { margin-top: 5px; background: var(--danger); color: white; border: none; border-radius: 4px; width: 100%; cursor: pointer; }
 
-.center-message {
-    text-align: center;
-    margin-top: 5rem;
-    color: #777;
-}
-
-.tool-photo-thumb {
-    height: 60px; /* 高さを固定 */
-    width: auto;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    transition: transform 0.1s;
-    display: block; /* ブロック表示で改行させる */
-}
-
-.tool-photo-thumb:hover {
-    transform: scale(1.05);
-    border-color: #D66000;
-}
-
-/* 工具使用記録セクション */
-#tool-check-section {
-    background-color: #fff;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-bottom: 1.5rem;
-}
-
-/* 写真リストのグリッド表示 */
-.tool-log-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 10px;
-    margin-top: 1rem;
-}
-
-.tool-log-card {
-    border: 1px solid #eee;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #f9f9f9;
-}
-
-.tool-log-img-box {
-    width: 100%;
-    height: 120px;
-    background: #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.tool-log-img-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.tool-log-img-box img:hover {
-    transform: scale(1.1);
-}
-
-.tool-log-info {
-    padding: 8px;
-    font-size: 0.85rem;
-}
-
-.tool-log-user {
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 2px;
-}
-
-.tool-log-time {
-    color: #888;
-    font-size: 0.75rem;
-}
-
-.tool-log-delete {
-    margin-top: 5px;
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-size: 0.7rem;
-    cursor: pointer;
-    width: 100%;
-}
-
-/* 過去履歴セクション */
-.history-list-container {
-    margin-top: 1rem;
-    text-align: left;
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-}
-
-.history-date-header {
-    background-color: #e9ecef;
-    padding: 0.5rem;
-    font-weight: bold;
-    color: #495057;
-    margin-top: 1rem;
-    border-radius: 4px 4px 0 0;
-    border-bottom: 2px solid #dee2e6;
-}
-
-.history-date-header:first-child {
-    margin-top: 0;
-}
-
-.history-group {
-    background-color: #fff;
-    border: 1px solid #dee2e6;
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-    padding: 0.5rem;
-}
-
-.history-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.4rem 0;
-    border-bottom: 1px dashed #eee;
-    font-size: 0.9rem;
-}
-
-.history-row:last-child {
-    border-bottom: none;
-}
-
-.history-name {
-    font-weight: bold;
-    color: #333;
-}
-
-.history-time {
-    color: #666;
-    font-size: 0.85rem;
-}
-
-.history-duration {
-    color: #17a2b8;
-    margin-left: 5px;
-    font-size: 0.75rem;
-}
+/* 履歴リスト */
+.history-list-container { margin-top: 1rem; text-align: left; background: #f8f9fa; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; }
+.history-date-header { background: #e9ecef; padding: 0.5rem; font-weight: bold; color: #495057; margin-top: 1rem; border-radius: 4px 4px 0 0; border-bottom: 2px solid var(--border); }
+.history-group { background: #fff; border: 1px solid var(--border); border-top: none; padding: 0.5rem; }
+.history-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px dashed #eee; font-size: 0.9rem; }
 
 /* ==========================================================================
-   10. スマホ最適化 / アプリ風デザイン (Media Query: max-width 600px)
+   スマホ最適化 (Media Query: max-width 600px)
    ========================================================================== */
 @media (max-width: 600px) {
-    /* --- 基本設定 --- */
-    body {
-        font-size: 16px; /* 文字サイズ調整 */
-        padding-bottom: 80px; /* 下部ナビゲーションの分だけ余白を空ける */
-        background-color: #f0f2f5; /* アプリっぽい背景色 */
-    }
+    body { font-size: 16px; padding-bottom: 80px; background-color: #f0f2f5; }
+    
+    header { position: sticky; top: 0; z-index: 900; padding: 0.8rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    header h1 { font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* --- ヘッダー周り --- */
-    header {
-        position: sticky; /* ヘッダーを上に固定 */
-        top: 0;
-        z-index: 900;
-        padding: 0.8rem;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        gap: 0.5rem;
-    }
-
-    header h1 {
-        font-size: 1.1rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* --- 【重要】ボトムナビゲーション化 (アプリ風) --- */
+    /* ボトムナビ */
     #main-nav {
-        position: fixed; /* 画面下に固定 */
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background-color: #fff;
-        z-index: 1000;
-        padding-bottom: env(safe-area-inset-bottom); /* iPhoneの下部バー対応 */
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        border-top: 1px solid #eee;
-        display: flex;
-        justify-content: space-around; /* 均等配置 */
+        position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        border-top: 1px solid #eee; display: flex; justify-content: space-around;
     }
-
     .nav-button {
-        flex: 1;
-        border: none; /* 線を消す */
-        background: transparent;
-        color: #888;
-        padding: 0.5rem 0;
-        font-size: 0.7rem; /* 文字は小さく */
-        height: 60px; /* タップしやすい高さ */
-        border-radius: 0;
+        flex: 1; border: none; background: transparent; color: #888; padding: 0.5rem 0;
+        font-size: 1rem; height: 60px; border-radius: 0;
     }
-
-    .nav-button.active {
-        color: #E65C00;
-        background-color: transparent; /* 背景色はつけない */
-        position: relative;
-    }
-
-    /* アクティブ時に上部にオレンジの線を表示 */
+    .nav-button.active { color: #E65C00; background: transparent; position: relative; }
     .nav-button.active::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 20%;
-        width: 60%;
-        height: 3px;
-        background-color: #E65C00;
-        border-radius: 0 0 4px 4px;
+        content: ''; position: absolute; top: 0; left: 20%; width: 60%; height: 3px;
+        background-color: #E65C00; border-radius: 0 0 4px 4px;
     }
+    .sp-br { display: block; }
 
-    .sp-br { display: block; } /* 改行有効化 */
+    /* 入力・メインエリア */
+    input, select, textarea { font-size: 16px !important; padding: 12px; width: 100% !important; background: #fff; }
+    label { margin-top: 1.2rem; color: #555; }
+    main { padding: 10px; }
+    .module-content h2 { font-size: 1.3rem; margin-top: 1rem; border-left: 5px solid var(--accent); padding-left: 10px; margin-bottom: 1.5rem; }
 
-    /* --- 入力フォーム最適化 --- */
-    input, select, textarea {
-        font-size: 16px !important; /* iOSでズームされないサイズ */
-        padding: 12px; /* タップ領域を広げる */
-        width: 100% !important; /* 横幅いっぱいに */
-        box-sizing: border-box;
-        border: 1px solid #ddd;
-        background-color: #fff;
-    }
-
-    label {
-        margin-top: 1.2rem;
-        color: #555;
-    }
-
-    /* --- メインコンテンツ余白調整 --- */
-    main {
-        padding: 10px;
-    }
-
-    .module-content h2 {
-        font-size: 1.3rem;
-        margin-top: 1rem;
-        border-left: 5px solid #E65C00;
-        padding-left: 10px;
-        margin-bottom: 1.5rem;
-    }
-
-    /* --- 横スクロールナビ (詳細・Wikiタブ) --- */
+    /* サブナビ */
     #detail-nav, #info-nav {
-        background: #fff;
-        padding: 5px 0;
-        margin: 0 -10px 1rem -10px; /* 画面端まで広げる */
-        padding-left: 10px;
-        position: sticky;
-        top: 60px; /* ヘッダーの下に固定 */
-        z-index: 800;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        background: #fff; padding: 5px 0 5px 10px; margin: 0 -10px 1rem; position: sticky; top: 60px;
+        z-index: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    
-    .detail-nav-button, .info-nav-button {
-        padding: 10px 15px;
-        font-size: 0.9rem;
+    .detail-nav-button, .info-nav-button { padding: 10px 15px; font-size: 0.9rem; }
+    .detail-header-group {
+        gap: 10x;
+    }
+    .detail-vehicle-name {
+        font-size: 1.1rem;
     }
 
-    /* --- モーダル (全画面っぽく) --- */
+    /* モーダル (スマホ全画面) */
     .modal-content {
-        width: 95%;
-        height: auto;
-        max-height: 85vh; /* キーボードが出ても隠れないように */
-        padding: 1.5rem;
-        border-radius: 12px 12px 0 0; /* 上だけ角丸 */
-        position: absolute;
-        bottom: 0; /* 下からせり出す感じに */
-        top: auto;
-        overflow-y: auto;
+        width: 95%; height: 100vh; max-height: 85vh; padding: 1.5rem; border-radius: 12px 12px 0 0;
+        position: absolute; bottom: 0; top: auto; overflow-y: auto;
     }
+    .modal-background { align-items: flex-end; }
+    .modal-buttons { flex-direction: column-reverse; gap: 10px; margin-top: 2rem; }
+    .modal-buttons button, .modal-buttons-right button { width: 100%; padding: 14px; margin: 0; }
+    .modal-buttons-right { display: flex; flex-direction: column-reverse; gap: 10px; width: 100%; }
+
+    /* その他スマホ調整 */
+    #vehicle-list-container { gap: 15px; }
+    .vehicle-card { padding: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .history-item, .wiki-list-item, .setup-item { padding: 15px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
+    .setup-grid { grid-template-columns: 1fr; }
+    .article-content table { display: block; overflow-x: auto; white-space: nowrap; }
+    .attendance-btn { width: 130px; height: 130px; font-size: 1.3rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
     
-    .modal-background {
-        align-items: flex-end; /* 下揃え */
-    }
-
-    .modal-buttons {
-        flex-direction: column-reverse; /* 保存ボタンを上に */
-        gap: 10px;
-        margin-top: 2rem;
-    }
-
-    .modal-buttons button, 
-    .modal-buttons-right button {
-        width: 100%;
-        padding: 14px; /* 指で押しやすく */
-        font-size: 1rem;
-        margin: 0;
-    }
-    
-    .modal-buttons-right {
-        display: flex;
-        flex-direction: column-reverse;
-        gap: 10px;
-        width: 100%;
-    }
-
-    /* --- リスト・カードデザイン調整 --- */
-    /* 車両リスト */
-    #vehicle-list-container {
-        gap: 15px;
-    }
-    .vehicle-card {
-        padding: 15px;
-        border: none;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* 影を強めに */
-    }
-
-    /* 履歴リスト */
-    .history-item, .wiki-list-item, .setup-item {
-        padding: 15px;
-        background: #fff;
-        border: none;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        margin-bottom: 15px;
-    }
-
-    /* セッティング (2列を1列に) */
-    .setup-grid {
-        grid-template-columns: 1fr; /* 縦積み */
-    }
-
-    /* Wiki記事内のテーブル (横スクロールさせる) */
-    .article-content table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-    }
-    
-    /* 出退勤ボタン */
-    .attendance-btn {
-        width: 130px;
-        height: 130px;
-        font-size: 1.3rem;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    }
+    .wiki-prep-grid { grid-template-columns: 1fr; }
 }
 
-/* ==========================================================================
-   Wiki拡張デザイン (マニュアル用)
-   ========================================================================== */
-
-/* 準備セクションのグリッド (PCで2列、スマホで1列) */
-.wiki-prep-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-@media (max-width: 600px) {
-    .wiki-prep-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.wiki-section {
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-    padding: 1rem;
-}
-
-.wiki-section h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1rem;
-    color: #495057;
-    border-bottom: 1px dashed #ced4da;
-    padding-bottom: 5px;
-}
-
-.wiki-section-body {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: #333;
-}
-
-/* 注意書きボックス */
-.wiki-notice-box {
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    color: #856404;
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-}
-
-/* 参考リンクボタン */
-.wiki-ref-link {
-    display: inline-block;
-    padding: 6px 12px;
-    background-color: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 20px;
-    text-decoration: none;
-    color: #007bff;
-    font-size: 0.9rem;
-    transition: background-color 0.2s;
-}
-
-.wiki-ref-link:hover {
-    background-color: #e2e6ea;
-}
+/* Wiki拡張 */
+.wiki-prep-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+.wiki-section { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 1rem; }
+.wiki-section h3 { margin: 0 0 0.5rem; font-size: 1rem; border-bottom: 1px dashed #ced4da; padding-bottom: 5px; }
+.wiki-notice-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+.wiki-ref-link { display: inline-block; padding: 6px 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 20px; text-decoration: none; color: #007bff; font-size: 0.9rem; }
+.wiki-ref-link:hover { background: #e2e6ea; }
