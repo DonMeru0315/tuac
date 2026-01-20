@@ -67,6 +67,11 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
     DOMElements.syncDoneTasksButton.addEventListener('click', async () => {
         if (!currentVehicleId) return;
 
+        // 削除を伴うため、確認ダイアログを追加（安全第一）
+        if (!confirm('「完了」列のタスクを整備記録に移し、タスク一覧から完全に削除します。\nよろしいですか？')) {
+            return;
+        }
+
         const btn = DOMElements.syncDoneTasksButton;
         btn.disabled = true;
         btn.textContent = '処理中...';
@@ -75,65 +80,63 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
             const tasksRef = db.collection('vehicles').doc(currentVehicleId).collection('tasks');
             const logsRef = db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs');
             
-            // ★★★ 変更点 ①: クエリをシンプルに「done」だけにします ★★★
-            // 'copiedToLogs' のチェックは削除します。
+            // 'copiedToLogs' の判定は不要なので、シンプルに 'done' だけを取得
             const snapshot = await tasksRef
                 .where('status', '==', 'done')
-                //.where('copiedToLogs', '!=', true) // ← この行を削除（またはコメントアウト）
                 .get();
 
             if (snapshot.empty) {
-                alert('履歴に反映する完了タスクはありません。');
-                btn.disabled = false;
-                btn.textContent = '🔄 完了タスクを履歴に反映';
-                return;
+                alert('移動する完了タスクはありません。');
+                return; // finallyへ
             }
 
             const batch = db.batch();
-            let copiedCount = 0;
+            let count = 0;
 
             snapshot.forEach(doc => {
                 const task = doc.data();
-                if (task.copiedToLogs === true) {
-                    return; // 既に反映済みのタスクはスキップ
-                }
                 
                 // 3. 整備履歴データを作成
-                const logDate = (task.doneAt && task.doneAt.toDate) 
-                                ? task.doneAt.toDate() 
-                                : new Date();
+                // 日付の優先度: 完了日(doneAt) > 期限(dueDate) > 今日
+                let logDateStr = new Date().toISOString().split('T')[0];
+                if (task.doneAt && task.doneAt.toDate) {
+                    logDateStr = task.doneAt.toDate().toISOString().split('T')[0];
+                } else if (task.dueDate) {
+                    logDateStr = task.dueDate;
+                }
 
                 const logData = {
-                    date: logDate.toISOString().split('T')[0],
-                    task: task.title,
-                    notes: `[タスクから反映] ${task.notes || ''}`.trim(),
+                    date: logDateStr,
+                    task: task.title || '（タイトルなし）',
+                    // メモに担当者などの情報を付記しておくと親切です
+                    notes: `${task.notes || ''} (担当: ${task.assignee || '未定'})`.trim(),
+                    
+                    // 監査ログ（誰がいつ移したか）
+                    createdAt: firestore.FieldValue.serverTimestamp(),
+                    createdBy: auth.currentUser ? auth.currentUser.displayName : '不明',
+                    createdById: auth.currentUser ? auth.currentUser.uid : '不明'
                 };
                 
-                batch.set(logsRef.doc(), logData);
-                batch.update(tasksRef.doc(doc.id), { copiedToLogs: true });
-                copiedCount++;
+                // バッチに追加：記録の作成
+                const newLogRef = logsRef.doc();
+                batch.set(newLogRef, logData);
+                batch.delete(doc.ref);
+                count++;
             });
 
-            if (copiedCount === 0) {
-                alert('履歴に反映する完了タスクはありません。\n(すべて反映済みです)');
-                btn.disabled = false;
-                btn.textContent = '🔄 完了タスクを履歴に反映';
-                return; // バッチ処理を実行せずに終了
-            }
-
-            // 5. バッチ処理を実行
+            // 5. バッチ処理を実行（ここで一括 作成＆削除）
             await batch.commit();
 
-            alert(`${copiedCount}件の完了タスクを整備履歴に反映しました。`);
+            alert(`${count}件のタスクを整備記録に移動しました。`);
 
-            // 6. 整備履歴リストを再描画
+            // 6. 画面の再描画
             await renderMaintenanceLogs(currentVehicleId, DOMElements);
+            await renderKanban(currentVehicleId, DOMElements);
 
         } catch (err) {
-            console.error("タスクの同期エラー:", err);
-            alert("タスクの反映に失敗しました。");
+            console.error("タスク移動エラー:", err);
+            alert("処理に失敗しました。");
         } finally {
-            // 7. ボタンを元に戻す
             btn.disabled = false;
             btn.textContent = '🔄 完了タスクを履歴に反映';
         }
@@ -253,27 +256,24 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
         const taskId = DOMElements.taskModal.dataset.editingId;
         const newStatus = DOMElements.taskForm.querySelector('#task-status').value;
 
-        // ★ 変更点①: data オブジェクトから doneAt と、重複した updatedAt を削除
+        // data オブジェクトから doneAt と、重複した updatedAt を削除
         const data = {
             title: DOMElements.taskForm.querySelector('#task-title').value,
             assignee: DOMElements.taskForm.querySelector('#task-assignee').value,
             status: newStatus,
             dueDate: DOMElements.taskForm.querySelector('#task-due-date').value,
             notes: DOMElements.taskForm.querySelector('#task-notes').value,
-            updatedAt: firestore.FieldValue.serverTimestamp(), // ★ 正しい updatedAt のみ残す
+            updatedAt: firestore.FieldValue.serverTimestamp(), // 正しい updatedAt のみ残す
             updatedBy: user ? user.displayName : '不明',
             updatedById: user ? user.uid : '不明',
-            // updatedAt: new Date() // ★ BUG: 重複していたので削除
         };
-
-        // ★ 変更点②: doneAt のロジックを「更新」と「新規」で分離
 
         if (taskId) {
             // --- 更新 (Update) ---
             if (newStatus === 'done') {
-                data.doneAt = new Date(); // または firestore.FieldValue.serverTimestamp()
+                data.doneAt = new Date();
             } else {
-                data.doneAt = firestore.FieldValue.delete(); // ★ 更新時は delete を使ってOK
+                data.doneAt = firestore.FieldValue.delete(); 
             }
             await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).update(data);
         
@@ -284,10 +284,8 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
             data.createdById = user ? user.uid : '不明';
 
             if (newStatus === 'done') {
-                data.doneAt = new Date(); // ★ 新規作成時は 'done' の時だけフィールドを追加
+                data.doneAt = new Date(); // 新規作成時は 'done' の時だけフィールドを追加
             }
-            // ★ 'done' 以外の場合は、data.doneAt フィールドを *一切追加しない*
-            // これで FieldValue.delete() が .add() で呼ばれるのを防ぎます。
 
             await db.collection('vehicles').doc(currentVehicleId).collection('tasks').add(data);
         }
@@ -566,7 +564,7 @@ async function renderMaintenanceLogs(vehicleId, DOMElements) {
     
     if(snapshot.empty) {
         container.innerHTML = '<p>整備履歴はありません。</p>';
-        return; // ★ 追加: 空の場合はここで処理終了
+        return; // 空の場合はここで処理終了
     }
     
     snapshot.forEach(doc => {
@@ -577,7 +575,7 @@ async function renderMaintenanceLogs(vehicleId, DOMElements) {
         
         item.innerHTML = `
             <p><strong>${new Date(log.date.replace(/-/g, '/')).toLocaleDateString()}</strong> - ${log.task}</p>
-            <p>メモ: ${log.notes || 'なし'}</p>
+            <p>[メモ] ${log.notes || 'なし'}</p>
             `;
         container.appendChild(item);
     });
@@ -619,15 +617,10 @@ async function renderKanban(vehicleId, DOMElements) {
             dateHtml = `<span class="task-date" title="期限: ${task.dueDate}">📅 ${dateStr}</span>`;
         }
 
-        let notesHtml = '';
-        if (task.notes) {
-            notesHtml = `<span class="task-notes-icon" title="備考あり">📝</span>`;
-        }
-
         card.innerHTML = `
             <div class="task-title">${task.title}</div>
             <div class="task-meta">
-                <span><span class="task-assignee-icon">${assigneeInitial}</span>${task.assignee || '未割当'}</span>
+                <span>${task.assignee || '未割当'}</span>
                 ${dateHtml}
             </div>
         `;
