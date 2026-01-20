@@ -53,14 +53,17 @@
             </div>
 
             <div id="vehicle-detail-view" class="module-content hidden">
-                <button id="back-to-list-button">＜ 車両リストに戻る</button>
-                <h2 id="detail-vehicle-name"></h2>
+                <div class="detail-header-group">
+                    <button id="back-to-list-button">＜ 戻る</button>
+                    <h2 id="detail-vehicle-name"></h2>
+                </div>
+                
                 
                 <nav id="detail-nav">
                     <button class="detail-nav-button active" data-detailtab="basic-info">基本情報</button>
                     <button class="detail-nav-button" data-detailtab="maintenance-logs">整備履歴</button>
-                    <button class="detail-nav-button" data-detailtab="customizations">カスタマイズ</button>
                     <button class="detail-nav-button" data-detailtab="kanban-board">タスク管理</button>
+                    <button class="detail-nav-button" data-detailtab="customizations">カスタマイズ</button>
                     <button class="detail-nav-button" data-detailtab="setup-log">セッティング</button>
                     <button class="detail-nav-button" data-detailtab="spare-parts">予備部品</button>
                 </nav>
