@@ -214,11 +214,12 @@ h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D660
 }
 .logout-button-small:hover { background: var(--danger); color: white; }
 
-#calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-#calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+#calendar-header h3 { font-size: 1.6rem; font-weight: bold; margin: 0; }
+#calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0.5rem 0; }
+#calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; }
 .calendar-day { border: 1px solid #ddd; background: #fff; min-height: 100px; padding: 5px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
 .calendar-day.not-current-month { background: #f8f9fa; color: #ccc; }
-.calendar-day-header { font-weight: bold; text-align: right; }
+.calendar-day-header { font-weight: bold; font-size: 0.8rem;}
 .calendar-day.saturday .calendar-day-header { color: #007bff; }
 .calendar-day.sunday .calendar-day-header { color: var(--danger); }
 .calendar-day.today .calendar-day-header { display: inline-block; width: 1.8em; text-align: center; border-radius: 50%; background: var(--warning); color: #333; }
@@ -332,8 +333,9 @@ h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D660
     .setup-grid { grid-template-columns: 1fr; }
     .article-content table { display: block; overflow-x: auto; white-space: nowrap; }
     .attendance-btn { width: 130px; height: 130px; font-size: 1.3rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-    
     .wiki-prep-grid { grid-template-columns: 1fr; }
+    .calendar-holiday-name { display: none !important; }
+    .calendar-day-header-container { justify-content: flex-start; gap: 0; }
 }
 
 /* Wiki拡張 */
