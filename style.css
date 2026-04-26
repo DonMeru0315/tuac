@@ -87,7 +87,7 @@ label { display: block; margin: 1rem 0 0.25rem; font-weight: bold; }
 /* ボタン共通 */
 button { cursor: pointer; font-family: inherit; }
 .primary-button, #auth-button, #logout-button, .modal-buttons button {
-    padding: 0.75rem 1.5rem; border: none; border-radius: 5px; font-size: 1rem; color: white;
+    padding: 0.25rem 0.5rem; border: none; border-radius: 5px; font-size: 1rem; color: white;
 }
 .primary-button { background-color: var(--primary); margin-bottom: 1rem; }
 .cancel-button { background-color: var(--text-light); }
@@ -108,7 +108,7 @@ button { cursor: pointer; font-family: inherit; }
 #login-register-area { text-align: center; }
 #login-register-area h3 { margin: 0 0 0.5rem; }
 #auth-form input { display: inline-block; width: 200px; } /* 特定の上書き */
-#auth-button, #logout-button { width: 100%; }
+#auth-button, #logout-button { width: 50%; }
 #toggle-mode-button { background: none; border: none; color: white; text-decoration: underline; padding: 0.5rem; }
 
 /* モーダル */
