@@ -36,7 +36,14 @@ export function setupInfoHandlers(DOMElements) {
 
     // Wikiリストのクリック
     DOMElements.wikiListContainer.addEventListener('click', e => {
-        if (e.target.matches('.wiki-list-item')) showWikiArticle(e.target.dataset.id, DOMElements); // DOMElements を渡す
+        // e.targetから親要素に向かって .wiki-list-item を探す
+        const listItem = e.target.closest('.wiki-list-item');
+        
+        // listItemが見つかった場合のみ処理を実行
+        if (listItem) {
+            // 見つかった要素の dataset.id を取得して渡す
+            showWikiArticle(listItem.dataset.id, DOMElements);
+        }
     });
 
     // Wiki記事内のクリック（戻る、編集、削除）
