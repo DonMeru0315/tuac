@@ -1,5 +1,4 @@
-// キャッシュ名（更新するときはこのバージョン番号を変える）
-const CACHE_NAME = 'club-auto-log-v2.1.7.4';
+const CACHE_NAME = 'club-auto-log';
 
 // キャッシュするファイル一覧
 const ASSETS_TO_CACHE = [
@@ -31,21 +30,26 @@ self.addEventListener('install', (event) => {
 
 // リクエスト処理（キャッシュがあればそこから返し、なければ通信する）
 self.addEventListener('fetch', (event) => {
-  // FirestoreやCloudinaryへのリクエストはキャッシュしない（常に最新を取得）
+  // FirestoreやCloudinaryへのリクエストはキャッシュしない
   if (event.request.url.includes('firestore.googleapis.com') || 
       event.request.url.includes('api.cloudinary.com')) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // キャッシュが見つかればそれを返す
-        if (response) {
-          return response;
-        }
-        // なければネットワークに取りに行く
-        return fetch(event.request);
+    // サーバーに最新ファイルを取りに行く
+    fetch(event.request)
+      .then((networkResponse) => {
+        // 最新ファイルをキャッシュに上書き保存しつつ、画面に返す
+        return caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        });
+      })
+      .catch(() => {
+        // 圏外やオフラインなどで通信失敗した場合は、保存済みのキャッシュを返す
+        console.log('[Service Worker] Offline mode, using cache for:', event.request.url);
+        return caches.match(event.request);
       })
   );
 });
