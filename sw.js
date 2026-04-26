@@ -1,5 +1,5 @@
 // キャッシュ名（更新するときはこのバージョン番号を変える）
-const CACHE_NAME = 'club-auto-log-v2.1.2';
+const CACHE_NAME = 'club-auto-log-v2.1.5';
 
 // キャッシュするファイル一覧
 const ASSETS_TO_CACHE = [
