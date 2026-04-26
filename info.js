@@ -36,7 +36,6 @@ export function setupInfoHandlers(DOMElements) {
 
     // Wikiリストのクリック
     DOMElements.wikiListContainer.addEventListener('click', e => {
-<<<<<<< HEAD
         // e.targetから親要素に向かって .wiki-list-item を探す
         const listItem = e.target.closest('.wiki-list-item');
         
@@ -45,9 +44,6 @@ export function setupInfoHandlers(DOMElements) {
             // 見つかった要素の dataset.id を取得して渡す
             showWikiArticle(listItem.dataset.id, DOMElements);
         }
-=======
-        if (e.target.matches('.wiki-list-item')) showWikiArticle(e.target.dataset.id, DOMElements); // DOMElements を渡す
->>>>>>> 5a20773d951f041f5e009fb8c781b992112614c1
     });
 
     // Wiki記事内のクリック（戻る、編集、削除）
