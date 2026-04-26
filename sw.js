@@ -12,7 +12,6 @@ const ASSETS_TO_CACHE = [
   './vehicle.js',
   './info.js',
   './practice.js',
-  './tools.js',
   './icon-192.png',
   './icon-512.png'
 ];
