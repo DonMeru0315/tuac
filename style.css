@@ -321,9 +321,9 @@ h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D660
     /* モーダル (スマホ全画面) */
     .modal-content {
         width: 95%; height: 100vh; max-height: 85vh; padding: 1.5rem; border-radius: 12px 12px 0 0;
-        position: absolute; bottom: 0; top: auto; overflow-y: auto;
+        position: absolute; bottom: 0; top: auto; overflow-y: auto; overscroll-behavior: contain;
     }
-    .modal-background { align-items: flex-end; }
+    .modal-background { align-items: flex-end; overscroll-behavior: contain; }
     .modal-buttons { flex-direction: column-reverse; gap: 10px; margin-top: 2rem; }
     .modal-buttons button, .modal-buttons-right button { width: 100%; padding: 14px; margin: 0; }
     .modal-buttons-right { display: flex; flex-direction: column-reverse; gap: 10px; width: 100%; }
