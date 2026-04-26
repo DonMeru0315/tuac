@@ -19,8 +19,8 @@
                 <h3 id="form-title">ログイン</h3>
                 <form id="auth-form">
                     <input type="text" id="auth-name" placeholder="名前" class="hidden">
-                    <input type="email" id="auth-email" placeholder="メールアドレス" required>
-                    <input type="password" id="auth-password" placeholder="パスワード" required>
+                    <input type="email" id="auth-email" placeholder="メールアドレス" required autocapitalize="none" autocorrect="off" autocomplete="username">
+                    <input type="password" id="auth-password" placeholder="パスワード" required autocomplete="current-password">
                     <button type="submit" id="auth-button">ログイン</button>
                 </form>
                 <button id="toggle-mode-button">新規登録はこちら</button>
