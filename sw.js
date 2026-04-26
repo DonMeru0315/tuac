@@ -1,5 +1,5 @@
 // キャッシュ名（更新するときはこのバージョン番号を変える）
-const CACHE_NAME = 'club-auto-log-v1';
+const CACHE_NAME = 'club-auto-log-v2.1';
 
 // キャッシュするファイル一覧
 const ASSETS_TO_CACHE = [
@@ -13,7 +13,6 @@ const ASSETS_TO_CACHE = [
   './vehicle.js',
   './info.js',
   './practice.js',
-  './attendance.js',
   './tools.js',
   './icon-192.png',
   './icon-512.png'
