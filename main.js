@@ -173,9 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // カレンダーを再描画
                     practiceModule.renderCalendar(DOMElements);
 
-                }　else if (moduleId === 'tools-module') {
-                    const toolsModule = await import('./tools.js');
-                    toolsModule.setupToolsHandlers(DOMElements);
                 }
             } catch (err) {
                 console.error("モジュールの動的インポートに失敗しました:", moduleId, err);

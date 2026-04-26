@@ -94,8 +94,8 @@ button { cursor: pointer; font-family: inherit; }
 }
 .primary-button { background-color: var(--primary); margin-bottom: 1rem; }
 .cancel-button { background-color: var(--text-light); }
-.delete-button { background-color: var(--danger); color: white;}
-.edit-button { background-color: var(--warning); }
+.delete-button { background-color: var(--danger); color: white; font-size: 1rem; }
+.edit-button { background-color: var(--warning); font-size: 1rem; }
 
 /* 色の個別指定 */
 #show-add-vehicle-button, .attendance-btn.clock-in { background-color: var(--success); }
@@ -186,12 +186,22 @@ button { cursor: pointer; font-family: inherit; }
 .wiki-list-meta { font-size: 0.85rem; color: #555; display: flex; gap: 0.75rem; flex-wrap: wrap; }
 .wiki-difficulty { padding: 2px 6px; border-radius: 4px; background: #eee; font-size: 0.8rem; }
 .wiki-list-updater { color: var(--danger); font-weight: bold; margin-left: auto; }
-
 #wiki-article-view .article-content { background: #fff; padding: 1.5rem; border: 1px solid #ddd; min-height: 200px; line-height: 1.7; }
 .article-actions { margin-top: 1rem; }
+.ql-editor h2, .ql-editor h3 {
+    border: none !important;
+    background: transparent !important; 
+    padding: 0 !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    color: var(--text) !important;
+    font-weight: bold !important;
+}
+.ql-editor h2 { font-size: 1.5em !important; }
+.ql-editor h3 { font-size: 1.2em !important; }
 
 /* 便利ツール・場所 */
-#external-tools, #tool-check-section { background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 1.5rem; }
+#external-tools{ background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 1.5rem; }
 h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D66000; padding-bottom: 5px; }
 .tool-links { display: flex; gap: 1rem; flex-wrap: wrap; }
 .tool-button { flex: 1; min-width: 120px; padding: 0.8rem; text-align: center; text-decoration: none; border-radius: 5px; font-weight: bold; color: white; transition: 0.2s; }
@@ -230,7 +240,7 @@ h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D660
 .calendar-day.saturday .calendar-day-header { color: #007bff; }
 .calendar-day.sunday .calendar-day-header { color: var(--danger); }
 .calendar-day.today .calendar-day-header { display: inline-block; width: 1.8em; text-align: center; border-radius: 50%; background: var(--warning); color: #333; }
-.calendar-event { background: #007bff; color: white; padding: 4px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+.calendar-event { background: #007bff; color: white; padding: 2px; border-radius: 4px; font-size: 0.6rem; cursor: pointer; width: 90%;}
 .calendar-holiday-name { font-size: 1rem; font-weight: bold; color: var(--danger); }
 
 /* ==========================================================================
@@ -264,13 +274,6 @@ h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D660
 /* ユーティリティ & ツール記録 */
 .hidden { display: none !important; }
 .center-message { text-align: center; margin-top: 5rem; color: #777; }
-.tool-photo-thumb { height: 60px; width: auto; border-radius: 4px; border: 1px solid #ddd; cursor: pointer; display: block; }
-.tool-log-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 1rem; }
-.tool-log-card { border: 1px solid #eee; border-radius: 8px; overflow: hidden; background: #f9f9f9; }
-.tool-log-img-box { width: 100%; height: 120px; background: #ccc; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.tool-log-img-box img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
-.tool-log-img-box img:hover { transform: scale(1.1); }
-.tool-log-delete { margin-top: 5px; background: var(--danger); color: white; border: none; border-radius: 4px; width: 100%; cursor: pointer; }
 
 /* 履歴リスト */
 .history-list-container { margin-top: 1rem; text-align: left; background: #f8f9fa; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; }
@@ -361,6 +364,17 @@ h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D660
     .calendar-day-header-container { justify-content: flex-start; gap: 0; }
     div[style*="gap: 1rem"], 
     div[style*="gap:1rem"] {
-        gap: 0.5rem !important; /* 横並びの隙間も狭くする */
+        gap: 0.5rem !important;
     }
+    .ql-toolbar {
+        padding: 4px !important;
+    }
+    .ql-toolbar button {
+        width: 35px !important;
+        height: 35px !important;
+    }
+    #wiki-editor {
+        font-size: 16px;
+    }
+
 }

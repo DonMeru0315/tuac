@@ -80,6 +80,7 @@ async function openEventModalForEdit(eventId, DOMElements) {
         DOMElements.eventForm.querySelector('#event-date').value = dateStr;
         DOMElements.eventForm.querySelector('#event-time').value = event.time || ''; 
         DOMElements.eventForm.querySelector('#event-location').value = event.location || '';
+        DOMElements.eventForm.querySelector('#event-notes').value = event.notes || '';
         DOMElements.deleteEventButton.classList.remove('hidden');
         DOMElements.eventModal.classList.remove('hidden');
     } catch (err) {
@@ -137,6 +138,7 @@ export function setupPracticeHandlers(DOMElements) {
         const timeStr = DOMElements.eventForm.querySelector('#event-time').value;
         const location = DOMElements.eventForm.querySelector('#event-location').value || null;
         const group = DOMElements.eventForm.querySelector('#event-group').value || null;
+        const notes = DOMElements.eventForm.querySelector('#event-notes').value || null;
         const combinedDate = new Date(`${dateStr}T${timeStr || '00:00:00'}`);
         const data = {
             title: title,
@@ -144,6 +146,7 @@ export function setupPracticeHandlers(DOMElements) {
             time: timeStr || null,
             location: location,
             group: group,
+            notes: notes,
             updatedAt: firestore.FieldValue.serverTimestamp(),
             updatedBy: user ? user.displayName : '不明',
             updatedById: user ? user.uid : '不明',
@@ -160,7 +163,7 @@ export function setupPracticeHandlers(DOMElements) {
             await addNewGroup(group, DOMElements);
         }
         DOMElements.eventModal.classList.add('hidden');
-        delete DOMElements.eventModal.dataset.editingId; 
+        delete DOMElements.eventModal.dataset.editingId;
         renderCalendar(DOMElements);
     });
 

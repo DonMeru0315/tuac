@@ -8,9 +8,10 @@
     <meta name="theme-color" content="#D66000">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 </head>
+
 <body>
     <header>
         <h1>拓殖大学　自動車部</h1>
@@ -44,8 +45,8 @@
             <button class="nav-button" data-module="maintenance-module">整備<br class="sp-br">管理</button> 
             <button class="nav-button" data-module="practice-module">部活<br class="sp-br">日程</button>
             <button class="nav-button" data-module="info-module">情報<br class="sp-br">共有</button>
-            <button class="nav-button" data-module="tools-module">便利<br class="sp-br">ツール</button>
-            <button class="nav-button" data-module="help-module">ヘルプ<br class="sp-br">案内</button>
+            <button class="nav-button" data-module="tools-module">ツール<br class="sp-br"></button>
+            <button class="nav-button" data-module="help-module">ヘルプ<br class="sp-br"></button>
         </nav>
 
         <main>
@@ -54,14 +55,11 @@
                 <button id="show-add-vehicle-button" class="primary-button">＋ 部車を新規登録</button>
                 <div id="vehicle-list-container"></div>
             </div>
-
             <div id="vehicle-detail-view" class="module-content hidden">
                 <div class="detail-header-group">
                     <button id="back-to-list-button">＜ 戻る</button>
                     <h2 id="detail-vehicle-name"></h2>
                 </div>
-                
-                
                 <nav id="detail-nav">
                     <button class="detail-nav-button active" data-detailtab="basic-info">基本情報</button>
                     <button class="detail-nav-button" data-detailtab="maintenance-logs">整備履歴</button>
@@ -70,15 +68,12 @@
                     <button class="detail-nav-button" data-detailtab="setup-log">セッティング</button>
                     <button class="detail-nav-button" data-detailtab="spare-parts">予備部品</button>
                 </nav>
-
                 <div id="basic-info-tab" class="detail-tab-content">
                     <div id="basic-info-content"></div>
                 </div>
                 <div id="maintenance-logs-tab" class="detail-tab-content hidden">
                     <button id="show-add-log-button" class="primary-button">＋ 整備履歴を追加</button>
-                    <button id="sync-done-tasks-button" class="primary-button" style="background-color: #6c757d;">
-                        🔄 完了タスクを履歴に反映
-                    </button>
+                    <button id="sync-done-tasks-button" class="primary-button" style="background-color: #6c757d;">🔄 完了タスクを履歴に反映</button>
                     <div id="maintenance-logs-container"></div>
                 </div>
                 <div id="customizations-tab" class="detail-tab-content hidden">
@@ -125,7 +120,7 @@
             </div>
 
             <div id="tools-module" class="module-content hidden">
-                <h2>便利ツール</h2>
+                <h2>ツール</h2>
                 <div id="external-tools">
                     <h3>部品検索ツール</h3>
                     <div class="tool-links">
@@ -138,29 +133,11 @@
                     </div>
                     <p class="tool-note" sytle="color=#888">ⓘ外部サイトが新しいタブで開きます</p>
                 </div>
-                
-
-                <div id="tool-check-section">
-                    <h3>本日の工具使用記録</h3>
-                    <p class="tool-note" style="text-align: left; margin-bottom: 1rem;">
-                        使用した工具の写真を撮ってアップロードしてください。<br>
-                        「誰が」「何を」使ったかを記録し、紛失を防ぎましょう。
-                    </p>
-                    
-                    <button id="add-tool-photo-button" class="primary-button" style="background-color: #6610f2;">
-                        工具の写真を記録
-                    </button>
-                    <input type="file" id="tool-photo-input-tools" accept="image/*" capture="environment" style="display: none;">
-
-                    <div id="tool-log-list" class="tool-log-grid">
-                        </div>
-                </div>
 
                 <hr>
                 <div id="practice-locations">
                     <h3>練習会 会場マップ</h3>
                     <div class="location-list">
-                        
                         <div class="location-card">
                             <h4>
                                 <a href="https://www.google.com/maps?q=ドライビングパレット那須" target="_blank" rel="noopener noreferrer" class="location-name-link">
@@ -207,7 +184,7 @@
 
                         <div class="location-card">
                             <h4>
-                                <a href="https://www.google.com/maps?q=本庄サーキット" target="_blank" rel="noopener noreferrer" class="location-name-link">
+                                <a href="https://www.google.com/maps?q=庄サーキット" target="_blank" rel="noopener noreferrer" class="location-name-link">
                                     本庄サーキット
                                 </a>
                             </h4>
@@ -278,8 +255,7 @@
             <div id="help-module" class="module-content hidden">
                 <h2>部活インフォメーション(製作中)</h2>
 
-                <div class="wiki-section" style="margin-bottom: 1.5rem;">
-                    <h3>情報</h3>
+                <div class="wiki-section" style="margin-bottom: 1rem;">
                     <details>
                         <summary>活動内容</summary>
                             <details>
@@ -395,9 +371,9 @@
             <h3>予定を追加</h3>
             <form id="event-form">
                 <label for="event-title">予定</label>
-                <input type="text" id="event-title" required>
-                <label for="event-group">グループ</label>
-                <input type="text" id="event-group" list="event-group-list" placeholder="例: 走行会, ミーティング">
+                <input type="text" id="event-title" required placeholder="例: 新歓, OB総会">
+                <label for="event-group">カテゴリー</label>
+                <input type="text" id="event-group" list="event-group-list" placeholder="例: 練習会, 通常活動, 大会">
                 <datalist id="event-group-list"></datalist>
                 <label for="event-date">日付</label>
                 <input type="date" id="event-date" required>
@@ -405,6 +381,8 @@
                 <input type="time" id="event-time">
                 <label for="event-location">場所 (任意)</label>
                 <input type="text" id="event-location" placeholder="例: 〇〇キャンパス, △△サーキット">
+                <label for="event-notes">備考 (任意)</label>
+                <textarea id="event-notes" rows="3" placeholder="持ち物や集合場所、詳細など"></textarea>
                 <div class="modal-buttons">
                     <button type="button" id="delete-event-button" class="delete-button hidden">削除</button>
                     <div class="modal-buttons-right"> 
@@ -467,14 +445,16 @@
     </div>
     <input type="file" id="wiki-image-file" accept="image/*" style="display:none;">
 
-    <label for="wiki-content">手順・本文 (Markdown対応)</label>
-    <textarea id="wiki-content" rows="8" placeholder="ここに手順を記載... 画像ボタンを押すとここに画像コードが挿入されます。"></textarea>
+    <label>手順・本文</label>
+    <div style="background: white; margin-bottom: 1rem;">
+        <div id="wiki-editor" style="height: 250px;"></div>
+    </div>
 
     <label for="wiki-notices" style="color:#dc3545;">注意点・コツ</label>
     <textarea id="wiki-notices" rows="3" placeholder="・ボルトが固着しやすいのでラスペネ必須&#13;&#10;・ジャッキアップポイントに注意"></textarea>
 
-    <label for="wiki-links">参考リンク (タイトル | URL)</label>
-    <textarea id="wiki-links" rows="3" placeholder="みんカラ整備手帳 | https://minkara...&#13;&#10;締め付けトルク参考 | https://..."></textarea>
+    <label for="wiki-links">参考リンク (タイトル , URL)</label>
+    <textarea id="wiki-links" rows="3" placeholder="みんカラ整備手帳 , https://minkara...&#13;&#10;締め付けトルク参考 , https://..."></textarea>
     
     <div class="modal-buttons">
         <button type="button" class="cancel-button">キャンセル</button>
