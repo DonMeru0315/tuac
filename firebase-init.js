@@ -1,4 +1,4 @@
-// Firebaseライブラリをインポート
+// Firebaseライブラリをインポートします。
 import "https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js";
 import "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js";
 import "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js";

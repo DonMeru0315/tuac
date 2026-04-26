@@ -1,7 +1,4 @@
-import { db, firestore, auth } from './firebase-init.js'; 
-// ★ あなたのCloudinary設定等はそのまま維持してください
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/tuac/image/upload";
-const UPLOAD_PRESET = "club_auto_preset"; 
+import { db, firestore, auth } from './firebase-init.js';
 
 let unsubscribeToolLogs = null;
 
@@ -10,6 +7,7 @@ export function setupToolsHandlers(DOMElements) {
     const addBtn = document.getElementById('add-tool-photo-button');
     const listContainer = document.getElementById('tool-log-list');
 
+    // ボタンを押したらカメラ/ファイル選択を起動
     addBtn.addEventListener('click', () => {
         const user = auth.currentUser;
         if (!user) {
@@ -19,40 +17,29 @@ export function setupToolsHandlers(DOMElements) {
         fileInput.click();
     });
 
+    // 写真が選択されたら圧縮して保存
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // ボタンをロード中に
         const originalText = addBtn.textContent;
-        addBtn.textContent = "アップロード中...";
+        addBtn.textContent = "圧縮＆保存中...";
         addBtn.disabled = true;
 
         try {
-            const compressedBlob = await compressImageToBlob(file);
-            
-            const formData = new FormData();
-            formData.append('file', compressedBlob);
-            formData.append('upload_preset', UPLOAD_PRESET);
-            formData.append('folder', 'tool_photos');
-
-            const res = await fetch(CLOUDINARY_URL, {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!res.ok) throw new Error('Upload failed');
-            const cloudData = await res.json();
-            
+            // 圧縮 & Base64変換
+            const base64String = await compressImageToBase64(file);
             const user = auth.currentUser;
             const todayStr = getTodayString();
 
+            // tool_logs コレクションに保存
             const data = {
                 date: todayStr,
                 uid: user.uid,
                 displayName: user.displayName || '名称未設定',
-                photoURL: cloudData.secure_url,
-                // 即座に表示させるため、serverTimestamp() ではなく端末の時間を使う
-                timestamp: new Date() 
+                photoBase64: base64String,
+                timestamp: firestore.FieldValue.serverTimestamp()
             };
 
             await db.collection('tool_logs').add(data);
@@ -64,15 +51,18 @@ export function setupToolsHandlers(DOMElements) {
         } finally {
             addBtn.textContent = originalText;
             addBtn.disabled = false;
-            fileInput.value = '';
+            fileInput.value = ''; // 入力をリセット
         }
     });
 
+    // 今日のログをリアルタイム監視
     subscribeTodayToolLogs(listContainer);
 }
 
+// リアルタイム監視を開始
 function subscribeTodayToolLogs(container) {
     if (unsubscribeToolLogs) unsubscribeToolLogs();
+
     const todayStr = getTodayString();
 
     unsubscribeToolLogs = db.collection('tool_logs')
@@ -90,31 +80,16 @@ function subscribeTodayToolLogs(container) {
                 const card = document.createElement('div');
                 card.className = 'tool-log-card';
                 
+                // 時間のフォーマット
                 let timeStr = '';
                 if (log.timestamp) {
-                    // FirestoreのTimestamp型か、JSのDate型かを判定して処理
-                    let dateObj;
-                    if (typeof log.timestamp.toDate === 'function') {
-                        dateObj = log.timestamp.toDate(); // Firestoreから来たデータ
-                    } else {
-                        dateObj = new Date(log.timestamp); // 今保存したばかりのデータ
-                    }
-                    timeStr = `${dateObj.getHours()}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+                    const date = log.timestamp.toDate();
+                    timeStr = `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
                 }
-
-                // undefined チェックを厳密に行い、空の場合は画像タグを出さない、またはプレースホルダーを出す
-                const imgSrc = (log.photoURL && log.photoURL.startsWith('http')) 
-                                ? log.photoURL 
-                                : (log.photoBase64 || ''); // 古いデータへの互換性
-
-                // 画像がある場合のみ img タグを表示、なければ「画像なし」と表示
-                const imgHtml = imgSrc 
-                    ? `<img src="${imgSrc}" alt="工具写真" onclick="window.open(this.src)" loading="lazy">`
-                    : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#ccc;">画像なし</div>`;
 
                 card.innerHTML = `
                     <div class="tool-log-img-box">
-                        <img src="${imgSrc}" alt="工具写真" onclick="window.open(this.src)" loading="lazy">
+                        <img src="${log.photoBase64}" alt="工具写真" onclick="window.open(this.src)">
                     </div>
                     <div class="tool-log-info">
                         <div class="tool-log-user">${log.displayName}</div>
@@ -125,7 +100,8 @@ function subscribeTodayToolLogs(container) {
                 container.appendChild(card);
             });
 
-             container.querySelectorAll('.tool-log-delete').forEach(btn => {
+            // 削除ボタンのイベント設定
+            container.querySelectorAll('.tool-log-delete').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     if (confirm("この写真を削除しますか？")) {
                         await db.collection('tool_logs').doc(e.target.dataset.id).delete();
@@ -135,9 +111,10 @@ function subscribeTodayToolLogs(container) {
         });
 }
 
-function compressImageToBlob(file) {
+// 画像圧縮関数 (attendance.jsと同じロジック)
+function compressImageToBase64(file) {
     return new Promise((resolve, reject) => {
-        const maxWidth = 800; 
+        const maxWidth = 600; 
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
@@ -155,10 +132,9 @@ function compressImageToBlob(file) {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                canvas.toBlob((blob) => {
-                    if(blob) resolve(blob);
-                    else reject(new Error("Compression failed"));
-                }, 'image/jpeg', 0.7);
+                // JPEG, 品質0.5
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                resolve(dataUrl);
             };
             img.onerror = (err) => reject(err);
         };

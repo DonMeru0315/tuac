@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Club Auto Log</title>
-    <link rel="stylesheet" href="style.css?v=1.4">
+    <link rel="stylesheet" href="style.css?v=1.5">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
 </head>
@@ -41,8 +41,8 @@
             <button class="nav-button" data-module="maintenance-module">整備<br class="sp-br">管理</button> 
             <button class="nav-button" data-module="practice-module">部活<br class="sp-br">日程</button>
             <button class="nav-button" data-module="info-module">情報<br class="sp-br">共有</button>
-            <button class="nav-button" data-module="attendance-module">出退勤</button>
             <button class="nav-button" data-module="tools-module">便利<br class="sp-br">ツール</button>
+            <button class="nav-button" data-module="help-module">ヘルプ<br class="sp-br">案内</button>
         </nav>
 
         <main>
@@ -53,14 +53,17 @@
             </div>
 
             <div id="vehicle-detail-view" class="module-content hidden">
-                <button id="back-to-list-button">＜ 車両リストに戻る</button>
-                <h2 id="detail-vehicle-name"></h2>
+                <div class="detail-header-group">
+                    <button id="back-to-list-button">＜ 戻る</button>
+                    <h2 id="detail-vehicle-name"></h2>
+                </div>
+                
                 
                 <nav id="detail-nav">
                     <button class="detail-nav-button active" data-detailtab="basic-info">基本情報</button>
                     <button class="detail-nav-button" data-detailtab="maintenance-logs">整備履歴</button>
-                    <button class="detail-nav-button" data-detailtab="customizations">カスタマイズ</button>
                     <button class="detail-nav-button" data-detailtab="kanban-board">タスク管理</button>
+                    <button class="detail-nav-button" data-detailtab="customizations">カスタマイズ</button>
                     <button class="detail-nav-button" data-detailtab="setup-log">セッティング</button>
                     <button class="detail-nav-button" data-detailtab="spare-parts">予備部品</button>
                 </nav>
@@ -120,7 +123,6 @@
 
             <div id="tools-module" class="module-content hidden">
                 <h2>便利ツール</h2>
-                
                 <div id="external-tools">
                     <h3>部品検索ツール</h3>
                     <div class="tool-links">
@@ -131,8 +133,9 @@
                             PartsFan
                         </a>
                     </div>
-                    <p class="tool-note">※外部サイトが新しいタブで開きます</p>
+                    <p class="tool-note" sytle="color=#888">ⓘ外部サイトが新しいタブで開きます</p>
                 </div>
+                
 
                 <div id="tool-check-section">
                     <h3>本日の工具使用記録</h3>
@@ -269,34 +272,46 @@
                 </div>
             </div>
 
-            <div id="attendance-module" class="module-content hidden">
-                <h2>出退勤打刻</h2>
+            <div id="help-module" class="module-content hidden">
+                <h2>部活インフォメーション(製作中)</h2>
 
-                <div class="attendance-panel">
-                    <p id="attendance-message">読み込み中...</p>
-                    <div class="attendance-buttons">
-                        <button id="clock-in-button" class="attendance-btn clock-in hidden">出 席</button>
-                        <button id="clock-out-button" class="attendance-btn clock-out hidden">退 席</button>
-                    </div>
-                    <p id="attendance-status-text"></p>
+                <div class="wiki-section" style="margin-bottom: 1.5rem;">
+                    <h3>情報</h3>
+                    <details>
+                        <summary>活動内容</summary>
+                            <details>
+                                <summary>整備ってなにやるの？</summary>
+                                <p>こんなことやってます。</p>
+                            </details>
+                            <details>
+                                <summary>練習って？</summary>
+                            </details>
+                    </details>
+                    <details>
+                        <summary>車</summary>
+                            <details>
+                                <summary>詳細</summary>
+                            </details>
+                    </details>
+                    <details>
+                        <summary>金銭</summary>
+                            <details>
+                                <summary>詳細</summary>
+                            </details>
+                    </details>
+                    <details>
+                        <summary>組織</summary>
+                            <details>
+                                <summary>詳細</summary>
+                            </details>
+                    </details>
                 </div>
-            
-                <hr>
-            
-                <h3>本日の参加状況 (<span id="today-date-display"></span>)</h3>
-                <hr style="margin: 2rem 0;"> 
-                <div id="attendance-history-section" style="text-align: center;">
-                    <button id="load-history-button" class="primary-button" style="background-color: #6c757d;">
-                        📅 過去1ヶ月の履歴を表示
-                    </button>
-                    <div id="attendance-history-container" class="history-list-container hidden">
-                        </div>
-                    </div>
+
+                <div class="wiki-notice-box">
+                    <strong>⚠️ バグを発見した・要望がある場合</strong><br>
+                    ページ最下部の「お問い合わせ・バグ報告」リンクから、お知らせください。
                 </div>
-                <div id="attendance-list-container">
-            </div>
-    </div>
-            
+            </div> 
         </main>
     </div>
     
@@ -577,7 +592,7 @@
             <a href="https://docs.google.com/forms/d/e/1FAIpQLScdIjBBcYN6DvGw99G-qUEBCJHQd0gmG6gJp5HdK1aN7KWaIg/viewform?usp=header" target="_blank" rel="noopener noreferrer" class="contact-link">
                 📧 お問い合わせ・バグ報告
             </a>
-            <p class="copyright">© 2025 Takushoku Univ. Auto Club</p>
+            <p class="copyright">© Takushoku Univ. Auto Club</p>
         </div>
     </footer>
 
