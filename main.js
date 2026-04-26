@@ -207,4 +207,14 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("車両モジュールのバックグラウンド読み込み失敗:", err);
         }
     }
+
+    // スクロール時にヘッダーの見た目を変える
+    window.addEventListener('scroll', () => {
+        const header = document.querySelector('header');
+        if (window.scrollY > 20) { // 20px以上スクロールしたら
+            header.classList.add('header-scrolled');
+        } else {
+            header.classList.remove('header-scrolled');
+        }
+    });
 });

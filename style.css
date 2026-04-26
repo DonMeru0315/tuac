@@ -20,6 +20,8 @@ body {
     color: var(--text);
     margin: 0;
     display: flex; flex-direction: column; min-height: 100vh;
+    overflow-x: hidden;
+    width: 100%;
 }
 
 /* ==========================================================================
@@ -289,7 +291,14 @@ h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D660
 @media (max-width: 600px) {
     body { font-size: 16px; padding-bottom: 80px; background-color: #f0f2f5; }
     
-    header { position: sticky; top: 0; z-index: 900; padding: 0.8rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    header { position: sticky; top: 0; z-index: 900; padding: 0.6rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .header-scrolled {
+        background-color: rgba(214, 96, 0, 0.85) !important;
+        padding-top: 0.6rem !important;
+        padding-bottom: 0.6rem !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
     header h1 { font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* ボトムナビ */
