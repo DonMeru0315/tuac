@@ -344,4 +344,8 @@ h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D660
 .wiki-section h3 { margin: 0 0 0.5rem; font-size: 1rem; border-bottom: 1px dashed #ced4da; padding-bottom: 5px; }
 .wiki-notice-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
 .wiki-ref-link { display: inline-block; padding: 6px 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 20px; text-decoration: none; color: #007bff; font-size: 0.9rem; }
+<<<<<<< HEAD
 .wiki-ref-link:hover { background: #e2e6ea; }
+=======
+.wiki-ref-link:hover { background: #e2e6ea; }
+>>>>>>> 5a20773d951f041f5e009fb8c781b992112614c1

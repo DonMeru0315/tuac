@@ -1,5 +1,9 @@
 // キャッシュ名（更新するときはこのバージョン番号を変える）
+<<<<<<< HEAD
 const CACHE_NAME = 'club-auto-log-v2.1.1';
+=======
+const CACHE_NAME = 'club-auto-log-v2.1';
+>>>>>>> 5a20773d951f041f5e009fb8c781b992112614c1
 
 // キャッシュするファイル一覧
 const ASSETS_TO_CACHE = [
@@ -64,4 +68,8 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> 5a20773d951f041f5e009fb8c781b992112614c1
