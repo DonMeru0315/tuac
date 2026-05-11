@@ -25,6 +25,15 @@ body {
     overscroll-behavior-y: none;
 }
 
+button, 
+input, 
+select, 
+textarea, 
+.nav-button, 
+.action-link-button {
+    touch-action: manipulation;
+}
+
 /* ==========================================================================
    ヘッダー / フッター
    ========================================================================== */
