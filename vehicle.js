@@ -314,6 +314,13 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
     
     // タスクカードのクリック（編集モーダルを開く）
     DOMElements.kanbanContainer.addEventListener('click', async e => {
+        // ヘッダー（h4）またはその中の要素がクリックされたか判定
+        const header = e.target.closest('h4');
+        if (header) {
+            const column = header.parentElement;
+            column.classList.toggle('open'); // openクラスを付け外しして表示を切り替え
+            return;
+        }
         const card = e.target.closest('.task-card');
         if (!card) return;
         const taskId = card.dataset.id;
@@ -595,8 +602,12 @@ async function renderCustomizations(vehicleId, DOMElements) {
     });
 }
 
+// vehicle.js 内の renderKanban を書き換え
 async function renderKanban(vehicleId, DOMElements) {
-    ['todo', 'inprogress', 'waiting', 'done'].forEach(status => {
+    const statuses = ['todo', 'inprogress', 'waiting', 'done'];
+    const counts = { todo: 0, inprogress: 0, waiting: 0, done: 0 };
+
+    statuses.forEach(status => {
         const col = document.getElementById(`kanban-${status}`);
         if(col) col.innerHTML = '';
     });
@@ -605,27 +616,33 @@ async function renderKanban(vehicleId, DOMElements) {
     
     snapshot.forEach(doc => {
         const task = doc.data();
+        counts[task.status]++; // 件数をカウント
+
         const card = document.createElement('div');
         card.className = 'task-card';
         card.dataset.id = doc.id;
-        const assigneeInitial = task.assignee ? task.assignee.charAt(0) : '?';
         
-        // 日付の表示 (MM/DD形式)
-        let dateHtml = '';
-        if (task.dueDate) {
-            const dateStr = task.dueDate.replace(/-/g, '/').slice(5); // "2023-11-15" -> "11/15"
-            dateHtml = `<span class="task-date" title="期限: ${task.dueDate}">📅 ${dateStr}</span>`;
-        }
+        let dateHtml = task.dueDate ? `<span class="task-date">📅 ${task.dueDate.slice(5).replace(/-/g, '/')}</span>` : '';
 
         card.innerHTML = `
             <div class="task-title">${task.title}</div>
-            <div class="task-meta">
-                <span>${task.assignee || '未割当'}</span>
-                ${dateHtml}
-            </div>
+            <div class="task-meta"><span>${task.assignee || '未割当'}</span>${dateHtml}</div>
         `;
         const column = document.getElementById(`kanban-${task.status}`);
         if (column) column.appendChild(card);
+    });
+
+    statuses.forEach(status => {
+        const columnEl = document.querySelector(`.kanban-column[data-status="${status}"]`);
+        const header = columnEl.querySelector('h4');
+        // 既存のバッジがあれば削除して再作成
+        const oldBadge = header.querySelector('.task-count-badge');
+        if(oldBadge) oldBadge.remove();
+
+        const badge = document.createElement('span');
+        badge.className = 'task-count-badge';
+        badge.textContent = counts[status];
+        header.appendChild(badge);
     });
 }
 

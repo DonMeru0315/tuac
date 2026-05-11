@@ -261,11 +261,7 @@ export async function renderCalendar(DOMElements) {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'calendar-event';
             eventDiv.dataset.id = event.id;
-            let html = `<div class="event-title">${event.title}</div>`;
-            if (event.time) { html += `<div class="event-detail">🕒 ${event.time}</div>`; }
-            if (event.group) { html += `<div class="event-detail">🏷️ ${event.group}</div>`; }
-            if (event.location) { html += `<div class="event-detail">📍 ${event.location}</div>`; }
-            eventDiv.innerHTML = html;
+            eventDiv.textContent = event.title; // 予定の名前のみをシンプルに表示
             dayDiv.appendChild(eventDiv);
         });
         DOMElements.calendarGrid.appendChild(dayDiv);

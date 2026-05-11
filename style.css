@@ -1,392 +1,227 @@
-/* ==========================================================================
-   設定 & ベーススタイル
-   ========================================================================== */
-:root {
-    --primary: #17a2b8;
-    --success: #28a745;
-    --danger: #dc3545;
-    --warning: #ffc107;
-    --accent: #D66000; /* 拓大オレンジ */
-    --text: #333;
-    --text-light: #6c757d;
-    --bg-gray: #f4f4f9;
-    --border: #dee2e6;
-}
+/* ベース & 変数 */
+:root{--primary:#17a2b8;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--accent:#D66000;--text:#333;--text-light:#6c757d;--bg-gray:#f4f4f9;--border:#dee2e6;}
+body{font-family:"Meiryo","Hiragino Kaku Gothic ProN","MS PGothic",sans-serif;font-size:18px;background-color:var(--bg-gray);color:var(--text);margin:0;display:flex;flex-direction:column;min-height:100svh;overflow-x:hidden;width:100%;overscroll-behavior-y:none;}
+button,input,select,textarea,.nav-button,.action-link-button{touch-action:manipulation;}
 
-body {
-    font-family: "Meiryo", "Hiragino Kaku Gothic ProN", "MS PGothic", sans-serif;
-    font-size: 18px;
-    background-color: var(--bg-gray);
-    color: var(--text);
-    margin: 0;
-    display: flex; flex-direction: column; min-height: 100svh;
-    overflow-x: hidden;
-    width: 100%;
-    overscroll-behavior-y: none;
-}
+/* ヘッダー & フッター */
+header{background-color:var(--accent);color:white;padding:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+header h1{margin:0;font-size:1.5rem;}
+footer{margin-top:auto;padding:2rem 1rem;text-align:center;border-top:1px solid #e9ecef;background-color:#f8f9fa;color:var(--text-light);flex-shrink:0;}
+.copyright{font-size:0.8rem;margin:0;color:#adb5bd;}
+.contact-link{display:inline-block;color:var(--text-light);text-decoration:none;font-size:0.9rem;margin-bottom:0.5rem;border-bottom:1px dashed #adb5bd;transition:0.2s;}
+.contact-link:hover{color:var(--accent);border-bottom-color:var(--accent);}
 
-button, 
-input, 
-select, 
-textarea, 
-.nav-button, 
-.action-link-button {
-    touch-action: manipulation;
-}
+/* ナビゲーション */
+#main-nav{display:flex;background-color:#e9ecef;border-bottom:1px solid var(--border);}
+.sp-br{display:none;}
+.nav-button{flex-grow:1;font-size:0.8rem;line-height:1.3;padding:0.5rem 0.2rem;border-bottom:1px solid var(--border);border-right:none;display:flex;align-items:center;justify-content:center;flex-direction:column;height:auto;}
+.nav-button:last-child{border-right:none;}
+.nav-button.active{background-color:#E65C00;color:white;font-weight:bold;}
+#info-nav,#detail-nav{display:flex;margin-bottom:1rem;border-bottom:1px solid #ddd;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+#info-nav::-webkit-scrollbar,#detail-nav::-webkit-scrollbar{display:none;}
+.info-nav-button,.detail-nav-button{padding:0.6rem 0.8rem;border:none;background:transparent;cursor:pointer;font-size:0.95rem;color:var(--text-light);flex:0 0 auto;border-bottom:3px solid transparent;transition:0.2s;}
+.info-nav-button.active,.detail-nav-button.active{color:var(--accent);font-weight:bold;border-bottom:3px solid var(--accent);background-color:#f8f9fa;}
 
-/* ==========================================================================
-   ヘッダー / フッター
-   ========================================================================== */
-header {
-    background-color: var(--accent);
-    color: white;
-    padding: 1rem;
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
-}
-header h1 { margin: 0; font-size: 1.5rem; }
+/* フォーム & UI共通 */
+input,select,textarea{width:100%;padding:0.5rem;margin-bottom:0.5rem;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;}
+label{display:block;margin:1rem 0 0.25rem;font-weight:bold;}
+button{cursor:pointer;font-family:inherit;}
+.primary-button,#auth-button,#logout-button,.modal-buttons button{padding:0.25rem 0.5rem;border:none;border-radius:5px;font-size:1rem;color:white;}
+.primary-button{background-color:var(--primary);margin-bottom:1rem;}
+.cancel-button{background-color:var(--text-light);}
+.delete-button{background-color:var(--danger);color:white;font-size:1rem;}
+.edit-button{background-color:var(--warning);font-size:1rem;}
+#show-add-vehicle-button,.attendance-btn.clock-in{background-color:var(--success);}
+#logout-button,.attendance-btn.clock-out{background-color:var(--danger);}
+#auth-button{background-color:var(--primary);}
+#back-to-list-button{background:none;border:1px solid var(--text-light);color:var(--text-light);padding:0.5rem 1rem;margin-bottom:0;flex-shrink:0;}
 
-footer {
-    margin-top: auto; padding: 2rem 1rem; text-align: center;
-    border-top: 1px solid #e9ecef; background-color: #f8f9fa; color: var(--text-light); flex-shrink: 0;
-}
-.copyright { font-size: 0.8rem; margin: 0; color: #adb5bd; }
-.contact-link {
-    display: inline-block; color: var(--text-light); text-decoration: none; font-size: 0.9rem;
-    margin-bottom: 0.5rem; border-bottom: 1px dashed #adb5bd; transition: 0.2s;
-}
-.contact-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
+/* 認証 & モーダル */
+#login-register-area{text-align:center;}
+#login-register-area h3{margin:0 0 0.5rem;}
+#auth-form input{display:inline-block;width:200px;}
+#auth-button,#logout-button{width:50%;}
+#toggle-mode-button{background:none;border:none;color:white;text-decoration:underline;padding:0.5rem;}
+.modal-background{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;overscroll-behavior:contain;}
+.modal-content{background:white;padding:2rem;border-radius:8px;width:90%;max-width:500px;box-shadow:0 5px 15px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;overscroll-behavior:contain;}
+.modal-buttons{margin-top:1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+.modal-buttons-right{display:flex;gap:1rem;}
+.modal-buttons [type="submit"]{background-color:var(--primary);}
 
-/* ==========================================================================
-   ナビゲーション
-   ========================================================================== */
-#main-nav { display: flex; background-color: #e9ecef; border-bottom: 1px solid var(--border); }
-.sp-br { display: none; }
+/* カード共通 */
+.vehicle-card,.history-item,.wiki-list-item,.setup-item,.attendance-item,.location-card{background:#fff;padding:0.5rem;border-radius:8px;margin-bottom:0.1rem;border:1px solid #ddd;box-shadow:0 2px 5px rgba(0,0,0,0.05);position:relative;}
 
-.nav-button {
-    flex-grow: 1; font-size: 0.8rem; line-height: 1.3; padding: 0.5rem 0.2rem;
-    border-bottom: 1px solid var(--border); border-right: none;
-    display: flex; align-items: center; justify-content: center; flex-direction: column; height: auto;
-}
-.nav-button:last-child { border-right: none; }
-.nav-button.active { background-color: #E65C00; color: white; font-weight: bold; }
+/* 車両管理 */
+#vehicle-list-container{display:flex;flex-direction:column;gap:8px;padding-bottom:20px;}
+.vehicle-card{margin-bottom:0;padding:15px;border-radius:12px;border:2px solid #f0f0f0;border-left:5px solid var(--accent);display:flex;align-items:center;gap:15px;cursor:pointer;transition:0.1s;-webkit-tap-highlight-color:transparent;}
+.vehicle-card:active{background-color:#fafafa;transform:scale(0.98);}
+.vehicle-icon-box{width:45px;height:45px;background:#fff5eb;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+.vehicle-info{flex-grow:1;display:flex;flex-direction:column;justify-content:center;}
+.vehicle-info h3{margin:0;font-size:1.05rem;font-weight:bold;line-height:1.4;}
+.vehicle-meta{font-size:0.8rem;color:#888;margin-top:3px;display:flex;align-items:center;gap:8px;}
+.maker-badge{background:#eee;color:#555;padding:2px 6px;border-radius:4px;font-size:0.7rem;font-weight:bold;}
+.vehicle-arrow{color:#ccc;font-size:1.2rem;font-weight:bold;}
+.detail-header-group{display:flex;align-items:center;gap:15px;margin-bottom:1rem;}
+#basic-info-content{background:#fff;padding:1rem;border-radius:8px;border:1px solid #eee;}
+#basic-info-content p{font-size:1.1rem;margin:0.5rem 0;border-bottom:1px dashed #eee;padding-bottom:0.25rem;display:flex;justify-content:space-between;}
+#basic-info-content strong{color:#555;font-size:0.9rem;}
+.card-actions{position:absolute;top:1rem;right:1rem;display:flex;gap:0.5rem;}
+.card-actions button{padding:0.5rem 1rem;font-size:0.9rem;}
 
-/* サブナビ (横スクロール) */
-#info-nav, #detail-nav {
-    display: flex; margin-bottom: 1rem; border-bottom: 1px solid #ddd;
-    overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-}
-#info-nav::-webkit-scrollbar, #detail-nav::-webkit-scrollbar { display: none; }
+/* 予備部品 */
+.spare-part-item{cursor:pointer;}
+.spare-part-item:hover{background-color:#f8f9fa;}
+.spare-part-layout{display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;}
+.part-main-info{flex-basis:300px;flex-grow:2;}
+.part-stock-info{flex-basis:200px;flex-grow:1;text-align:right;color:#495057;}
+.part-name{font-size:1.1rem;font-weight:bold;display:block;}
+.part-notes{font-size:0.9rem;background:#f9f9f9;padding:0.5rem;border-radius:4px;margin-top:0.5rem;}
 
-.info-nav-button, .detail-nav-button {
-    padding: 0.6rem 0.8rem; border: none; background: transparent; cursor: pointer;
-    font-size: 0.95rem; color: var(--text-light); flex: 0 0 auto;
-    border-bottom: 3px solid transparent; transition: 0.2s;
-}
-.info-nav-button.active, .detail-nav-button.active {
-    color: var(--accent); font-weight: bold; border-bottom: 3px solid var(--accent); background-color: #f8f9fa;
-}
+/* Wiki */
+.wiki-list-item:hover{background:#f8f9fa;cursor:pointer;}
+.wiki-list-title{font-size:1.15rem;font-weight:bold;margin-bottom:0.5rem;}
+.wiki-list-meta{font-size:0.85rem;color:#555;display:flex;gap:0.75rem;flex-wrap:wrap;}
+.wiki-difficulty{padding:2px 6px;border-radius:4px;background:#eee;font-size:0.8rem;}
+.wiki-list-updater{color:var(--danger);font-weight:bold;margin-left:auto;}
+#wiki-article-view .article-content{background:#fff;padding:1.5rem;border:1px solid #ddd;min-height:200px;line-height:1.7;}
+.article-actions{margin-top:1rem;}
+.ql-editor h2,.ql-editor h3{border:none !important;background:transparent !important;padding:0 !important;margin-top:1rem !important;margin-bottom:0.5rem !important;color:var(--text) !important;font-weight:bold !important;}
+.ql-editor h2{font-size:1.5em !important;}
+.ql-editor h3{font-size:1.2em !important;}
+.wiki-prep-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+.wiki-section{background:#f8f9fa;border:1px solid #e9ecef;border-radius:6px;padding:1rem;}
+.wiki-section h3{margin:0 0 0.5rem;font-size:1rem;border-bottom:1px dashed #ced4da;padding-bottom:5px;}
+.wiki-notice-box{background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:1rem;border-radius:6px;margin-bottom:1.5rem;}
+.wiki-ref-link{display:inline-block;padding:6px 12px;background:#fff;border:1px solid #dee2e6;border-radius:20px;text-decoration:none;color:#007bff;font-size:0.9rem;}
+.wiki-ref-link:hover{background:#e2e6ea;}
 
-/* ==========================================================================
-   UIコンポーネント (ボタン, 入力, モーダル)
-   ========================================================================== */
-/* 入力フォーム共通 */
-input, select, textarea {
-    width: 100%; padding: 0.5rem; margin-bottom: 0.5rem;
-    border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
-}
-label { display: block; margin: 1rem 0 0.25rem; font-weight: bold; }
+/* ツール & 場所 */
+#external-tools{background:#fff;padding:1rem;border-radius:8px;border:1px solid #ddd;margin-bottom:1.5rem;}
+h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;padding-bottom:5px;}
+.tool-links{display:flex;gap:1rem;flex-wrap:wrap;}
+.tool-button{flex:1;min-width:120px;padding:0.8rem;text-align:center;text-decoration:none;border-radius:5px;font-weight:bold;color:white;transition:0.2s;}
+.epc-data{background:#2c3e50;}
+.parts-fan{background:#e67e22;}
+.location-dropdown-container{background:#fff;padding:1rem;border-radius:8px;border:1px solid #ddd;}
+.location-select{width:100%;padding:0.8rem;font-size:1rem;border-radius:5px;border:1px solid #ccc;background-color:#f8f9fa;margin-bottom:0;cursor:pointer;}
+.location-actions{display:flex;gap:10px;margin-top:1rem;}
+.action-link-button{flex:1;display:block;text-align:center;padding:0.8rem;color:white;text-decoration:none;border-radius:5px;font-weight:bold;transition:opacity 0.2s;}
+.action-link-button:hover{opacity:0.8;color:white;}
+.btn-map{background-color:#4285F4;}
+.btn-info{background-color:var(--success);}
 
-/* ボタン共通 */
-button { cursor: pointer; font-family: inherit; }
-.primary-button, #auth-button, #logout-button, .modal-buttons button {
-    padding: 0.25rem 0.5rem; border: none; border-radius: 5px; font-size: 1rem; color: white;
-}
-.primary-button { background-color: var(--primary); margin-bottom: 1rem; }
-.cancel-button { background-color: var(--text-light); }
-.delete-button { background-color: var(--danger); color: white; font-size: 1rem; }
-.edit-button { background-color: var(--warning); font-size: 1rem; }
+/* カレンダー & ユーザーメニュー */
+#user-info{position:relative;display:flex;align-items:center;}
+.icon-button{background:rgba(255,255,255,0.6);border-radius:50%;width:40px;height:40px;border:none;font-size:1.2rem;cursor:pointer;color:white;display:flex;justify-content:center;align-items:center;}
+.dropdown-menu{position:absolute;top:20%;right:0;background:white;padding:0.7rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);width:260px;z-index:2000;text-align:left;border:1px solid var(--border);}
+.dropdown-name{color:black;}
+.dropdown-email{color:black;}
+.logout-button-small{width:100%;padding:0.6rem;background:#fff;color:var(--danger);border:1px solid var(--danger);border-radius:4px;cursor:pointer;font-weight:bold;}
+.logout-button-small:hover{background:var(--danger);color:rgb(10,10,10);}
+#calendar-header h3{font-size:1.6rem;font-weight:bold;margin:0;}
+#calendar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding:0.5rem 0;}
+#calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;}
+.calendar-day{border:1px solid #ddd;background:#fff;min-height:100px;padding:5px;display:flex;flex-direction:column;gap:4px;overflow:hidden;}
+.calendar-day.not-current-month{background:#f8f9fa;color:#ccc;}
+.calendar-day-header{font-weight:bold;font-size:0.8rem;}
+.calendar-day.saturday .calendar-day-header{color:#007bff;}
+.calendar-day.sunday .calendar-day-header{color:var(--danger);}
+.calendar-day.today .calendar-day-header{display:inline-block;width:1.8em;text-align:center;border-radius:50%;background:var(--warning);color:#333;}
+.calendar-event{background:#007bff;color:white;padding:2px;border-radius:4px;font-size:0.7rem;cursor:pointer;width:90%;}
+.calendar-holiday-name{font-size:1rem;font-weight:bold;color:var(--danger);}
 
-/* 色の個別指定 */
-#show-add-vehicle-button, .attendance-btn.clock-in { background-color: var(--success); }
-#logout-button, .attendance-btn.clock-out { background-color: var(--danger); }
-#auth-button { background-color: var(--primary); }
+/* カンバン */
+#kanban-container{display:flex;flex-direction:column;gap:15px;padding:10px 5%;}
+.kanban-column{background:#f4f5f7;border-radius:8px;border:1px solid #ddd;}
+.kanban-column h4{position:relative;display:flex;justify-content:center;align-items:center;padding:20px 15px;margin:0;background:#f8f9fa;border-radius:8px;cursor:pointer;border-bottom:2px solid transparent;font-size:1.2rem;}
+.kanban-column[data-status="todo"] h4{border-bottom-color:var(--text-light);}
+.kanban-column[data-status="inprogress"] h4{border-bottom-color:#007bff;color:#007bff;}
+.kanban-column[data-status="waiting"] h4{border-bottom-color:var(--danger);color:var(--danger);}
+.kanban-column[data-status="done"] h4{border-bottom-color:var(--success);color:var(--success);}
+.kanban-column h4::after{content:'▼';position:absolute;right:15px;font-size:0.7rem;color:#888;}
+.kanban-column.open h4::after{content:'▲';}
+.kanban-list{display:none;padding:15px 10px;background:#fff;border-top:1px solid #eee;border-radius:0 0 8px 8px;}
+.kanban-column.open .kanban-list{display:block;}
+.task-count-badge{position:absolute;left:15px;background-color:#dc3545;color:white;border-radius:50%;min-width:24px;height:24px;display:flex;justify-content:center;align-items:center;font-size:1rem;font-weight:bold;}
+.task-meta{font-size:0.8rem;color:#666;display:flex;justify-content:space-between;}
+.task-date{font-size:0.75rem;color:#e74c3c;background:#fdf0ed;padding:1px 4px;border-radius:3px;}
+.task-card{background:#fff;border:1px solid #ddd;border-radius:6px;padding:10px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05);}
+.task-card:last-child{margin-bottom:0;}
+.task-title{font-weight:bold;margin-bottom:5px;font-size:0.95rem;color:var(--text);}
 
-#back-to-list-button {
-    background: none; border: 1px solid var(--text-light); color: var(--text-light);
-    padding: 0.5rem 1rem; margin-bottom: 0; flex-shrink: 0;
-}
 
-/* 認証エリア */
-#login-register-area { text-align: center; }
-#login-register-area h3 { margin: 0 0 0.5rem; }
-#auth-form input { display: inline-block; width: 200px; } /* 特定の上書き */
-#auth-button, #logout-button { width: 50%; }
-#toggle-mode-button { background: none; border: none; color: white; text-decoration: underline; padding: 0.5rem; }
+/* セッティング・履歴・出退勤・その他 */
+.setup-item{border-left:5px solid var(--primary);}
+.setup-header{display:flex;justify-content:space-between;font-weight:bold;border-bottom:1px solid #eee;padding-bottom:0.5rem;margin-bottom:0.5rem;}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;font-size:0.9rem;}
+.attendance-panel{background:#fff;padding:1.5rem;border-radius:8px;text-align:center;box-shadow:0 2px 5px rgba(0,0,0,0.05);margin-bottom:2rem;}
+.attendance-buttons{display:flex;justify-content:center;gap:2rem;margin-bottom:1rem;}
+.attendance-btn{width:150px;height:150px;border-radius:50%;border:none;font-size:1.5rem;font-weight:bold;color:white;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,0.2);}
+.clock-in{background:linear-gradient(135deg,#28a745,#218838);}
+.clock-out{background:linear-gradient(135deg,#dc3545,#c82333);}
+#attendance-list-container{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;}
+.attendance-item.active{border-left:5px solid var(--success);background:#f0fff4;}
+.attendance-item.left{border-left:5px solid var(--text-light);opacity:0.7;}
+.hidden{display:none !important;}
+.center-message{text-align:center;margin-top:5rem;color:#777;}
+.history-list-container{margin-top:1rem;text-align:left;background:#f8f9fa;padding:1rem;border-radius:8px;border:1px solid #ddd;}
+.history-date-header{background:#e9ecef;padding:0.5rem;font-weight:bold;color:#495057;margin-top:1rem;border-radius:4px 4px 0 0;border-bottom:2px solid var(--border);}
+.history-group{background:#fff;border:1px solid var(--border);border-top:none;padding:0.5rem;}
+.history-row{display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px dashed #eee;font-size:0.9rem;}
 
-/* モーダル */
-.modal-background {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;
-    overscroll-behavior: contain;
-}
-.modal-content {
-    background: white; padding: 2rem; border-radius: 8px;
-    width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    max-height: 90vh; overflow-y: auto; overscroll-behavior: contain;
-}
-.modal-buttons { margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.modal-buttons-right { display: flex; gap: 1rem; }
-.modal-buttons [type="submit"] { background-color: var(--primary); }
-
-/* ==========================================================================
-   カード & リストスタイル (共通化)
-   ========================================================================== */
-/* 全てのカード要素に共通するスタイル */
-.vehicle-card, .history-item, .wiki-list-item, .setup-item, .attendance-item, .location-card {
-    background: #fff; padding: 0.5rem; border-radius: 8px; margin-bottom: 0.1rem;
-    border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative;
-}
-
-/* 車両カード */
-#vehicle-list-container { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; }
-.vehicle-card {
-    margin-bottom: 0; padding: 15px; border-radius: 12px; border: 2px solid #f0f0f0; border-left: 5px solid var(--accent);
-    display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.1s;
-    -webkit-tap-highlight-color: transparent;
-}
-.vehicle-card:active { background-color: #fafafa; transform: scale(0.98); }
-.vehicle-icon-box {
-    width: 45px; height: 45px; background: #fff5eb; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;
-}
-.vehicle-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
-.vehicle-info h3 { margin: 0; font-size: 1.05rem; font-weight: bold; line-height: 1.4; }
-.vehicle-meta { font-size: 0.8rem; color: #888; margin-top: 3px; display: flex; align-items: center; gap: 8px; }
-.maker-badge { background: #eee; color: #555; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
-.vehicle-arrow { color: #ccc; font-size: 1.2rem; font-weight: bold; }
-.detail-header-group {
-    display: flex;           /* 横並びにする */
-    align-items: center;     /* 上下中央揃え */
-    gap: 15px;               /* ボタンと名前の間隔 */
-    margin-bottom: 1rem;     /* 下（タブナビゲーション）との余白 */
-}
-
-/* 詳細・履歴・Wiki・セッティング等のパーツ */
-#basic-info-content { background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #eee; }
-#basic-info-content p {
-    font-size: 1.1rem; margin: 0.5rem 0; border-bottom: 1px dashed #eee; padding-bottom: 0.25rem;
-    display: flex; justify-content: space-between;
-}
-#basic-info-content strong { color: #555; font-size: 0.9rem; }
-
-.card-actions { position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; }
-.card-actions button { padding: 0.5rem 1rem; font-size: 0.9rem; }
-
-.spare-part-item { cursor: pointer; }
-.spare-part-item:hover { background-color: #f8f9fa; }
-.spare-part-layout { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-.part-main-info { flex-basis: 300px; flex-grow: 2; }
-.part-stock-info { flex-basis: 200px; flex-grow: 1; text-align: right; color: #495057; }
-.part-name { font-size: 1.1rem; font-weight: bold; display: block; }
-.part-notes { font-size: 0.9rem; background: #f9f9f9; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; }
-
-.wiki-list-item:hover { background: #f8f9fa; cursor: pointer; }
-.wiki-list-title { font-size: 1.15rem; font-weight: bold; margin-bottom: 0.5rem; }
-.wiki-list-meta { font-size: 0.85rem; color: #555; display: flex; gap: 0.75rem; flex-wrap: wrap; }
-.wiki-difficulty { padding: 2px 6px; border-radius: 4px; background: #eee; font-size: 0.8rem; }
-.wiki-list-updater { color: var(--danger); font-weight: bold; margin-left: auto; }
-#wiki-article-view .article-content { background: #fff; padding: 1.5rem; border: 1px solid #ddd; min-height: 200px; line-height: 1.7; }
-.article-actions { margin-top: 1rem; }
-.ql-editor h2, .ql-editor h3 {
-    border: none !important;
-    background: transparent !important; 
-    padding: 0 !important;
-    margin-top: 1rem !important;
-    margin-bottom: 0.5rem !important;
-    color: var(--text) !important;
-    font-weight: bold !important;
-}
-.ql-editor h2 { font-size: 1.5em !important; }
-.ql-editor h3 { font-size: 1.2em !important; }
-
-/* 便利ツール・場所 */
-#external-tools{ background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 1.5rem; }
-h3 { margin-top: 0; font-size: 1rem; color: #555; border-bottom: 2px solid #D66000; padding-bottom: 5px; }
-.tool-links { display: flex; gap: 1rem; flex-wrap: wrap; }
-.tool-button { flex: 1; min-width: 120px; padding: 0.8rem; text-align: center; text-decoration: none; border-radius: 5px; font-weight: bold; color: white; transition: 0.2s; }
-.epc-data { background: #2c3e50; } .parts-fan { background: #e67e22; }
-.location-dropdown-container { background: #fff; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; }
-.location-select { width: 100%; padding: 0.8rem; font-size: 1rem; border-radius: 5px; border: 1px solid #ccc; background-color: #f8f9fa; margin-bottom: 0; cursor: pointer; }
-.location-actions { display: flex; gap: 10px; margin-top: 1rem; }
-.action-link-button { flex: 1; display: block; text-align: center; padding: 0.8rem; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; transition: opacity 0.2s; }
-.action-link-button:hover { opacity: 0.8; color: white; }
-.btn-map { background-color: #4285F4; } /* Google Maps風ブルー */
-.btn-info { background-color: var(--success); }
-
-/* ==========================================================================
-   カレンダー & ユーザーメニュー
-   ========================================================================== */
-#user-info { position: relative; display: flex; align-items: center; }
-.icon-button {
-    background: rgba(255,255,255,0.6); border-radius: 50%; width: 40px; height: 40px; border: none;
-    font-size: 1.2rem; cursor: pointer; color: white; display: flex; justify-content: center; align-items: center;
-}
-.dropdown-menu {
-    position: absolute; top: 20%; right: 0; background: white; padding: 0.7rem;
-    border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); width: 260px; z-index: 2000; text-align: left; border: 1px solid var(--border);
-}
-.dropdown-name {color: black;}
-.dropdown-email {color: black;}
-.logout-button-small {
-    width: 100%; padding: 0.6rem; background: #fff; color: var(--danger); border: 1px solid var(--danger);
-    border-radius: 4px; cursor: pointer; font-weight: bold;
-}
-.logout-button-small:hover { background: var(--danger); color: rgb(10, 10, 10); }
-
-#calendar-header h3 { font-size: 1.6rem; font-weight: bold; margin: 0; }
-#calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0.5rem 0; }
-#calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; }
-.calendar-day { border: 1px solid #ddd; background: #fff; min-height: 100px; padding: 5px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
-.calendar-day.not-current-month { background: #f8f9fa; color: #ccc; }
-.calendar-day-header { font-weight: bold; font-size: 0.8rem;}
-.calendar-day.saturday .calendar-day-header { color: #007bff; }
-.calendar-day.sunday .calendar-day-header { color: var(--danger); }
-.calendar-day.today .calendar-day-header { display: inline-block; width: 1.8em; text-align: center; border-radius: 50%; background: var(--warning); color: #333; }
-.calendar-event { background: #007bff; color: white; padding: 2px; border-radius: 4px; font-size: 0.6rem; cursor: pointer; width: 90%;}
-.calendar-holiday-name { font-size: 1rem; font-weight: bold; color: var(--danger); }
-
-/* ==========================================================================
-   カンバン / セッティング / 出退勤
-   ========================================================================== */
-#kanban-container { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; min-height: 300px; }
-.kanban-column { flex: 1; min-width: 200px; background: #f4f5f7; border-radius: 8px; padding: 0.5rem; border: 1px solid #ddd; }
-.kanban-column h4 { margin: 0 0 0.5rem 0; text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 5px; }
-/* カンバン色設定 */
-.kanban-column[data-status="todo"] h4 { border-color: var(--text-light); }
-.kanban-column[data-status="inprogress"] h4 { border-color: #007bff; color: #007bff; }
-.kanban-column[data-status="waiting"] h4 { border-color: var(--danger); color: var(--danger); }
-.kanban-column[data-status="done"] h4 { border-color: var(--success); color: var(--success); }
-.task-card { background: white; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: 1px solid #e1e4e8; cursor: pointer; }
-.task-meta { font-size: 0.8rem; color: #666; display: flex; justify-content: space-between; }
-.task-date { font-size: 0.75rem; color: #e74c3c; background: #fdf0ed; padding: 1px 4px; border-radius: 3px; }
-
-.setup-item { border-left: 5px solid var(--primary); }
-.setup-header { display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 0.5rem; }
-.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; }
-
-.attendance-panel { background: #fff; padding: 1.5rem; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 2rem; }
-.attendance-buttons { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; }
-.attendance-btn { width: 150px; height: 150px; border-radius: 50%; border: none; font-size: 1.5rem; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-.clock-in { background: linear-gradient(135deg, #28a745, #218838); }
-.clock-out { background: linear-gradient(135deg, #dc3545, #c82333); }
-#attendance-list-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
-.attendance-item.active { border-left: 5px solid var(--success); background: #f0fff4; }
-.attendance-item.left { border-left: 5px solid var(--text-light); opacity: 0.7; }
-
-/* ユーティリティ & ツール記録 */
-.hidden { display: none !important; }
-.center-message { text-align: center; margin-top: 5rem; color: #777; }
-
-/* 履歴リスト */
-.history-list-container { margin-top: 1rem; text-align: left; background: #f8f9fa; padding: 1rem; border-radius: 8px; border: 1px solid #ddd; }
-.history-date-header { background: #e9ecef; padding: 0.5rem; font-weight: bold; color: #495057; margin-top: 1rem; border-radius: 4px 4px 0 0; border-bottom: 2px solid var(--border); }
-.history-group { background: #fff; border: 1px solid var(--border); border-top: none; padding: 0.5rem; }
-.history-row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px dashed #eee; font-size: 0.9rem; }
-
-/* Wiki拡張 */
-.wiki-prep-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
-.wiki-section { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 1rem; }
-.wiki-section h3 { margin: 0 0 0.5rem; font-size: 1rem; border-bottom: 1px dashed #ced4da; padding-bottom: 5px; }
-.wiki-notice-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
-.wiki-ref-link { display: inline-block; padding: 6px 12px; background: #fff; border: 1px solid #dee2e6; border-radius: 20px; text-decoration: none; color: #007bff; font-size: 0.9rem; }
-.wiki-ref-link:hover { background: #e2e6ea; }
-
-/* ==========================================================================
-   スマホ最適化 (Media Query: max-width 600px)
-   ========================================================================== */
+/* @media (max-width: 600px) スマホ用 */
 @media (max-width: 600px) {
-    body { font-size: 16px; padding-bottom: 80px; background-color: #f0f2f5; }
+    /* ベース */
+    body{font-size:16px;padding-bottom:80px;background-color:#f0f2f5;}
+    main{padding:10px;}
+    .module-content h2{font-size:1.3rem;margin-top:1rem;border-left:5px solid var(--accent);padding-left:10px;margin-bottom:1.5rem;}
+    .hidden{display:none !important;}
     
-    header { position: sticky; top: 0; z-index: 900; padding: 0.6rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .header-scrolled {
-        background-color: rgba(214, 96, 0, 0.85) !important;
-        padding-top: 0.6rem !important;
-        padding-bottom: 0.6rem !important;
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-    header h1 { font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* ヘッダー */
+    header{position:sticky;top:0;z-index:900;padding:0.6rem;box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+    .header-scrolled{background-color:rgba(214,96,0,0.85) !important;padding-top:0.6rem !important;padding-bottom:0.6rem !important;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+    header h1{font-size:1.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
-    /* ボトムナビ */
-    #main-nav {
-        position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; z-index: 1000;
-        padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        border-top: 1px solid #eee; display: flex; justify-content: space-around;
-    }
-    .nav-button {
-        flex: 1; border: none; background: transparent; color: #888; padding: 0.5rem 0;
-        font-size: 1rem; height: 60px; border-radius: 0;
-    }
-    .nav-button.active { color: #E65C00; background: transparent; position: relative; }
-    .nav-button.active::after {
-        content: ''; position: absolute; top: 0; left: 20%; width: 60%; height: 3px;
-        background-color: #E65C00; border-radius: 0 0 4px 4px;
-    }
-    .sp-br { display: block; }
+    /* ナビゲーション */
+    #main-nav{position:fixed;bottom:0;left:0;width:100%;background:#fff;z-index:1000;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,0.1);border-top:1px solid #eee;display:flex;justify-content:space-around;}
+    .nav-button{flex:1;border:none;background:transparent;color:#888;padding:0.5rem 0;font-size:1rem;height:60px;border-radius:0;}
+    .nav-button.active{color:#E65C00;background:transparent;position:relative;}
+    .nav-button.active::after{content:'';position:absolute;top:0;left:20%;width:60%;height:3px;background-color:#E65C00;border-radius:0 0 4px 4px;}
+    .sp-br{display:block;}
+    #detail-nav,#info-nav{background:#fff;padding:5px 0 5px 10px;margin:0 -10px 1rem;position:sticky;top:60px;z-index:800;box-shadow:0 2px 4px rgba(0,0,0,0.05);}
+    .detail-nav-button,.info-nav-button{padding:10px 15px;font-size:0.9rem;}
 
-    /* 入力・メインエリア */
-    input, select, textarea { font-size: 15px !important; padding: 8px 10px !important; margin-bottom: 0.2rem !important; background: #fff; }
-    label { margin-top: 0.8rem; font-size: 0.85rem; color: #555; }
-    main { padding: 10px; }
-    .module-content h2 { font-size: 1.3rem; margin-top: 1rem; border-left: 5px solid var(--accent); padding-left: 10px; margin-bottom: 1.5rem; }
+    /* フォーム周り */
+    input,select,textarea{font-size:15px !important;padding:8px 10px !important;margin-bottom:0.2rem !important;background:#fff;}
+    label{margin-top:0.8rem;font-size:0.85rem;color:#555;}
+    div[style*="gap: 1rem"],div[style*="gap:1rem"]{gap:0.5rem !important;}
 
-    /* サブナビ */
-    #detail-nav, #info-nav {
-        background: #fff; padding: 5px 0 5px 10px; margin: 0 -10px 1rem; position: sticky; top: 60px;
-        z-index: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .detail-nav-button, .info-nav-button { padding: 10px 15px; font-size: 0.9rem; }
-    .detail-header-group {
-        gap: 10x;
-    }
-    .detail-vehicle-name {
-        font-size: 1.1rem;
-    }
+    /* モーダル */
+    .modal-background{align-items:flex-end;overscroll-behavior:contain;}
+    .modal-content{width:85%;height:100svh;max-height:85vh;padding:1.2rem 1rem;border-radius:12px 12px 0 0;position:absolute;bottom:0;top:auto;overflow-y:auto;overscroll-behavior:contain;}
+    .modal-content h3{margin-bottom:0.5rem;font-size:1.1rem;}
+    .modal-buttons{flex-direction:column-reverse;gap:10px;margin-top:2rem;}
+    .modal-buttons button,.modal-buttons-right button{width:100%;padding:14px;margin:0;}
+    .modal-buttons-right{display:flex;flex-direction:column-reverse;gap:10px;width:100%;}
 
-    /* モーダル (スマホ全画面) */
-    .modal-content {
-        width: 85%; height: 100svh; max-height: 85vh; padding: 1.2rem 1rem; border-radius: 12px 12px 0 0;
-        position: absolute; bottom: 0; top: auto; overflow-y: auto; overscroll-behavior: contain;
-    }
-    .modal-content h3 { margin-bottom: 0.5rem; font-size: 1.1rem; }
-    .modal-background { align-items: flex-end; overscroll-behavior: contain; }
-    .modal-buttons { flex-direction: column-reverse; gap: 10px; margin-top: 2rem; }
-    .modal-buttons button, .modal-buttons-right button { width: 100%; padding: 14px; margin: 0; }
-    .modal-buttons-right { display: flex; flex-direction: column-reverse; gap: 10px; width: 100%; }
+    /* 各種カード・リスト・レイアウト調整 */
+    .detail-header-group{gap:10px;}
+    .detail-vehicle-name{font-size:1.1rem;}
+    #vehicle-list-container{gap:15px;}
+    .vehicle-card{padding:15px;border:none;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+    .history-item,.wiki-list-item,.setup-item{padding:15px;border:none;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:15px;}
+    .setup-grid{grid-template-columns:1fr;}
+    .wiki-prep-grid{grid-template-columns:1fr;}
+    .article-content table{display:block;overflow-x:auto;white-space:nowrap;}
+    .attendance-btn{width:130px;height:130px;font-size:1.3rem;box-shadow:0 8px 20px rgba(0,0,0,0.2);}
+    .calendar-holiday-name{display:none !important;}
+    .calendar-day-header-container{justify-content:flex-start;gap:0;}
+    .calendar-day{padding:2px 3px;}
+    .calendar-day-header-container{display:flex;justify-content:flex-start;align-items:flex-start;}
+    .calendar-day-header{text-align:left;line-height:1;}
+    .ql-toolbar{padding:4px !important;}
+    .ql-toolbar button{width:35px !important;height:35px !important;}
+    #wiki-editor{font-size:16px;}
+    .location-actions{flex-direction:column;font-size:1rem;}
 
-    /* その他スマホ調整 */
-    #vehicle-list-container { gap: 15px; }
-    .vehicle-card { padding: 15px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .history-item, .wiki-list-item, .setup-item { padding: 15px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; }
-    .setup-grid { grid-template-columns: 1fr; }
-    .article-content table { display: block; overflow-x: auto; white-space: nowrap; }
-    .attendance-btn { width: 130px; height: 130px; font-size: 1.3rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
-    .wiki-prep-grid { grid-template-columns: 1fr; }
-    .calendar-holiday-name { display: none !important; }
-    .calendar-day-header-container { justify-content: flex-start; gap: 0; }
-    div[style*="gap: 1rem"], 
-    div[style*="gap:1rem"] {
-        gap: 0.5rem !important;
-    }
-    .ql-toolbar {
-        padding: 4px !important;
-    }
-    .ql-toolbar button {
-        width: 35px !important;
-        height: 35px !important;
-    }
-    #wiki-editor {
-        font-size: 16px;
-    }
-    .location-actions { flex-direction: column; font-size: 1rem;}
 }
