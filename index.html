@@ -133,122 +133,31 @@
                     </div>
                     <p class="tool-note" sytle="color=#888">ⓘ外部サイトが新しいタブで開きます</p>
                 </div>
-
-                <hr>
-                <div id="practice-locations">
+                
+                <div id="practice-locations" class="location-dropdown-container">
                     <h3>練習会 会場マップ</h3>
-                    <div class="location-list">
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://www.google.com/maps?q=ドライビングパレット那須" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    ドライビングパレット那須
-                                </a>
-                            </h4>
-                            <a href="http://dp-nasu.com/04calender/index.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                空き状況を見る
-                            </a>
-                        </div>
-
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://www.google.com/maps?q=筑波サーキット+ジムカーナ場" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    筑波サーキット (ジムカーナ場)
-                                </a>
-                            </h4>
-                            <a href="https://www.tsukuba-circuit.jp/more-info/reserve.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                コースの貸し出し・通常予約
-                            </a>
-                        </div>
-                        
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://www.google.com/maps?q=モビリティリゾートもてぎ+北ショートコース" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    もてぎ北ショート
-                                </a>
-                            </h4>
-                            <a href="https://apps.mobilityland.co.jp/info/download/bYUmdv" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                スポーツ走行情報
-                            </a>
-                        </div>
-                        
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://www.google.com/maps?q=富士スピードウェイ+ジムカーナコース" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    富士スピードウェイ
-                                </a>
-                            </h4>
-                            <a href="https://www.fsw.tv/driving/howto/courserental.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                WEBサイト
-                            </a>
-                        </div>
-
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://www.google.com/maps?q=庄サーキット" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    本庄サーキット
-                                </a>
-                            </h4>
-                            <a href="https://honjo-circuit.com/rents_schedule" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                日程表を見る
-                            </a>
-                        </div>
-                        
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://www.google.com/maps?q=群馬サイクルスポーツセンター" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    群馬サイクルスポーツセンター
-                                </a>
-                            </h4>
-                            <a href="https://www.gunsai.jp/about_rental/#calender" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                予約/カレンダー
-                            </a>
-                        </div>
-                        
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://maps.app.goo.gl/pkCHWWfe6ohExNhs6" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    宝台樹スキー場 駐車場
-                                </a>
-                            </h4>
-                            <a href="http://www.quality-jp.net/saigun/practice.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                JMRC埼群ジムカーナOFFICIALホームページ
-                            </a>
-                        </div>
-                        
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://maps.app.goo.gl/EzkAXJnSCn9sb4wM9" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    南千葉サーキット
-                                </a>
-                            </h4>
-                            <a href="https://reserve.minami-chiba-circuit.com/" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                南千葉サーキット予約サイト
-                            </a>
-                        </div>
-                        
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://www.google.com/maps?q=ナリタモーターランド" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    ナリタモーターランド
-                                </a>
-                            </h4>
-                            <a href="https://narita-motorland.sakura.ne.jp/schedule-1.html" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                コーススケジュール
-                            </a>
-                        </div>
-                        
-                        <div class="location-card">
-                            <h4>
-                                <a href="https://www.google.com/maps?q=茨城中央サーキット" target="_blank" rel="noopener noreferrer" class="location-name-link">
-                                    茨城中央サーキット
-                                </a>
-                            </h4>
-                            <a href="http://clear.la.coocan.jp/" target="_blank" rel="noopener noreferrer" class="location-link-button">
-                                WEBサイト
-                            </a>
-                        </div>
-                        
-                        </div>
+                    <select id="location-select" class="location-select">
+                        <option value="" disabled selected>▼ 会場を選択してください</option>
+                        <option data-map="https://www.google.com/maps?q=ドライビングパレット那須" data-info="http://dp-nasu.com/04calender/index.html">ドライビングパレット那須</option>
+                        <option data-map="https://www.google.com/maps?q=筑波サーキット+ジムカーナ場" data-info="https://www.tsukuba-circuit.jp/more-info/reserve.html">筑波サーキット (ジムカーナ場)</option>
+                        <option data-map="https://www.google.com/maps?q=モビリティリゾートもてぎ+北ショートコース" data-info="https://apps.mobilityland.co.jp/info/download/bYUmdv">もてぎ北ショート</option>
+                        <option data-map="https://www.google.com/maps?q=富士スピードウェイ+ジムカーナコース" data-info="https://www.fsw.tv/driving/howto/courserental.html">富士スピードウェイ</option>
+                        <option data-map="https://www.google.com/maps?q=庄サーキット" data-info="https://honjo-circuit.com/rents_schedule">本庄サーキット</option>
+                        <option data-map="https://www.google.com/maps?q=群馬サイクルスポーツセンター" data-info="https://www.gunsai.jp/about_rental/#calender">群馬サイクルスポーツセンター</option>
+                        <option data-map="https://maps.app.goo.gl/pkCHWWfe6ohExNhs6" data-info="http://www.quality-jp.net/saigun/practice.html">宝台樹スキー場 駐車場</option>
+                        <option data-map="https://maps.app.goo.gl/EzkAXJnSCn9sb4wM9" data-info="https://reserve.minami-chiba-circuit.com/">南千葉サーキット</option>
+                        <option data-map="https://www.google.com/maps?q=ナリタモーターランド" data-info="https://narita-motorland.sakura.ne.jp/schedule-1.html">ナリタモーターランド</option>
+                        <option data-map="https://www.google.com/maps?q=茨城中央サーキット" data-info="http://clear.la.coocan.jp/">茨城中央サーキット</option>
+                    </select>
+                
+                    <div id="location-action-area" class="location-actions hidden">
+                        <a id="location-map-btn" href="#" target="_blank" rel="noopener noreferrer" class="action-link-button btn-map">
+                            Google Maps
+                        </a>
+                        <a id="location-info-btn" href="#" target="_blank" rel="noopener noreferrer" class="action-link-button btn-info">
+                            WEBサイト・予約
+                        </a>
+                    </div>
                 </div>
             </div>
 

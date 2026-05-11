@@ -214,4 +214,32 @@ document.addEventListener('DOMContentLoaded', () => {
             header.classList.remove('header-scrolled');
         }
     });
+
+    // 会場マップ ドロップダウン制御
+    const locationSelect = document.getElementById('location-select');
+    const locationActionArea = document.getElementById('location-action-area');
+    const locationMapBtn = document.getElementById('location-map-btn');
+    const locationInfoBtn = document.getElementById('location-info-btn');
+
+    if (locationSelect) {
+        locationSelect.addEventListener('change', (e) => {
+            // 選択されたオプション要素を取得
+            const selectedOption = e.target.options[e.target.selectedIndex];
+
+            // カスタムデータ属性(data-*)からURLを取得
+            const mapUrl = selectedOption.getAttribute('data-map');
+            const infoUrl = selectedOption.getAttribute('data-info');
+
+            if (mapUrl && infoUrl) {
+                // ボタンのリンク先を更新
+                locationMapBtn.href = mapUrl;
+                locationInfoBtn.href = infoUrl;
+                // ボタンエリアを表示
+                locationActionArea.classList.remove('hidden');
+            } else {
+                // 値がない場合は非表示
+                locationActionArea.classList.add('hidden');
+            }
+        });
+    }
 });
