@@ -484,32 +484,60 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
     });
 }
 
-// 車両リストをDBから取得・描画
+// 車両リストをDBから取得・描画（差分更新版）
 export function fetchVehicles(DOMElements, onVehicleClick) {
     if (unsubscribeVehicles) unsubscribeVehicles();
-    unsubscribeVehicles = db.collection('vehicles').orderBy('name').onSnapshot(snapshot => {
-        DOMElements.vehicleListContainer.innerHTML = '';
-        if (snapshot.empty) {
-            DOMElements.vehicleListContainer.innerHTML = '<p>車両が登録されていません。</p>';
-        }
-        snapshot.forEach(doc => {
-            const vehicle = doc.data();
-            const card = document.createElement('div');
-            card.className = 'vehicle-card';
-            card.dataset.id = doc.id;
-            card.innerHTML = `
-                <div class="vehicle-info">
-                    <h3>${vehicle.name}</h3>
-                    <div class="vehicle-meta">
-                        <span class="maker-badge">${vehicle.manufacturer || '未設定'}</span>
-                        <span class="model-code">${vehicle.modelCode || ''}</span>
-                    </div>
-                </div>
+    DOMElements.vehicleListContainer.replaceChildren();
 
-                <div class="vehicle-arrow">›</div>
-            `;
+    unsubscribeVehicles = db.collection('vehicles').orderBy('name').onSnapshot(snapshot => {
+        if (snapshot.empty) {
+            DOMElements.vehicleListContainer.innerHTML = '<p class="empty-msg">車両が登録されていません。</p>';
+            return;
+        }
+        const emptyMsg = DOMElements.vehicleListContainer.querySelector('.empty-msg');
+        if (emptyMsg) emptyMsg.remove();
+
+        snapshot.docChanges().forEach(change => {
+            const vehicle = change.doc.data();
+            const docId = change.doc.id;
+            if (change.type === 'added') {
+                const card = document.createElement('div');
+                card.className = 'vehicle-card';
+                card.dataset.id = docId;
+                card.innerHTML = `
+                    <div class="vehicle-info">
+                        <h3>${vehicle.name}</h3>
+                        <div class="vehicle-meta">
+                            <span class="maker-badge">${vehicle.manufacturer || '未設定'}</span>
+                            <span class="model-code">${vehicle.modelCode || ''}</span>
+                        </div>
+                    </div>
+                    <div class="vehicle-arrow">›</div>
+                `;
+                DOMElements.vehicleListContainer.appendChild(card);
+            } else if (change.type === 'modified') {
+                const card = DOMElements.vehicleListContainer.querySelector(`.vehicle-card[data-id="${docId}"]`);
+                if (card) {
+                    card.innerHTML = `
+                        <div class="vehicle-info">
+                            <h3>${vehicle.name}</h3>
+                            <div class="vehicle-meta">
+                                <span class="maker-badge">${vehicle.manufacturer || '未設定'}</span>
+                                <span class="model-code">${vehicle.modelCode || ''}</span>
+                            </div>
+                        </div>
+                        <div class="vehicle-arrow">›</div>
+                    `;
+                }
+            } 
             
-            DOMElements.vehicleListContainer.appendChild(card);
+            else if (change.type === 'removed') {
+                // 【削除】データが消された時
+                const card = DOMElements.vehicleListContainer.querySelector(`.vehicle-card[data-id="${docId}"]`);
+                if (card) {
+                    card.remove();
+                }
+            }
         });
     }, err => console.error(err));
 }

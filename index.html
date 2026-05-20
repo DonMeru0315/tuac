@@ -297,18 +297,29 @@
             <h3>予定を追加</h3>
             <form id="event-form">
                 <label for="event-title">予定</label>
-                <input type="text" id="event-title" required placeholder="例: 新歓, OB総会">
+                <input type="text" id="event-title" required placeholder="予定名">
                 <label for="event-group">カテゴリー</label>
                 <input type="text" id="event-group" list="event-group-list" placeholder="例: 練習会, 通常活動, 大会">
                 <datalist id="event-group-list"></datalist>
                 <label for="event-date">日付</label>
                 <input type="date" id="event-date" required>
-                <label for="event-time">時間 (任意)</label>
-                <input type="time" id="event-time">
-                <label for="event-location">場所 (任意)</label>
-                <input type="text" id="event-location" placeholder="例: 〇〇キャンパス, △△サーキット">
-                <label for="event-notes">備考 (任意)</label>
-                <textarea id="event-notes" rows="3" placeholder="持ち物や集合場所、詳細など"></textarea>
+                <div id="toggle-event-details-btn" style="color: #007bff; cursor: pointer; margin: 15px 0; font-size: 0.9rem; text-align: center; font-weight: bold;">
+                    詳細を表示
+                </div>
+                <div id="event-time-wrapper" class="hidden">
+                    <label for="event-time">時間</label>
+                    <input type="time" id="event-time">
+                </div>
+                
+                <div id="event-location-wrapper" class="hidden">
+                    <label for="event-location">場所</label>
+                    <input type="text" id="event-location" placeholder="例: 〇〇キャンパス, △△サーキット">
+                </div>
+                
+                <div id="event-notes-wrapper" class="hidden">
+                    <label for="event-notes">備考</label>
+                    <textarea id="event-notes" rows="3" placeholder="持ち物や集合場所、詳細など"></textarea>
+                </div>
                 <div class="modal-buttons">
                     <button type="button" id="delete-event-button" class="delete-button hidden">削除</button>
                     <div class="modal-buttons-right"> 

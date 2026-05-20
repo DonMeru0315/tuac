@@ -30,6 +30,18 @@ function ensureDOMElements(DOMElements) {
     if (!DOMElements.deleteEventButton) {
         DOMElements.deleteEventButton = DOMElements.eventModal.querySelector('#delete-event-button');
     }
+    if (!DOMElements.toggleEventDetailsBtn) {
+        DOMElements.toggleEventDetailsBtn = DOMElements.eventModal.querySelector('#toggle-event-details-btn');
+        DOMElements.timeWrapper = DOMElements.eventModal.querySelector('#event-time-wrapper');
+        DOMElements.locationWrapper = DOMElements.eventModal.querySelector('#event-location-wrapper');
+        DOMElements.notesWrapper = DOMElements.eventModal.querySelector('#event-notes-wrapper');
+        DOMElements.toggleEventDetailsBtn.addEventListener('click', () => {
+            DOMElements.timeWrapper.classList.remove('hidden');
+            DOMElements.locationWrapper.classList.remove('hidden');
+            DOMElements.notesWrapper.classList.remove('hidden');
+            DOMElements.toggleEventDetailsBtn.classList.add('hidden');
+        });
+    }
 }
 
 // イベントグループを読み込み
@@ -60,6 +72,10 @@ function openEventModalForNew(dateStr, DOMElements) {
     DOMElements.eventModal.querySelector('h3').textContent = '予定を追加';
     DOMElements.eventForm.querySelector('#event-date').value = dateStr;
     DOMElements.deleteEventButton.classList.add('hidden');
+    DOMElements.timeWrapper.classList.add('hidden');
+    DOMElements.locationWrapper.classList.add('hidden');
+    DOMElements.notesWrapper.classList.add('hidden');
+    DOMElements.toggleEventDetailsBtn.classList.remove('hidden');
     DOMElements.eventModal.classList.remove('hidden');
 }
 
@@ -81,6 +97,18 @@ async function openEventModalForEdit(eventId, DOMElements) {
         DOMElements.eventForm.querySelector('#event-time').value = event.time || ''; 
         DOMElements.eventForm.querySelector('#event-location').value = event.location || '';
         DOMElements.eventForm.querySelector('#event-notes').value = event.notes || '';
+        if (event.time) DOMElements.timeWrapper.classList.remove('hidden');
+        else DOMElements.timeWrapper.classList.add('hidden');
+        if (event.location) DOMElements.locationWrapper.classList.remove('hidden');
+        else DOMElements.locationWrapper.classList.add('hidden');
+        if (event.notes) DOMElements.notesWrapper.classList.remove('hidden');
+        else DOMElements.notesWrapper.classList.add('hidden');
+
+        if (event.time && event.location && event.notes) {
+            DOMElements.toggleEventDetailsBtn.classList.add('hidden');
+        } else {
+            DOMElements.toggleEventDetailsBtn.classList.remove('hidden');
+        }
         DOMElements.deleteEventButton.classList.remove('hidden');
         DOMElements.eventModal.classList.remove('hidden');
     } catch (err) {
