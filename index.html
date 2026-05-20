@@ -445,12 +445,18 @@
                 <input type="text" id="setup-course" placeholder="例: 〇〇サーキット (ドライ)">
                 <h4>足回り</h4>
                 <div style="display:flex; gap:10px;">
-                    <input type="text" id="setup-damper-f" placeholder="減衰 F">
-                    <input type="text" id="setup-damper-r" placeholder="減衰 R">
+                    <input type="text" inputmode="decimal" id="setup-damper-f" placeholder="減衰 F">
+                    <input type="text" inputmode="decimal" id="setup-damper-r" placeholder="減衰 R">
                 </div>
                 <div style="display:flex; gap:10px; margin-top:5px;">
-                    <input type="text" id="setup-spring" placeholder="バネレート">
-                    <input type="text" id="setup-camber" placeholder="キャンバー">
+                    <input type="text" inputmode="decimal" id="setup-spring" placeholder="バネレート">
+                    <input type="text" inputmode="decimal" id="setup-camber" placeholder="キャンバー">
+                </div>
+                <h4>タイヤ</h4>
+                <input type="text" id="setup-tire" placeholder="タイヤ銘柄 (例: A052)">
+                <div style="display:flex; gap:10px;">
+                    <input type="text" inputmode="decimal" id="setup-air-f" placeholder="空気圧 F (温間)">
+                    <input type="text" inputmode="decimal" id="setup-air-r" placeholder="空気圧 R (温間)">
                 </div>
                 <h4>タイヤ</h4>
                 <input type="text" id="setup-tire" placeholder="タイヤ銘柄 (例: A052)">
