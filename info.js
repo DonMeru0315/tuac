@@ -148,6 +148,27 @@ export function setupInfoHandlers(DOMElements) {
             DOMElements.wikiModal.querySelector('h3').textContent = 'Wikiを編集';
             DOMElements.wikiModal.classList.remove('hidden');
         }
+        if (e.target.matches('.share-button')) {
+            const title = e.target.dataset.title;
+            // 現在のURLを取得（アプリのURL）
+            const url = window.location.href; 
+            
+            // Web Share API が使えるブラウザかチェック
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'TUAC Auto Log',
+                        text: `自動車部Wiki: ${title}\n`,
+                        url: url
+                    });
+                } catch (err) {
+                    console.log('共有がキャンセルされたか、エラーが発生しました:', err);
+                }
+            } else {
+                alert('お使いのブラウザや端末は、この共有機能に対応していません。');
+            }
+            return;
+        }
         if (e.target.matches('.delete-button')) {
             if (confirm('この記事を削除しますか？')) {
                 await db.collection('wiki').doc(id).delete();
@@ -259,6 +280,7 @@ async function showWikiArticle(id, DOMElements) {
         ${linksHtml}
 
         <div class="article-actions">
+            <button class="share-button" style="background-color: var(--success);" data-title="${article.title}">共有</button>
             <button class="edit-button" data-id="${doc.id}">編集</button>
             <button class="delete-button" data-id="${doc.id}">削除</button>
         </div>`;

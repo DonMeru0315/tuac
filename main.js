@@ -294,4 +294,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // オフライン・オンライン検知インジケーター
+    const offlineBanner = document.getElementById('offline-banner');
+    
+    // 電波が切れた瞬間
+    window.addEventListener('offline', () => {
+        if (offlineBanner) {
+            offlineBanner.textContent = 'オフライン（入力データは保存され、通信回復時に自動同期されます）';
+            offlineBanner.style.backgroundColor = 'var(--danger)';
+            offlineBanner.classList.add('show');
+        }
+    });
+
+    // 電波が復帰した瞬間
+    window.addEventListener('online', () => {
+        if (offlineBanner) {
+            offlineBanner.textContent = 'オンラインに復帰しました（データを同期しています）';
+            offlineBanner.style.backgroundColor = 'var(--success)';
+            setTimeout(() => {
+                offlineBanner.classList.remove('show');
+            }, 3000);
+        }
+    });
+
+    // アプリ起動時にすでにオフラインだった場合のチェック
+    if (!navigator.onLine && offlineBanner) {
+        offlineBanner.classList.add('show');
+    }
+
 });
