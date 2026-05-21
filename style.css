@@ -205,8 +205,10 @@ h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;paddin
     .modal-content input,.modal-content select,.modal-content textarea{font-size:15px !important;padding:6px 8px !important;margin-bottom:0.1rem !important;}
     #wiki-editor{height:180px !important;}
     .modal-buttons{flex-direction:column-reverse;gap:8px;margin-top:1rem;}
-    .modal-buttons button,.modal-buttons-right button{width:100%;padding:10px !important;margin:0;}
+    .modal-buttons button,.modal-buttons-right button{width:100%;padding:12px !important;margin:0;}
     .modal-buttons-right{display:flex;flex-direction:column-reverse;gap:8px;width:100%;}
+    .modal-buttons .delete-button { margin-top: 32px !important; background-color: transparent !important; border: 2px solid var(--danger) !important; color: var(--danger) !important; font-weight: bold; }
+    .modal-buttons .delete-button:active { background-color: var(--danger) !important; color: white !important; }
 
     /* 各種カード・リスト・レイアウト調整 */
     .detail-header-group{gap:10px;}
