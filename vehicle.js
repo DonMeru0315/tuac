@@ -311,6 +311,31 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
             }
         });
     }
+
+    // セレクトボックスを操作してステータスを即座に変更する処理
+    DOMElements.kanbanContainer.addEventListener('change', async e => {
+        if (e.target.matches('.quick-status-change')) {
+            const taskId = e.target.dataset.id;
+            const newStatus = e.target.value;
+            if (!currentVehicleId || !taskId) return;
+
+            e.target.disabled = true; // 連続タップ防止
+
+            const data = { 
+                status: newStatus, 
+                updatedAt: firestore.FieldValue.serverTimestamp() 
+            };
+            if (newStatus === 'done') {
+                data.doneAt = new Date();
+            } else {
+                data.doneAt = firestore.FieldValue.delete();
+            }
+
+            // DBを更新して即座にカンバンを再描画
+            await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).update(data);
+            renderKanban(currentVehicleId, DOMElements);
+        }
+    });
     
     // タスクカードのクリック（編集モーダルを開く）
     DOMElements.kanbanContainer.addEventListener('click', async e => {
@@ -319,6 +344,11 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
         if (header) {
             const column = header.parentElement;
             column.classList.toggle('open'); // openクラスを付け外しして表示を切り替え
+            return;
+        }
+
+        // セレクトボックス自体をクリックした場合はモーダルを開かない（イベントを無視する）
+        if (e.target.tagName.toLowerCase() === 'select' || e.target.tagName.toLowerCase() === 'option') {
             return;
         }
         const card = e.target.closest('.task-card');
@@ -652,9 +682,28 @@ async function renderKanban(vehicleId, DOMElements) {
         
         let dateHtml = task.dueDate ? `<span class="task-date">📅 ${task.dueDate.slice(5).replace(/-/g, '/')}</span>` : '';
 
+        // ステータス選択肢の定義
+        const statusOptions = [
+            { value: 'todo', label: '未着手' },
+            { value: 'inprogress', label: '作業中' },
+            { value: 'waiting', label: '部品待ち' },
+            { value: 'done', label: '完了' }
+        ];
+        
+        // セレクトボックスのHTMLを生成（現在のステータスを選択状態にする）
+        let selectHtml = `<select class="quick-status-change" data-id="${doc.id}">`;
+        statusOptions.forEach(opt => {
+            const selected = task.status === opt.value ? 'selected' : '';
+            selectHtml += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
+        });
+        selectHtml += `</select>`;
+
         card.innerHTML = `
             <div class="task-title">${task.title}</div>
             <div class="task-meta"><span>${task.assignee || '未割当'}</span>${dateHtml}</div>
+            <div class="task-actions" style="margin-top: 8px; text-align: right;">
+                ${selectHtml}
+            </div>
         `;
         const column = document.getElementById(`kanban-${task.status}`);
         if (column) column.appendChild(card);
