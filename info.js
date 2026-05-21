@@ -1,6 +1,7 @@
 import { db, firestore, auth } from './firebase-init.js';
 
 let quill;
+let wikiDataCache = []; // 取得したWikiデータを保持しておく配列
 export function setupInfoHandlers(DOMElements) {
     if (!quill) {
         quill = new Quill('#wiki-editor', {
@@ -110,6 +111,22 @@ export function setupInfoHandlers(DOMElements) {
         }
     });
 
+    // 検索ボックスに入力されたときのリアルタイム絞り込み処理
+    const searchInput = document.getElementById('wiki-search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            // キャッシュからタイトルかタグに一致するものを探す
+            const filteredData = wikiDataCache.filter(article => {
+                const titleMatch = (article.title || '').toLowerCase().includes(query);
+                const tagsMatch = (article.tags || []).some(tag => tag.toLowerCase().includes(query));
+                return titleMatch || tagsMatch;
+            });
+            // 絞り込んだ結果だけを描画
+            renderWikiList(DOMElements.wikiListContainer, filteredData);
+        });
+    }
+
     // Wiki記事内のクリック（戻る、編集、削除）
     DOMElements.wikiArticleView.addEventListener('click', async e => {
         const id = e.target.dataset.id;
@@ -138,33 +155,39 @@ export function setupInfoHandlers(DOMElements) {
             }
         }
     });
-
-    
 }
 
-// Wikiリストを表示
+// WikiデータをDBから取得してキャッシュし、初期表示する
 export async function showWikiList(DOMElements) {
     DOMElements.wikiArticleView.classList.add('hidden');
     DOMElements.wikiListContainer.classList.remove('hidden');
-    DOMElements.wikiListContainer.innerHTML = '';
+    const searchInput = document.getElementById('wiki-search-input');
+    if (searchInput) searchInput.value = '';
     const snapshot = await db.collection('wiki').orderBy('updatedAt', 'desc').get();
+    wikiDataCache = [];
+    snapshot.forEach(doc => {
+        wikiDataCache.push({ id: doc.id, ...doc.data() });
+    });
+    renderWikiList(DOMElements.wikiListContainer, wikiDataCache);
+}
+
+// データ配列をもとにリストを描画する専用関数
+function renderWikiList(container, dataArray) {
+    container.innerHTML = '';
     
-    if (snapshot.empty) {
-        DOMElements.wikiListContainer.innerHTML = '<p>Wiki記事はまだありません。</p>';
-        return; // 
+    if (dataArray.length === 0) {
+        container.innerHTML = '<p>該当するWiki記事はありません。</p>';
+        return;
     }
     
-    snapshot.forEach(doc => {
-        const article = doc.data(); // ★ データを取得
+    dataArray.forEach(article => {
         const item = document.createElement('div');
         item.className = 'wiki-list-item';
-        item.dataset.id = doc.id;
+        item.dataset.id = article.id;
         
         let updateInfo = '更新情報なし';
         if (article.updatedAt) {
-            // FirestoreのTimestampをJavaScriptのDateオブジェクトに変換
             const date = article.updatedAt.toDate(); 
-            // YYYY/MM/DD 形式にフォーマット
             const dateString = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
             updateInfo = `( ${dateString} 更新 - ${article.updatedBy || '不明'} )`;
         }
@@ -177,8 +200,7 @@ export async function showWikiList(DOMElements) {
                 <span class="wiki-list-updater">${updateInfo}</span>
             </div>
         `;
-        
-        DOMElements.wikiListContainer.appendChild(item);
+        container.appendChild(item);
     });
 }
 
