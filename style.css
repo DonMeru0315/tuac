@@ -189,7 +189,11 @@ h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;paddin
     .nav-button.active{color:#E65C00;background:transparent;position:relative;}
     .nav-button.active::after{content:'';position:absolute;top:0;left:20%;width:60%;height:3px;background-color:#E65C00;border-radius:0 0 4px 4px;}
     .sp-br{display:block;}
-    #detail-nav,#info-nav{background:#fff;padding:5px 0 5px 10px;margin:0 -10px 1rem;position:sticky;top:60px;z-index:800;box-shadow:0 2px 4px rgba(0,0,0,0.05);}
+    .sp-br{display:block;}
+    .nav-scroll-wrapper { position: sticky; top: 60px; z-index: 800; margin: 0 -10px 1rem; }
+    .nav-scroll-wrapper::after { content: ''; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1) 80%); pointer-events: none; }
+    #detail-nav, #info-nav { background: #fff; padding: 5px 0 5px 10px; margin: 0; position: relative;  box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
     .detail-nav-button,.info-nav-button{padding:10px 15px;font-size:0.9rem;}
 
     /* フォーム周り */
