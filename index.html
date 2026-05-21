@@ -181,6 +181,32 @@
                         </a>
                     </div>
                 </div>
+
+                <div class="location-dropdown-container" style="margin-top: 1.5rem;">
+                    <h3>活動報告書エクスポート</h3>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <h4 style="margin: 0 0 5px 0; font-size: 0.95rem; color: #555;">【月次】レポート出力</h4>
+                        <input type="month" id="export-month" class="location-select" style="margin-bottom:10px;">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="btn-export-month-calendar-csv" class="primary-button" style="flex:1; margin:0; background-color:#28a745;">📅 日程 CSV</button>
+                            <button id="btn-export-month-calendar-pdf" class="primary-button" style="flex:1; margin:0; background-color:#17a2b8;">📅 日程 PDF</button>
+                            <button id="btn-export-month-logs-csv" class="primary-button" style="flex:1; margin:0; background-color:#28a745;">🔧 整備 CSV</button>
+                            <button id="btn-export-month-logs-pdf" class="primary-button" style="flex:1; margin:0; background-color:#17a2b8;">🔧 整備 PDF</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 style="margin: 0 0 5px 0; font-size: 0.95rem; color: #555;">【年次】レポート出力</h4>
+                        <input type="number" id="export-year" class="location-select" style="margin-bottom:10px;" placeholder="例: 2026">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="btn-export-year-calendar-csv" class="primary-button" style="flex:1; margin:0; background-color:#28a745;">📅 日程 CSV</button>
+                            <button id="btn-export-year-calendar-pdf" class="primary-button" style="flex:1; margin:0; background-color:#17a2b8;">📅 日程 PDF</button>
+                            <button id="btn-export-year-logs-csv" class="primary-button" style="flex:1; margin:0; background-color:#28a745;">🔧 整備 CSV</button>
+                            <button id="btn-export-year-logs-pdf" class="primary-button" style="flex:1; margin:0; background-color:#17a2b8;">🔧 整備 PDF</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="help-module" class="module-content hidden">

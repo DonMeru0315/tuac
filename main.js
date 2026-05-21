@@ -242,4 +242,56 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // 活動報告書エクスポート制御
+    const exportMonthInput = document.getElementById('export-month');
+    const exportYearInput = document.getElementById('export-year');
+    
+    // 入力欄の初期値を「現在の月」および「現在の年」に設定
+    if (exportMonthInput && exportYearInput) {
+        const now = new Date();
+        exportMonthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        exportYearInput.value = now.getFullYear();
+    }
+
+    // エクスポートの共通処理関数
+    async function triggerExport(type, period, btnId) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "出力中...";
+
+        try {
+            const exportModule = await import('./export.js');
+            await exportModule.handleExport(type, period);
+        } catch (err) {
+            console.error("エクスポートエラー:", err);
+            alert("出力に失敗しました。電波状況を確認してください。");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+
+    const exportTypes = ['calendar-csv', 'calendar-pdf', 'logs-csv', 'logs-pdf'];
+    
+    // 月次ボタンのリスナー登録
+    exportTypes.forEach(type => {
+        document.getElementById(`btn-export-month-${type}`)?.addEventListener('click', () => {
+            const month = document.getElementById('export-month').value;
+            if (!month) { alert("対象の月を選択してください。"); return; }
+            triggerExport(type, month, `btn-export-month-${type}`);
+        });
+    });
+
+    // 年次ボタンのリスナー登録
+    exportTypes.forEach(type => {
+        document.getElementById(`btn-export-year-${type}`)?.addEventListener('click', () => {
+            const year = document.getElementById('export-year').value;
+            if (!year) { alert("対象の年を入力してください。"); return; }
+            triggerExport(type, year, `btn-export-year-${type}`);
+        });
+    });
+
 });
