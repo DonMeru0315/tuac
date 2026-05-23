@@ -280,7 +280,7 @@ async function showWikiArticle(id, DOMElements) {
         ${linksHtml}
 
         <div class="article-actions">
-            <button class="share-button" style="background-color: var(--success);" data-title="${article.title}">共有</button>
+            <button class="share-button primary-button" style="background-color:var(--success);" data-title="${article.title}">共有</button>
             <button class="edit-button" data-id="${doc.id}">編集</button>
             <button class="delete-button" data-id="${doc.id}">削除</button>
         </div>`;

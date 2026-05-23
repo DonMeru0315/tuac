@@ -86,7 +86,7 @@ button{cursor:pointer;font-family:inherit;}
 .wiki-difficulty{padding:2px 6px;border-radius:4px;background:#eee;font-size:0.8rem;}
 .wiki-list-updater{color:var(--danger);font-weight:bold;margin-left:auto;}
 #wiki-article-view .article-content{background:#fff;padding:1.5rem;border:1px solid #ddd;min-height:200px;line-height:1.7;}
-.article-actions{margin-top:1rem;}
+.article-actions{display:flex;gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);flex-wrap:wrap;}.article-actions button{flex:1;min-width:100px;padding:10px;border-radius:5px;border:none;cursor:pointer;font-weight:bold;}.article-actions .edit-button{background-color:var(--primary);color:white;}.article-actions .delete-button{background-color:transparent;border:2px solid var(--danger)!important;color:var(--danger);}
 .ql-editor h2,.ql-editor h3{border:none !important;background:transparent !important;padding:0 !important;margin-top:1rem !important;margin-bottom:0.5rem !important;color:var(--text) !important;font-weight:bold !important;}
 .ql-editor h2{font-size:1.5em !important;}
 .ql-editor h3{font-size:1.2em !important;}

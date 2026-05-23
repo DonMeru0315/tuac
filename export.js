@@ -108,24 +108,38 @@ function exportLogsCSV(logs, period) {
 }
 
 function openPrintWindow(title, htmlContent) {
-    const win = window.open('', '_blank');
-    win.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>${title}</title>
+    const children = Array.from(document.body.children);
+    children.forEach(child => {
+        if (child.style) {
+            child.dataset.originalDisplay = child.style.display;
+            child.style.display = 'none';
+        }
+    });
+    const printContainer = document.createElement('div');
+    printContainer.id = 'print-container';
+    printContainer.innerHTML = `
+        <div style="font-family:sans-serif; color:#333; padding:15mm; background:white; position:absolute; top:0; left:0; width:100%; min-height:100vh; z-index:99999;">
             <style>
-                @page{margin:0;}body{font-family:sans-serif;color:#333;margin:15mm;}h1{font-size:1.5rem;border-bottom:2px solid #D66000;padding-bottom:8px;margin-bottom:20px;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{border:1px solid #ddd;padding:10px;text-align:left;font-size:0.9rem;}th{background-color:#f4f4f9;font-weight:bold;}@media print{button{display:none;}}
+                @page{margin:0;}
+                h1{font-size:1.5rem; border-bottom:2px solid #D66000; padding-bottom:8px; margin-bottom:20px;}
+                table{width:100%; border-collapse:collapse; margin-top:10px;}
+                th,td{border:1px solid #ddd; padding:10px; text-align:left; font-size:0.9rem;}
+                th{background-color:#f4f4f9; font-weight:bold;}
             </style>
-        </head>
-        <body>
-            <div style="text-align:right;margin-bottom:10px;"><button onclick="window.print()" style="padding:8px 15px;background:#17a2b8;color:white;border:none;border-radius:4px;font-weight:bold;cursor:pointer;">PDFとして印刷・保存</button></div>
             <h1>${title}</h1>
             ${htmlContent}
-        </body>
-        </html>
-    `);
-    win.document.close();
+        </div>
+    `;
+    document.body.appendChild(printContainer);
+    setTimeout(() => {
+        window.print();
+        document.body.removeChild(printContainer);
+        children.forEach(child => {
+            if (child.style) {
+                child.style.display = child.dataset.originalDisplay;
+            }
+        });
+    }, 300); // 描画されるまで少しだけ待機
 }
 
 function exportCalendarPDF(events, period) {
