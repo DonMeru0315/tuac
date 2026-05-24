@@ -108,38 +108,39 @@ function exportLogsCSV(logs, period) {
 }
 
 function openPrintWindow(title, htmlContent) {
-    const children = Array.from(document.body.children);
-    children.forEach(child => {
-        if (child.style) {
-            child.dataset.originalDisplay = child.style.display;
-            child.style.display = 'none';
-        }
-    });
-    const printContainer = document.createElement('div');
-    printContainer.id = 'print-container';
-    printContainer.innerHTML = `
-        <div style="font-family:sans-serif; color:#333; padding:15mm; background:white; position:absolute; top:0; left:0; width:100%; min-height:100vh; z-index:99999;">
-            <style>
-                @page{margin:0;}
-                h1{font-size:1.5rem; border-bottom:2px solid #D66000; padding-bottom:8px; margin-bottom:20px;}
-                table{width:100%; border-collapse:collapse; margin-top:10px;}
-                th,td{border:1px solid #ddd; padding:10px; text-align:left; font-size:0.9rem;}
-                th{background-color:#f4f4f9; font-weight:bold;}
-            </style>
-            <h1>${title}</h1>
-            ${htmlContent}
-        </div>
-    `;
-    document.body.appendChild(printContainer);
-    setTimeout(() => {
-        window.print();
-        document.body.removeChild(printContainer);
-        children.forEach(child => {
-            if (child.style) {
-                child.style.display = child.dataset.originalDisplay;
+    let printContainer = document.getElementById('print-area');
+    if (!printContainer) {
+        printContainer = document.createElement('div');
+        printContainer.id = 'print-area';
+        printContainer.className = 'print-only';
+        document.body.appendChild(printContainer);
+    }
+    let printStyle = document.getElementById('print-style');
+    if (!printStyle) {
+        printStyle = document.createElement('style');
+        printStyle.id = 'print-style';
+        printStyle.textContent = `
+            /* 通常時は印刷用領域を隠す */
+            @media screen {
+                .print-only { display: none !important; }
             }
-        });
-    }, 300); // 描画されるまで少しだけ待機
+            @media print {
+                body * { visibility: hidden; }
+                #print-area, #print-area * { visibility: visible; }
+                #print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 15mm; background: white; }
+                #print-area h1 { font-size:1.5rem; border-bottom:2px solid #D66000; padding-bottom:8px; margin-bottom:20px; }
+                #print-area table { width:100%; border-collapse:collapse; margin-top:10px; }
+                #print-area th, #print-area td { border:1px solid #ddd; padding:10px; text-align:left; font-size:0.9rem; }
+                #print-area th { background-color:#f4f4f9; font-weight:bold; }
+            }
+        `;
+        document.head.appendChild(printStyle);
+    }
+    printContainer.innerHTML = `
+        <h1>${title}</h1>
+        ${htmlContent}
+    `;
+    window.print();
 }
 
 function exportCalendarPDF(events, period) {
