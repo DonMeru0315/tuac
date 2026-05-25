@@ -49,6 +49,9 @@ button{cursor:pointer;font-family:inherit;}
 .modal-buttons{margin-top:1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
 .modal-buttons-right{display:flex;gap:1rem;}
 .modal-buttons [type="submit"]{background-color:var(--primary);}
+.modal-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin-bottom: 10px; }
+.modal-header-title { margin: 0; padding: 0; border: none; }
+.modal-edit-toggle { background: none; border: none; font-size: 1.2rem; cursor: pointer; }
 
 /* カード共通 */
 .vehicle-card,.history-item,.wiki-list-item,.setup-item,.attendance-item,.location-card{background:#fff;padding:0.5rem;border-radius:8px;margin-bottom:0.1rem;border:1px solid #ddd;box-shadow:0 2px 5px rgba(0,0,0,0.05);position:relative;}
@@ -132,6 +135,12 @@ h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;paddin
 .calendar-day.sunday .calendar-day-header{color:var(--danger);}
 .calendar-day.today .calendar-day-header{display:inline-block;width:1.8em;text-align:center;border-radius:50%;background:var(--warning);color:#333;}
 .calendar-event{background:#007bff;color:white;padding:2px;border-radius:4px;font-size:0.7rem;cursor:pointer;width:90%;}
+.calendar-event.multiday-start { width: calc(100% + 6px) !important; border-radius: 4px 0 0 4px; margin-right: -6px; position: relative; z-index: 1; }
+.calendar-event.multiday-middle { width: calc(100% + 12px) !important; border-radius: 0; margin-left: -6px; margin-right: -6px; position: relative; z-index: 1; color: transparent; overflow: hidden; }
+.calendar-event.multiday-end { width: calc(100% + 6px) !important; border-radius: 0 4px 4px 0; margin-left: -6px; position: relative; z-index: 1; color: transparent; overflow: hidden; }
+.calendar-event.multiday-start-of-week { margin-left: 0 !important; width: calc(100% + 6px) !important; border-radius: 4px 0 0 4px !important; color: white !important; }
+.calendar-event.multiday-end-of-week { margin-right: 0 !important; width: calc(100% + 6px) !important; border-radius: 0 4px 4px 0 !important; }
+.calendar-event.multiday-start.multiday-end-of-week { width: 100% !important; border-radius: 4px !important; margin-right: 0 !important; margin-left: 0 !important; }
 .calendar-holiday-name{font-size:1rem;font-weight:bold;color:var(--danger);}
 .calendar-task { background-color: #ff9800; color: white; padding: 2px 2px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; width: 90%;
     margin-top: 3px; border-left: 3px solid #b36a00; font-weight: bold; box-sizing: border-box; }
@@ -175,6 +184,11 @@ h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;paddin
 .history-date-header{background:#e9ecef;padding:0.5rem;font-weight:bold;color:#495057;margin-top:1rem;border-radius:4px 4px 0 0;border-bottom:2px solid var(--border);}
 .history-group{background:#fff;border:1px solid var(--border);border-top:none;padding:0.5rem;}
 .history-row{display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px dashed #eee;font-size:0.9rem;}
+.date-range-wrapper { display: flex; gap: 10px; align-items: center; margin-bottom: 0.5rem; }
+.date-range-item { flex: 1; }
+.date-range-label { margin-top: 0; }
+.date-range-input { margin-bottom: 0; }
+.date-range-separator { font-weight: bold; margin-top: 1.5rem; }
 
 /* @media (max-width: 600px) スマホ用 */
 @media (max-width: 600px) {

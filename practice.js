@@ -140,8 +140,9 @@ function openEventModalForNew(dateStr, DOMElements) {
     ensureDOMElements(DOMElements);
     DOMElements.eventForm.reset();
     delete DOMElements.eventModal.dataset.editingId;
-    setEventModalMode(DOMElements, 'new'); // 新規モードを適用
-    DOMElements.eventForm.querySelector('#event-date').value = dateStr;
+    setEventModalMode(DOMElements, 'new');
+    DOMElements.eventForm.querySelector('#event-start-date').value = dateStr;
+    DOMElements.eventForm.querySelector('#event-end-date').value = dateStr; 
     DOMElements.eventModal.classList.remove('hidden');
 }
 
@@ -155,19 +156,22 @@ async function openEventModalForEdit(eventId, DOMElements) {
         DOMElements.eventForm.reset();
         DOMElements.eventModal.dataset.editingId = eventId;
         
-        // データをフォームにセット
         DOMElements.eventForm.querySelector('#event-title').value = event.title || '';
         DOMElements.eventForm.querySelector('#event-group').value = event.group || '';
         const eventDate = event.date.toDate();
-        const dateStr = eventDate.toISOString().split('T')[0];
-        DOMElements.eventForm.querySelector('#event-date').value = dateStr;
+        const startDateStr = eventDate.toISOString().split('T')[0];
+        let endDateStr = startDateStr;
+        if (event.endDate) {
+            endDateStr = event.endDate.toDate().toISOString().split('T')[0];
+        }
+        DOMElements.eventForm.querySelector('#event-start-date').value = startDateStr;
+        DOMElements.eventForm.querySelector('#event-end-date').value = endDateStr;
+        
         DOMElements.eventForm.querySelector('#event-time').value = event.time || ''; 
         DOMElements.eventForm.querySelector('#event-location').value = event.location || '';
         DOMElements.eventForm.querySelector('#event-notes').value = event.notes || '';
         
-        // 最初は「閲覧モード」で開く
         setEventModalMode(DOMElements, 'view');
-        
         DOMElements.eventModal.classList.remove('hidden');
     } catch (err) {
         console.error("Error fetching event for edit:", err);
@@ -220,15 +224,22 @@ export function setupPracticeHandlers(DOMElements) {
         const user = auth.currentUser;
         const eventId = DOMElements.eventModal.dataset.editingId || null;
         const title = DOMElements.eventForm.querySelector('#event-title').value;
-        const dateStr = DOMElements.eventForm.querySelector('#event-date').value;
+        const startDateStr = DOMElements.eventForm.querySelector('#event-start-date').value;
+        const endDateStr = DOMElements.eventForm.querySelector('#event-end-date').value;
+        if (new Date(endDateStr) < new Date(startDateStr)) {
+            alert("終了日は開始日以降の日付にしてください。");
+            return;
+        }
         const timeStr = DOMElements.eventForm.querySelector('#event-time').value;
         const location = DOMElements.eventForm.querySelector('#event-location').value || null;
         const group = DOMElements.eventForm.querySelector('#event-group').value || null;
         const notes = DOMElements.eventForm.querySelector('#event-notes').value || null;
-        const combinedDate = new Date(`${dateStr}T${timeStr || '00:00:00'}`);
+        const combinedStartDate = new Date(`${startDateStr}T${timeStr || '00:00:00'}`);
+        const combinedEndDate = new Date(`${endDateStr}T23:59:59`);
         const data = {
             title: title,
-            date: firestore.Timestamp.fromDate(combinedDate),
+            date: firestore.Timestamp.fromDate(combinedStartDate),
+            endDate: firestore.Timestamp.fromDate(combinedEndDate),
             time: timeStr || null,
             location: location,
             group: group,
@@ -277,19 +288,19 @@ export function setupPracticeHandlers(DOMElements) {
 
 // カレンダーを描画
 export async function renderCalendar(DOMElements) {
-    if (!DOMElements || !DOMElements.calendarMonthYear) {
-        return; 
-    }
+    if (!DOMElements || !DOMElements.calendarMonthYear) return;
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     DOMElements.calendarMonthYear.textContent = `${year}年 ${month + 1}月`;
     const holidays = await fetchAllHolidays();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startOfMonth = firestore.Timestamp.fromDate(firstDay);
+    const fetchStart = new Date(year, month - 1, 1); 
+    const startOfFetch = firestore.Timestamp.fromDate(fetchStart);
     const endOfMonth = firestore.Timestamp.fromDate(new Date(year, month + 1, 0, 23, 59, 59));
+    
     const snapshot = await db.collection('events')
-        .where('date', '>=', startOfMonth)
+        .where('date', '>=', startOfFetch)
         .where('date', '<=', endOfMonth)
         .orderBy('date', 'asc')
         .get();
@@ -303,68 +314,81 @@ export async function renderCalendar(DOMElements) {
         .get();
     const tasks = tasksSnapshot.docs.map(doc => {
         const vehicleId = doc.ref.parent.parent.id;
-        return { 
-            ...doc.data(), 
-            id: doc.id,
-            vehicleName: vehicleMap[vehicleId] || '不明'
-        };
+        return { ...doc.data(), id: doc.id, vehicleName: vehicleMap[vehicleId] || '不明' };
     });
+    
     DOMElements.calendarGrid.innerHTML = '';
     const today = new Date();
     const todayDate = today.getDate();
     const todayMonth = today.getMonth();
     const todayYear = today.getFullYear();
+    
     // 前月の日付セル
     for (let i = 0; i < firstDay.getDay(); i++) {
         DOMElements.calendarGrid.insertAdjacentHTML('beforeend', '<div class="calendar-day not-current-month"></div>');
     }
+    
     // 今月の日付セル
     for (let day = 1; day <= lastDay.getDate(); day++) {
         const currentDate = new Date(year, month, day); 
-        const dayOfWeek = currentDate.getDay(); // 0=日, 6=土
+        const dayOfWeek = currentDate.getDay(); 
         const dayDiv = document.createElement('div');
         dayDiv.className = 'calendar-day';
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         dayDiv.dataset.date = dateStr;
-        const holidayName = holidays[dateStr]; // 祝日名を取得
-        // 日曜または祝日
-        if (dayOfWeek === 0 || holidayName) {
-            dayDiv.classList.add('sunday');
-        } else if (dayOfWeek === 6) {
-            dayDiv.classList.add('saturday');
-        }        
-        // 今日
-        if (day === todayDate && month === todayMonth && year === todayYear) {
-            dayDiv.classList.add('today');
-        }
-        // --- ヘッダーコンテナを作成 ---
+        const holidayName = holidays[dateStr]; 
+        
+        if (dayOfWeek === 0 || holidayName) dayDiv.classList.add('sunday');
+        else if (dayOfWeek === 6) dayDiv.classList.add('saturday');
+        if (day === todayDate && month === todayMonth && year === todayYear) dayDiv.classList.add('today');
+        
         const headerContainer = document.createElement('div');
         headerContainer.className = 'calendar-day-header-container';
-        // 祝日名 (左上)
         if (holidayName) {
             const holidayDiv = document.createElement('div');
             holidayDiv.className = 'calendar-holiday-name';
             holidayDiv.textContent = holidayName;
-            headerContainer.appendChild(holidayDiv); // 祝日名を先に追加
+            headerContainer.appendChild(holidayDiv); 
         }
-        // 日付 (右上)
         const dayHeader = document.createElement('div');
         dayHeader.className = 'calendar-day-header';
         dayHeader.textContent = day;
-        headerContainer.appendChild(dayHeader); // 日付を後に追加        
-        dayDiv.appendChild(headerContainer); // コンテナをセルに追加       
-        // イベント描画
+        headerContainer.appendChild(dayHeader); 
+        dayDiv.appendChild(headerContainer); 
         const dayEvents = events.filter(e => {
-            const eventDate = e.date.toDate();
-            return eventDate.getDate() === day && eventDate.getMonth() === month && eventDate.getFullYear() === year;
+            const eventStart = e.date.toDate();
+            const eventEnd = e.endDate ? e.endDate.toDate() : eventStart;
+            const getStr = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            return getStr(eventStart) <= dateStr && dateStr <= getStr(eventEnd);
         });
+        
         dayEvents.forEach(event => {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'calendar-event';
             eventDiv.dataset.id = event.id;
             eventDiv.textContent = event.title;
+            
+            const eventStart = event.date.toDate();
+            const eventEnd = event.endDate ? event.endDate.toDate() : eventStart;
+            const getStr = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const startStr = getStr(eventStart);
+            const endStr = getStr(eventEnd);
+            if (startStr !== endStr) {
+                if (dateStr === startStr) {
+                    eventDiv.classList.add('multiday-start');
+                    if (dayOfWeek === 6) eventDiv.classList.add('multiday-end-of-week'); // 土曜は右端で切る
+                } else if (dateStr === endStr) {
+                    eventDiv.classList.add('multiday-end');
+                    if (dayOfWeek === 0) eventDiv.classList.add('multiday-start-of-week'); // 日曜は左端から開始
+                } else {
+                    eventDiv.classList.add('multiday-middle');
+                    if (dayOfWeek === 0) eventDiv.classList.add('multiday-start-of-week');
+                    if (dayOfWeek === 6) eventDiv.classList.add('multiday-end-of-week');
+                }
+            }
             dayDiv.appendChild(eventDiv);
         });
+        
         const dayTasks = tasks.filter(t => t.dueDate === dateStr && t.status !== 'done');
         dayTasks.forEach(task => {
             const taskDiv = document.createElement('div');

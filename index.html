@@ -326,9 +326,9 @@
 
     <div id="event-modal" class="modal-background hidden">
         <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin-bottom: 10px;">
-                <h3 style="margin: 0; padding: 0; border: none;">予定を追加</h3>
-                <button type="button" id="edit-event-toggle" class="hidden" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="編集する">✏️</button>
+            <div class="modal-header-flex">
+                <h3 class="modal-header-title">予定を追加</h3>
+                <button type="button" id="edit-event-toggle" class="hidden modal-edit-toggle" aria-label="編集する">✏️</button>
             </div>
             <form id="event-form">
                 <label for="event-title">予定</label>
@@ -336,8 +336,18 @@
                 <label for="event-group">カテゴリー</label>
                 <input type="text" id="event-group" list="event-group-list" placeholder="例: 練習会, 通常活動, 大会">
                 <datalist id="event-group-list"></datalist>
-                <label for="event-date">日付</label>
-                <input type="date" id="event-date" required>
+                
+                <div class="date-range-wrapper">
+                    <div class="date-range-item">
+                        <label for="event-start-date" class="date-range-label">開始日</label>
+                        <input type="date" id="event-start-date" required class="date-range-input">
+                    </div>
+                    <span class="date-range-separator">〜</span>
+                    <div class="date-range-item">
+                        <label for="event-end-date" class="date-range-label">終了日</label>
+                        <input type="date" id="event-end-date" required class="date-range-input">
+                    </div>
+                </div>
                 <div id="toggle-event-details-btn" style="color: #007bff; cursor: pointer; margin: 15px 0; font-size: 0.9rem; text-align: center; font-weight: bold;">
                     詳細を表示
                 </div>
