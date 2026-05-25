@@ -2,8 +2,9 @@ import { db, firestore, auth } from './firebase-init.js';
 let currentMonth = new Date(); 
 let eventGroupsCache = new Set();
 let allHolidaysCache = null; // 祝日データをキャッシュ
+let vehiclesCache = null; // 車両データを記憶しておく変数
 
-// --- 祝日データを一度だけ取得する関数 ---
+// 祝日データを一度だけ取得する関数
 async function fetchAllHolidays() {
     if (allHolidaysCache) {
         return allHolidaysCache;
@@ -23,6 +24,18 @@ async function fetchAllHolidays() {
         allHolidaysCache = {};
         return allHolidaysCache;
     }
+}
+
+// 車両IDと車種名のマップを取得する
+async function getVehicleMap() {
+    if (vehiclesCache) return vehiclesCache;
+    
+    vehiclesCache = {};
+    const snapshot = await db.collection('vehicles').get();
+    snapshot.forEach(doc => {
+        vehiclesCache[doc.id] = doc.data().name || '不明';
+    });
+    return vehiclesCache;
 }
 
 // 削除ボタンを DOMElements に動的に追加
@@ -195,15 +208,18 @@ export function setupPracticeHandlers(DOMElements) {
         renderCalendar(DOMElements);
     });
 
-    // カレンダークリック (変更なし)
+    // カレンダークリック
     DOMElements.calendarGrid.addEventListener('click', async e => {
         const eventElement = e.target.closest('.calendar-event');
+        const taskElement = e.target.closest('.calendar-task');
         const dayElement = e.target.closest('.calendar-day');
-
         if (eventElement) {
             e.stopPropagation();
             const eventId = eventElement.dataset.id;
             await openEventModalForEdit(eventId, DOMElements);
+        } else if (taskElement) {
+            e.stopPropagation();
+            alert(`整備予定: ${taskElement.textContent}\n※タスクの編集等は「整備管理」画面から行ってください。`);
         } else if (dayElement) {
             const dateStr = dayElement.dataset.date;
             if (!dateStr || dayElement.classList.contains('not-current-month')) {
@@ -222,8 +238,7 @@ export async function renderCalendar(DOMElements) {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     DOMElements.calendarMonthYear.textContent = `${year}年 ${month + 1}月`;
-    const holidays = await fetchAllHolidays(); // 祝日データを取得
-    // Firestoreからイベント取得 (変更なし)
+    const holidays = await fetchAllHolidays();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const startOfMonth = firestore.Timestamp.fromDate(firstDay);
@@ -234,6 +249,21 @@ export async function renderCalendar(DOMElements) {
         .orderBy('date', 'asc')
         .get();
     const events = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+    const vehicleMap = await getVehicleMap();
+    const startStr = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+    const endStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
+    const tasksSnapshot = await db.collectionGroup('tasks')
+        .where('dueDate', '>=', startStr)
+        .where('dueDate', '<=', endStr)
+        .get();
+    const tasks = tasksSnapshot.docs.map(doc => {
+        const vehicleId = doc.ref.parent.parent.id;
+        return { 
+            ...doc.data(), 
+            id: doc.id,
+            vehicleName: vehicleMap[vehicleId] || '不明'
+        };
+    });
     DOMElements.calendarGrid.innerHTML = '';
     const today = new Date();
     const todayDate = today.getDate();
@@ -258,7 +288,7 @@ export async function renderCalendar(DOMElements) {
         } else if (dayOfWeek === 6) {
             dayDiv.classList.add('saturday');
         }        
-        // 今日 (変更なし)
+        // 今日
         if (day === todayDate && month === todayMonth && year === todayYear) {
             dayDiv.classList.add('today');
         }
@@ -281,16 +311,21 @@ export async function renderCalendar(DOMElements) {
         // イベント描画
         const dayEvents = events.filter(e => {
             const eventDate = e.date.toDate();
-            return eventDate.getDate() === day &&
-                   eventDate.getMonth() === month &&
-                   eventDate.getFullYear() === year;
+            return eventDate.getDate() === day && eventDate.getMonth() === month && eventDate.getFullYear() === year;
         });
         dayEvents.forEach(event => {
             const eventDiv = document.createElement('div');
             eventDiv.className = 'calendar-event';
             eventDiv.dataset.id = event.id;
-            eventDiv.textContent = event.title; // 予定の名前のみをシンプルに表示
+            eventDiv.textContent = event.title;
             dayDiv.appendChild(eventDiv);
+        });
+        const dayTasks = tasks.filter(t => t.dueDate === dateStr && t.status !== 'done');
+        dayTasks.forEach(task => {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'calendar-task';
+            taskDiv.textContent = `${task.vehicleName}${task.title}`;
+            dayDiv.appendChild(taskDiv);
         });
         DOMElements.calendarGrid.appendChild(dayDiv);
     }

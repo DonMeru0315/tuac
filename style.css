@@ -131,6 +131,8 @@ h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;paddin
 .calendar-day.today .calendar-day-header{display:inline-block;width:1.8em;text-align:center;border-radius:50%;background:var(--warning);color:#333;}
 .calendar-event{background:#007bff;color:white;padding:2px;border-radius:4px;font-size:0.7rem;cursor:pointer;width:90%;}
 .calendar-holiday-name{font-size:1rem;font-weight:bold;color:var(--danger);}
+.calendar-task { background-color: #ff9800; color: white; padding: 2px 2px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; width: 90%;
+    margin-top: 3px; border-left: 3px solid #b36a00; font-weight: bold; box-sizing: border-box; }
 
 /* カンバン */
 #kanban-container{display:flex;flex-direction:column;gap:15px;padding:10px 5%;}
