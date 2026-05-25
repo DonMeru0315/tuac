@@ -259,15 +259,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById(btnId);
         if (!btn) return;
         const originalText = btn.textContent;
+        let targetWindow = null;
+        if (type.endsWith('pdf')) {
+            targetWindow = window.open('', '_blank');
+            if (!targetWindow) {
+                alert("ポップアップがブロックされました。ブラウザの設定で許可してください。");
+                return;
+            }
+            targetWindow.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>出力中...</title></head><body style="font-family:sans-serif; padding:20px; color:#666;"><h3>📄 レポートを生成しています。少々お待ちください...</h3></body></html>');
+            targetWindow.document.close();
+        }
+
         btn.disabled = true;
         btn.textContent = "出力中...";
 
         try {
             const exportModule = await import('./export.js');
-            await exportModule.handleExport(type, period);
+            await exportModule.handleExport(type, period, targetWindow);
         } catch (err) {
             console.error("エクスポートエラー:", err);
             alert("出力に失敗しました。電波状況を確認してください。");
+            if (targetWindow) targetWindow.close();
         } finally {
             btn.disabled = false;
             btn.textContent = originalText;
