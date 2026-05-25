@@ -39,9 +39,20 @@ async function getVehicleMap() {
 }
 
 // 削除ボタンを DOMElements に動的に追加
+// 削除ボタンなどを DOMElements に動的に追加し、要素をキャッシュ
 function ensureDOMElements(DOMElements) {
     if (!DOMElements.deleteEventButton) {
         DOMElements.deleteEventButton = DOMElements.eventModal.querySelector('#delete-event-button');
+        DOMElements.editEventToggle = DOMElements.eventModal.querySelector('#edit-event-toggle');
+        DOMElements.saveEventButton = DOMElements.eventModal.querySelector('button[type="submit"]');
+        DOMElements.cancelEventButton = DOMElements.eventModal.querySelector('.cancel-button');
+        DOMElements.eventModalTitle = DOMElements.eventModal.querySelector('h3');
+        DOMElements.eventInputs = DOMElements.eventForm.querySelectorAll('input, select, textarea');
+        if (DOMElements.editEventToggle) {
+            DOMElements.editEventToggle.addEventListener('click', () => {
+                setEventModalMode(DOMElements, 'edit');
+            });
+        }
     }
     if (!DOMElements.toggleEventDetailsBtn) {
         DOMElements.toggleEventDetailsBtn = DOMElements.eventModal.querySelector('#toggle-event-details-btn');
@@ -54,6 +65,53 @@ function ensureDOMElements(DOMElements) {
             DOMElements.notesWrapper.classList.remove('hidden');
             DOMElements.toggleEventDetailsBtn.classList.add('hidden');
         });
+    }
+}
+
+// モーダルの状態（新規、閲覧、編集）を切り替えるヘルパー関数
+function setEventModalMode(DOMElements, mode) {
+    if (mode === 'view') {
+        DOMElements.eventModalTitle.textContent = '予定の詳細';
+        DOMElements.editEventToggle.classList.remove('hidden');
+        DOMElements.saveEventButton.classList.add('hidden');
+        DOMElements.deleteEventButton.classList.add('hidden');
+        DOMElements.cancelEventButton.textContent = '閉じる';
+        DOMElements.eventInputs.forEach(input => {
+            input.disabled = true;
+            input.classList.add('view-mode-input');
+        });
+        DOMElements.timeWrapper.classList.remove('hidden');
+        DOMElements.locationWrapper.classList.remove('hidden');
+        DOMElements.notesWrapper.classList.remove('hidden');
+        if (DOMElements.toggleEventDetailsBtn) DOMElements.toggleEventDetailsBtn.classList.add('hidden');
+        
+    } else if (mode === 'edit') {
+        DOMElements.eventModalTitle.textContent = '予定を編集';
+        DOMElements.editEventToggle.classList.add('hidden');
+        DOMElements.saveEventButton.classList.remove('hidden');
+        DOMElements.deleteEventButton.classList.remove('hidden');
+        DOMElements.cancelEventButton.textContent = 'キャンセル';
+        
+        DOMElements.eventInputs.forEach(input => {
+            input.disabled = false;
+            input.classList.remove('view-mode-input');
+        });
+    } else if (mode === 'new') {
+        DOMElements.eventModalTitle.textContent = '予定を追加';
+        DOMElements.editEventToggle.classList.add('hidden');
+        DOMElements.saveEventButton.classList.remove('hidden');
+        DOMElements.deleteEventButton.classList.add('hidden');
+        DOMElements.cancelEventButton.textContent = 'キャンセル';
+        
+        DOMElements.eventInputs.forEach(input => {
+            input.disabled = false;
+            input.classList.remove('view-mode-input');
+        });
+        // 新規作成時は詳細は隠しておく
+        DOMElements.timeWrapper.classList.add('hidden');
+        DOMElements.locationWrapper.classList.add('hidden');
+        DOMElements.notesWrapper.classList.add('hidden');
+        if (DOMElements.toggleEventDetailsBtn) DOMElements.toggleEventDetailsBtn.classList.remove('hidden');
     }
 }
 
@@ -82,17 +140,12 @@ function openEventModalForNew(dateStr, DOMElements) {
     ensureDOMElements(DOMElements);
     DOMElements.eventForm.reset();
     delete DOMElements.eventModal.dataset.editingId;
-    DOMElements.eventModal.querySelector('h3').textContent = '予定を追加';
+    setEventModalMode(DOMElements, 'new'); // 新規モードを適用
     DOMElements.eventForm.querySelector('#event-date').value = dateStr;
-    DOMElements.deleteEventButton.classList.add('hidden');
-    DOMElements.timeWrapper.classList.add('hidden');
-    DOMElements.locationWrapper.classList.add('hidden');
-    DOMElements.notesWrapper.classList.add('hidden');
-    DOMElements.toggleEventDetailsBtn.classList.remove('hidden');
     DOMElements.eventModal.classList.remove('hidden');
 }
 
-// 編集モーダル
+// 編集（閲覧）モーダル
 async function openEventModalForEdit(eventId, DOMElements) {
     ensureDOMElements(DOMElements);
     try {
@@ -101,7 +154,8 @@ async function openEventModalForEdit(eventId, DOMElements) {
         const event = doc.data();
         DOMElements.eventForm.reset();
         DOMElements.eventModal.dataset.editingId = eventId;
-        DOMElements.eventModal.querySelector('h3').textContent = '予定を編集';
+        
+        // データをフォームにセット
         DOMElements.eventForm.querySelector('#event-title').value = event.title || '';
         DOMElements.eventForm.querySelector('#event-group').value = event.group || '';
         const eventDate = event.date.toDate();
@@ -110,19 +164,10 @@ async function openEventModalForEdit(eventId, DOMElements) {
         DOMElements.eventForm.querySelector('#event-time').value = event.time || ''; 
         DOMElements.eventForm.querySelector('#event-location').value = event.location || '';
         DOMElements.eventForm.querySelector('#event-notes').value = event.notes || '';
-        if (event.time) DOMElements.timeWrapper.classList.remove('hidden');
-        else DOMElements.timeWrapper.classList.add('hidden');
-        if (event.location) DOMElements.locationWrapper.classList.remove('hidden');
-        else DOMElements.locationWrapper.classList.add('hidden');
-        if (event.notes) DOMElements.notesWrapper.classList.remove('hidden');
-        else DOMElements.notesWrapper.classList.add('hidden');
-
-        if (event.time && event.location && event.notes) {
-            DOMElements.toggleEventDetailsBtn.classList.add('hidden');
-        } else {
-            DOMElements.toggleEventDetailsBtn.classList.remove('hidden');
-        }
-        DOMElements.deleteEventButton.classList.remove('hidden');
+        
+        // 最初は「閲覧モード」で開く
+        setEventModalMode(DOMElements, 'view');
+        
         DOMElements.eventModal.classList.remove('hidden');
     } catch (err) {
         console.error("Error fetching event for edit:", err);

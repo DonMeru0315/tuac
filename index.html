@@ -326,7 +326,10 @@
 
     <div id="event-modal" class="modal-background hidden">
         <div class="modal-content">
-            <h3>予定を追加</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin-bottom: 10px;">
+                <h3 style="margin: 0; padding: 0; border: none;">予定を追加</h3>
+                <button type="button" id="edit-event-toggle" class="hidden" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="編集する">✏️</button>
+            </div>
             <form id="event-form">
                 <label for="event-title">予定</label>
                 <input type="text" id="event-title" required placeholder="予定名">

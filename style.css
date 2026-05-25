@@ -52,6 +52,8 @@ button{cursor:pointer;font-family:inherit;}
 
 /* カード共通 */
 .vehicle-card,.history-item,.wiki-list-item,.setup-item,.attendance-item,.location-card{background:#fff;padding:0.5rem;border-radius:8px;margin-bottom:0.1rem;border:1px solid #ddd;box-shadow:0 2px 5px rgba(0,0,0,0.05);position:relative;}
+.view-mode-input { background-color: transparent !important; border: none !important; color: var(--text) !important; padding: 0 !important; appearance: none; resize: none; }
+.view-mode-input:disabled { opacity: 1 !important; color: var(--text) !important; }
 
 /* 車両管理 */
 #vehicle-list-container{display:flex;flex-direction:column;gap:8px;padding-bottom:20px;}
