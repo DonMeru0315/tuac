@@ -107,44 +107,39 @@ function exportLogsCSV(logs, period) {
 }
 
 function openPrintWindow(title, htmlContent) {
-    return new Promise((resolve) => {
-        let printContainer = document.getElementById('print-area');
-        if (!printContainer) {
-            printContainer = document.createElement('div');
-            printContainer.id = 'print-area';
-            printContainer.className = 'print-only';
-            document.body.appendChild(printContainer);
-        }
-        let printStyle = document.getElementById('print-style');
-        if (!printStyle) {
-            printStyle = document.createElement('style');
-            printStyle.id = 'print-style';
-            printStyle.textContent = `
-                /* 通常時は印刷用領域を隠す */
-                @media screen {
-                    .print-only { display: none !important; }
-                }
-                @media print {
-                    /* ★ visibility ではなく display: none を使い、iOSでのPDF生成を爆速化 */
-                    body > *:not(#print-area):not(script):not(style) { display: none !important; }
-                    #print-area { display: block !important; position: relative; width: 100%; padding: 0; background: white; margin: 0; }
-                    #print-area h1 { font-size:1.5rem; border-bottom:2px solid #D66000; padding-bottom:8px; margin-bottom:20px; }
-                    #print-area table { width:100%; border-collapse:collapse; margin-top:10px; }
-                    #print-area th, #print-area td { border:1px solid #ddd; padding:10px; text-align:left; font-size:0.9rem; }
-                    #print-area th { background-color:#f4f4f9; font-weight:bold; }
-                }
-            `;
-            document.head.appendChild(printStyle);
-        }
-        printContainer.innerHTML = `
-            <h1>${title}</h1>
-            ${htmlContent}
+    let printContainer = document.getElementById('print-area');
+    if (!printContainer) {
+        printContainer = document.createElement('div');
+        printContainer.id = 'print-area';
+        printContainer.className = 'print-only';
+        document.body.appendChild(printContainer);
+    }
+    let printStyle = document.getElementById('print-style');
+    if (!printStyle) {
+        printStyle = document.createElement('style');
+        printStyle.id = 'print-style';
+        printStyle.textContent = `
+            /* 通常時は印刷用領域を隠す */
+            @media screen {
+                .print-only { display: none !important; }
+            }
+            @media print {
+                /* iOSでのPDF生成を爆速化するために display: none を使用 */
+                body > *:not(#print-area):not(script):not(style) { display: none !important; }
+                #print-area { display: block !important; position: relative; width: 100%; padding: 0; background: white; margin: 0; }
+                #print-area h1 { font-size:1.5rem; border-bottom:2px solid #D66000; padding-bottom:8px; margin-bottom:20px; }
+                #print-area table { width:100%; border-collapse:collapse; margin-top:10px; }
+                #print-area th, #print-area td { border:1px solid #ddd; padding:10px; text-align:left; font-size:0.9rem; }
+                #print-area th { background-color:#f4f4f9; font-weight:bold; }
+            }
         `;
-        setTimeout(() => {
-            window.print();
-            setTimeout(resolve, 500);
-        }, 150);
-    });
+        document.head.appendChild(printStyle);
+    }
+    printContainer.innerHTML = `
+        <h1>${title}</h1>
+        ${htmlContent}
+    `;
+    window.print();
 }
 
 async function exportCalendarPDF(events, period) {
