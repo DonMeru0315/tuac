@@ -447,37 +447,40 @@
     </div>
 
     <div id="task-modal" class="modal-background hidden">
-        <div class="modal-content">
-            <h3>タスクを追加</h3>
-            <form id="task-form">
-                <label for="task-title">作業内容</label>
-                <input type="text" id="task-title" required placeholder="例: ミッション下ろし">
-                
-                <label for="task-due-date">期限 / 作業予定日</label>
-                <input type="date" id="task-due-date">
-
-                <label for="task-assignee">担当者</label>
-                <input type="text" id="task-assignee" placeholder="例: 山田">
-                <label for="task-status">ステータス</label>
-                    <select id="task-status">
-                        <option value="todo">未着手</option>
-                        <option value="inprogress">作業中</option>
-                        <option value="waiting">部品待ち</option>
-                        <option value="done">完了</option>
-                    </select>
-                <label for="task-notes">備考 (任意)</label>
-                <textarea id="task-notes" rows="3" placeholder="作業の注意点や、部品待ちの経緯などを記載"></textarea>
-                
-                <div class="modal-buttons">
-                    <button type="button" id="delete-task-button" class="delete-button hidden">削除</button>
-                    <div class="modal-buttons-right">
-                        <button type="button" class="cancel-button">キャンセル</button>
-                        <button type="submit">保存する</button>
-                    </div>
-                </div>
-            </form>
+    <div class="modal-content">
+        <div class="modal-header-flex">
+            <h3 class="modal-header-title">タスクを追加</h3>
+            <button type="button" id="edit-task-toggle" class="hidden modal-edit-toggle" aria-label="編集する">✏️</button>
         </div>
+        <form id="task-form">
+            <label for="task-title">作業内容</label>
+            <input type="text" id="task-title" required placeholder="例: ミッション下ろし">
+            
+            <label for="task-due-date">期限 / 作業予定日</label>
+            <input type="date" id="task-due-date">
+
+            <label for="task-assignee">担当者</label>
+            <input type="text" id="task-assignee" placeholder="例: 山田">
+            <label for="task-status">ステータス</label>
+                <select id="task-status">
+                    <option value="todo">未着手</option>
+                    <option value="inprogress">作業中</option>
+                    <option value="waiting">部品待ち</option>
+                    <option value="done">完了</option>
+                </select>
+            <label for="task-notes">備考 (任意)</label>
+            <textarea id="task-notes" rows="3" placeholder="作業の注意点や、部品待ちの経緯などを記載"></textarea>
+            
+            <div class="modal-buttons">
+                <button type="button" id="delete-task-button" class="delete-button hidden">削除</button>
+                <div class="modal-buttons-right">
+                    <button type="button" class="cancel-button">キャンセル</button>
+                    <button type="submit">保存する</button>
+                </div>
+            </div>
+        </form>
     </div>
+</div>
 
     <div id="setup-modal" class="modal-background hidden">
         <div class="modal-content">

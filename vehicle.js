@@ -236,6 +236,7 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
         DOMElements.taskForm.reset();
         DOMElements.taskModal.querySelector('h3').textContent = 'タスクを追加';
         delete DOMElements.taskModal.dataset.editingId;
+        setTaskModalMode(DOMElements, 'new');
         // ログインユーザー名を担当者に自動入力
         const user = auth.currentUser;
         if (user && user.displayName) {
@@ -316,6 +317,8 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
     DOMElements.kanbanContainer.addEventListener('change', async e => {
         if (e.target.matches('.quick-status-change')) {
             const taskId = e.target.dataset.id;
+            const doc = await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).get();
+            const task = doc.data();
             const newStatus = e.target.value;
             if (!currentVehicleId || !taskId) return;
 
@@ -363,11 +366,7 @@ export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onV
         DOMElements.taskForm.querySelector('#task-due-date').value = task.dueDate || '';
         DOMElements.taskForm.querySelector('#task-notes').value = task.notes || '';
         DOMElements.taskModal.dataset.editingId = taskId;
-        DOMElements.taskModal.querySelector('h3').textContent = 'タスクを編集';  
-        // 編集時は削除ボタンを表示
-        if (DOMElements.deleteTaskButton) {
-            DOMElements.deleteTaskButton.classList.remove('hidden');
-        }
+        setTaskModalMode(DOMElements, 'view');
         DOMElements.taskModal.classList.remove('hidden');
     });
 
@@ -894,3 +893,56 @@ async function openSetupModalForEdit(setupId, DOMElements) {
         alert("記録の読み込みに失敗しました。");
     }
 }
+
+function ensureTaskDOMElements(DOMElements) {
+    if (!DOMElements.editTaskToggle) {
+        DOMElements.editTaskToggle = DOMElements.taskModal.querySelector('#edit-task-toggle');
+        DOMElements.saveTaskButton = DOMElements.taskModal.querySelector('button[type="submit"]');
+        DOMElements.cancelTaskButton = DOMElements.taskModal.querySelector('.cancel-button');
+        DOMElements.taskModalTitle = DOMElements.taskModal.querySelector('.modal-header-title');
+        DOMElements.taskInputs = DOMElements.taskForm.querySelectorAll('input, select, textarea');
+        
+        if (DOMElements.editTaskToggle) {
+            DOMElements.editTaskToggle.addEventListener('click', () => {
+                setTaskModalMode(DOMElements, 'edit');
+            });
+        }
+    }
+}
+
+function setTaskModalMode(DOMElements, mode) {
+    ensureTaskDOMElements(DOMElements);
+    if (mode === 'view') {
+        DOMElements.taskModalTitle.textContent = 'タスクの詳細';
+        DOMElements.editTaskToggle.classList.remove('hidden');
+        DOMElements.saveTaskButton.classList.add('hidden');
+        DOMElements.deleteTaskButton.classList.add('hidden');
+        DOMElements.cancelTaskButton.textContent = '閉じる';
+        DOMElements.taskInputs.forEach(input => {
+            input.disabled = true;
+            input.classList.add('view-mode-input');
+        });
+    } else if (mode === 'edit') {
+        DOMElements.taskModalTitle.textContent = 'タスクを編集';
+        DOMElements.editTaskToggle.classList.add('hidden');
+        DOMElements.saveTaskButton.classList.remove('hidden');
+        DOMElements.deleteTaskButton.classList.remove('hidden');
+        DOMElements.cancelTaskButton.textContent = 'キャンセル';
+        DOMElements.taskInputs.forEach(input => {
+            input.disabled = false;
+            input.classList.remove('view-mode-input');
+        });
+    } else if (mode === 'new') {
+        DOMElements.taskModalTitle.textContent = 'タスクを追加';
+        DOMElements.editTaskToggle.classList.add('hidden');
+        DOMElements.saveTaskButton.classList.remove('hidden');
+        DOMElements.deleteTaskButton.classList.add('hidden');
+        DOMElements.cancelTaskButton.textContent = 'キャンセル';
+        DOMElements.taskInputs.forEach(input => {
+            input.disabled = false;
+            input.classList.remove('view-mode-input');
+        });
+    }
+}
+
+

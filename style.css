@@ -217,7 +217,7 @@ h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;paddin
     .detail-nav-button,.info-nav-button{padding:10px 15px;font-size:0.9rem;}
 
     /* フォーム周り */
-    input,select,textarea{font-size:15px !important;padding:8px 10px !important;margin-bottom:0.2rem !important;background:#fff;}
+    input,select,textarea{font-size:16px !important;padding:8px 10px !important;margin-bottom:0.2rem !important;background:#fff;}
     label{margin-top:0.8rem;font-size:0.85rem;color:#555;}
     div[style*="gap: 1rem"],div[style*="gap:1rem"]{gap:0.5rem !important;}
 
@@ -227,7 +227,7 @@ h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;paddin
     .modal-content{width:90% !important;height:auto !important;max-height:85vh !important;border-radius:12px !important;padding:0.8rem 0.6rem !important;box-sizing:border-box;position:relative;top:auto;left:auto;bottom:auto;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;}
     .modal-content h3{margin-top:0;margin-bottom:0.3rem;font-size:1.1rem;}
     .modal-content label{margin-top:0.4rem !important;margin-bottom:0.1rem !important;font-size:0.8rem;}
-    .modal-content input,.modal-content select,.modal-content textarea{font-size:15px !important;padding:6px 8px !important;margin-bottom:0.1rem !important;}
+    .modal-content input,.modal-content select,.modal-content textarea{font-size:16px !important;padding:6px 8px !important;margin-bottom:0.1rem !important;}
     #wiki-editor{height:180px !important;}
     .modal-buttons{flex-direction:column-reverse;gap:8px;margin-top:1rem;}
     .modal-buttons button,.modal-buttons-right button{width:100%;padding:12px !important;margin:0;}
