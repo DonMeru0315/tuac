@@ -155,22 +155,19 @@ async function openEventModalForEdit(eventId, DOMElements) {
         const event = doc.data();
         DOMElements.eventForm.reset();
         DOMElements.eventModal.dataset.editingId = eventId;
-        
         DOMElements.eventForm.querySelector('#event-title').value = event.title || '';
         DOMElements.eventForm.querySelector('#event-group').value = event.group || '';
-        const eventDate = event.date.toDate();
-        const startDateStr = eventDate.toISOString().split('T')[0];
+        const getLocalString = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const startDateStr = getLocalString(event.date.toDate());
         let endDateStr = startDateStr;
         if (event.endDate) {
-            endDateStr = event.endDate.toDate().toISOString().split('T')[0];
+            endDateStr = getLocalString(event.endDate.toDate());
         }
         DOMElements.eventForm.querySelector('#event-start-date').value = startDateStr;
         DOMElements.eventForm.querySelector('#event-end-date').value = endDateStr;
-        
         DOMElements.eventForm.querySelector('#event-time').value = event.time || ''; 
         DOMElements.eventForm.querySelector('#event-location').value = event.location || '';
         DOMElements.eventForm.querySelector('#event-notes').value = event.notes || '';
-        
         setEventModalMode(DOMElements, 'view');
         DOMElements.eventModal.classList.remove('hidden');
     } catch (err) {
@@ -199,10 +196,10 @@ export function setupPracticeHandlers(DOMElements) {
         }
     });
 
-    // 初期ロード (変更なし)
+    // 初期ロード
     loadEventGroups(DOMElements);
 
-    // 月移動ボタン (変更なし)
+    // 月移動ボタン
     DOMElements.prevMonthButton.addEventListener('click', () => { 
         currentMonth.setMonth(currentMonth.getMonth() - 1); 
         renderCalendar(DOMElements);
@@ -212,13 +209,13 @@ export function setupPracticeHandlers(DOMElements) {
         renderCalendar(DOMElements);
     });
 
-    // 予定追加ボタン (変更なし)
+    // 予定追加ボタン
     DOMElements.showAddEventButton.addEventListener('click', () => {
         const todayStr = new Date().toISOString().split('T')[0];
         openEventModalForNew(todayStr, DOMElements);
     });
 
-    // フォーム送信 (変更なし)
+    // フォーム送信
     DOMElements.eventForm.addEventListener('submit', async e => {
         e.preventDefault();
         const user = auth.currentUser;
@@ -275,7 +272,15 @@ export function setupPracticeHandlers(DOMElements) {
             await openEventModalForEdit(eventId, DOMElements);
         } else if (taskElement) {
             e.stopPropagation();
-            alert(`整備予定: ${taskElement.textContent}\n※タスクの編集等は「整備管理」画面から行ってください。`);
+            const taskId = taskElement.dataset.id;
+            const vehicleId = taskElement.dataset.vehicleId;
+            try {
+                const vehicleModule = await import('./vehicle.js');
+                await vehicleModule.showTaskDetailFromExternal(taskId, vehicleId, DOMElements);
+            } catch (err) {
+                console.error("車両モジュールの読み込み失敗:", err);
+                alert("詳細の読み込みに失敗しました。");
+            }
         } else if (dayElement) {
             const dateStr = dayElement.dataset.date;
             if (!dateStr || dayElement.classList.contains('not-current-month')) {
@@ -314,7 +319,7 @@ export async function renderCalendar(DOMElements) {
         .get();
     const tasks = tasksSnapshot.docs.map(doc => {
         const vehicleId = doc.ref.parent.parent.id;
-        return { ...doc.data(), id: doc.id, vehicleName: vehicleMap[vehicleId] || '不明' };
+        return { ...doc.data(), id: doc.id, vehicleId: vehicleId, vehicleName: vehicleMap[vehicleId] || '不明' };
     });
     
     DOMElements.calendarGrid.innerHTML = '';
@@ -393,7 +398,9 @@ export async function renderCalendar(DOMElements) {
         dayTasks.forEach(task => {
             const taskDiv = document.createElement('div');
             taskDiv.className = 'calendar-task';
-            taskDiv.textContent = `${task.vehicleName}${task.title}`;
+            taskDiv.dataset.id = task.id;
+            taskDiv.dataset.vehicleId = task.vehicleId;
+            taskDiv.textContent = `${task.vehicleName}`;
             dayDiv.appendChild(taskDiv);
         });
         DOMElements.calendarGrid.appendChild(dayDiv);

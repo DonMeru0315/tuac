@@ -1,948 +1,236 @@
 import { db, auth, firestore } from './firebase-init.js';
 let currentVehicleId = null;
-let unsubscribeVehicles = null; // リアルタイム監視を解除するための変数
+let unsubscribeVehicles = null;
+let navShowModule = null;
+let navShowDetailTab = null;
 
-// DOMElements とユーティリティ関数を引数で受け取る
-export function setupVehicleHandlers(DOMElements, showModule, showDetailTab, onVehicleClick) {
-    // --- 車両管理 (リスト) ---
-    DOMElements.showAddVehicleButton.addEventListener('click', () => {
-        DOMElements.vehicleForm.reset();
-        DOMElements.vehicleForm.querySelector('#vehicle-id').value = '';
-        DOMElements.vehicleModal.querySelector('h3').textContent = '車両を新規登録';
-        DOMElements.vehicleModal.classList.remove('hidden');
+// 監査フィールド(作成・更新情報)の生成
+const getAudit = (isNew) => {
+    const u = auth.currentUser;
+    const d = { updatedAt: firestore.FieldValue.serverTimestamp(), updatedBy: u ? u.displayName : '不明', updatedById: u ? u.uid : '不明' };
+    if (isNew) { d.createdAt = d.updatedAt; d.createdBy = d.updatedBy; d.createdById = d.updatedById; }
+    return d;
+};
+// ヘルパー: 現在の車両ドキュメントの参照
+const getVRef = () => db.collection('vehicles').doc(currentVehicleId);
+// ヘルパー: サブコレクションの保存と再描画
+const saveSub = async (col, id, data, modal, renderFn, DE) => {
+    const ref = getVRef().collection(col);
+    if (id) await ref.doc(id).update({ ...data, ...getAudit(false) });
+    else await ref.add({ ...data, ...getAudit(true) });
+    modal.classList.add('hidden');
+    if (renderFn) await renderFn(currentVehicleId, DE);
+};
+// ヘルパー: サブコレクションの削除と再描画
+const delSub = async (col, id, modal, renderFn, DE) => {
+    if (!id || !currentVehicleId || !confirm('本当に削除しますか？')) return;
+    await getVRef().collection(col).doc(id).delete();
+    if(modal) modal.classList.add('hidden');
+    if(renderFn) renderFn(currentVehicleId, DE);
+};
+// ヘルパー: 汎用リスト描画
+const renderList = async (col, container, emptyMsg, htmlFn, orderBy = ['updatedAt', 'desc']) => {
+    container.innerHTML = '';
+    const snap = await getVRef().collection(col).orderBy(...orderBy).get();
+    if(snap.empty) return container.innerHTML = `<p>${emptyMsg}</p>`;
+    snap.forEach(doc => container.insertAdjacentHTML('beforeend', htmlFn(doc.data(), doc.id)));
+};
+// ヘルパー: モーダルを開く（新規追加用）
+const initModal = (btn, form, modal, title, resetFn) => {
+    btn.addEventListener('click', () => {
+        form.reset(); resetFn(); modal.querySelector('h3').textContent = title;
+        const del = modal.querySelector('.delete-button'); if(del) del.classList.add('hidden');
+        modal.classList.remove('hidden');
     });
-    DOMElements.vehicleForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        const id = DOMElements.vehicleForm.querySelector('#vehicle-id').value;
-        const yearValue = DOMElements.vehicleForm.querySelector('#vehicle-year').value;
-        const user = auth.currentUser; // ユーザー情報取得
-        const data = {
-            manufacturer: DOMElements.vehicleForm.querySelector('#vehicle-manufacturer').value,
-            name: DOMElements.vehicleForm.querySelector('#vehicle-name').value,
-            grade: DOMElements.vehicleForm.querySelector('#vehicle-grade').value,
-            year: yearValue ? parseInt(yearValue, 10) : null,
-            modelCode: DOMElements.vehicleForm.querySelector('#vehicle-model-code').value,
-            vin: DOMElements.vehicleForm.querySelector('#vehicle-vin').value,
-            updatedAt: firestore.FieldValue.serverTimestamp(),
-            updatedBy: user ? user.displayName : '不明',
-            updatedById: user ? user.uid : '不明',
-        };
-        let promise;
-        if (id) {
-            promise = db.collection('vehicles').doc(id).update(data);
-        } else {
-            data.createdAt = firestore.FieldValue.serverTimestamp();
-            data.createdBy = user ? user.displayName : '不明';
-            data.createdById = user ? user.uid : '不明';
-            promise = db.collection('vehicles').add(data);
-        }
-        await promise.catch(err => console.error(err));
-        DOMElements.vehicleModal.classList.add('hidden');
-        if (id) await showVehicleDetail(DOMElements, showModule, showDetailTab, id); // ★編集後は詳細を再描画
+};
+// ヘルパー: モーダルを開く（リストからの編集用）
+const handleEditClick = (container, selector, col, modal, form, title, populateFn) => {
+    container.addEventListener('click', async e => {
+        const item = e.target.closest(selector);
+        if (!item || !currentVehicleId) return;
+        const doc = await getVRef().collection(col).doc(item.dataset.id).get();
+        if (!doc.exists) return alert("データが見つかりません。");
+        form.reset(); modal.querySelector('h3').textContent = title;
+        populateFn(doc.data(), doc.id, form, modal);
+        const del = modal.querySelector('.delete-button'); if(del) del.classList.remove('hidden');
+        modal.classList.remove('hidden');
     });
-    // 車両リストのクリック
-    DOMElements.vehicleListContainer.addEventListener('click', e => {
-        const card = e.target.closest('.vehicle-card');
-        if (card) {
-            currentVehicleId = card.dataset.id;
-            onVehicleClick(currentVehicleId);
-        }
+};
+
+export function setupVehicleHandlers(DE, showModule, showDetailTab, onVehicleClick) {
+    navShowModule = showModule; navShowDetailTab = showDetailTab;
+    const val = (sel, root = document) => root.querySelector(sel)?.value || '';
+
+    // 車両管理(親)の処理
+    initModal(DE.showAddVehicleButton, DE.vehicleForm, DE.vehicleModal, '車両を新規登録', () => DE.vehicleForm.querySelector('#vehicle-id').value = '');
+    DE.vehicleForm.addEventListener('submit', async e => {
+        e.preventDefault(); const id = val('#vehicle-id', DE.vehicleForm), y = val('#vehicle-year', DE.vehicleForm);
+        const data = { manufacturer: val('#vehicle-manufacturer', DE.vehicleForm), name: val('#vehicle-name', DE.vehicleForm), grade: val('#vehicle-grade', DE.vehicleForm), year: y ? parseInt(y, 10) : null, modelCode: val('#vehicle-model-code', DE.vehicleForm), vin: val('#vehicle-vin', DE.vehicleForm) };
+        if (id) await db.collection('vehicles').doc(id).update({ ...data, ...getAudit(false) });
+        else { const res = await db.collection('vehicles').add({ ...data, ...getAudit(true) }); if(!id) await showVehicleDetail(DE, showModule, showDetailTab, res.id); }
+        DE.vehicleModal.classList.add('hidden'); if(id) await showVehicleDetail(DE, showModule, showDetailTab, id);
     });
-    // --- 車両詳細 ---
-    DOMElements.detailNavButtons.forEach(b => b.addEventListener('click', () => showDetailTab(b.dataset.detailtab)));
-    DOMElements.backToListButton.addEventListener('click', () => {
-        DOMElements.vehicleDetailView.classList.add('hidden');
-        showModule('maintenance-module');
-        currentVehicleId = null;
+    DE.vehicleListContainer.addEventListener('click', e => { const c = e.target.closest('.vehicle-card'); if(c) onVehicleClick(c.dataset.id); });
+    DE.detailNavButtons.forEach(b => b.addEventListener('click', () => showDetailTab(b.dataset.detailtab)));
+    DE.backToListButton.addEventListener('click', () => { DE.vehicleDetailView.classList.add('hidden'); showModule('maintenance-module'); currentVehicleId = null; });
+
+    // 各種新規追加ボタンの初期化
+    initModal(DE.showAddLogButton, DE.maintenanceLogForm, DE.maintenanceLogModal, '整備履歴を追加', () => DE.maintenanceLogForm.querySelector('#log-id').value = '');
+    initModal(DE.showAddCustomButton, DE.customizationForm, DE.customizationModal, 'カスタマイズを追加', () => {});
+    initModal(DE.showAddSetupButton, DE.setupForm, DE.setupModal, 'セッティングを記録', () => DE.setupForm.querySelector('#setup-id').value = '');
+    initModal(DE.showAddPartButton, DE.sparePartForm, DE.sparePartModal, '予備部品を登録', () => delete DE.sparePartModal.dataset.editingId);
+
+    // 各種リストクリック（編集モーダル呼び出し）
+    handleEditClick(DE.maintenanceLogsContainer, '.log-item', 'maintenance_logs', DE.maintenanceLogModal, DE.maintenanceLogForm, '整備履歴を編集', (d, id, f) => { f.querySelector('#log-id').value = id; f.querySelector('#log-date').value = d.date; f.querySelector('#log-task').value = d.task; f.querySelector('#log-notes').value = d.notes || ''; });
+    handleEditClick(DE.setupLogContainer, '.setup-item', 'setups', DE.setupModal, DE.setupForm, 'セッティングを編集', (d, id, f) => {
+        f.querySelector('#setup-id').value = id; f.querySelector('#setup-date').value = d.date; f.querySelector('#setup-course').value = d.course;
+        if(d.suspension) ['damperF','damperR','spring','camber'].forEach(k => f.querySelector(`#setup-${k.toLowerCase()}`).value = d.suspension[k] || '');
+        if(d.tire) { f.querySelector('#setup-tire').value = d.tire.name || ''; f.querySelector('#setup-air-f').value = d.tire.airF || ''; f.querySelector('#setup-air-r').value = d.tire.airR || ''; }
+        f.querySelector('#setup-comment').value = d.comment || '';
     });
-    // --- 整備履歴 (Maintenance Logs) ---
-    DOMElements.showAddLogButton.addEventListener('click', () => {
-        DOMElements.maintenanceLogForm.reset();
-        DOMElements.maintenanceLogForm.querySelector('#log-id').value = ''; // IDをクリア
-        DOMElements.maintenanceLogModal.querySelector('h3').textContent = '整備履歴を追加';
-        DOMElements.deleteLogButton.classList.add('hidden'); // 削除ボタンを隠す
-        DOMElements.maintenanceLogModal.classList.remove('hidden');
+    handleEditClick(DE.sparePartsContainer, '.spare-part-item', 'spare_parts', DE.sparePartModal, DE.sparePartForm, '予備部品を編集', (d, id, f, m) => {
+        m.dataset.editingId = id; ['name','partNumber','quantity','location','notes'].forEach(k => f.querySelector(`#part-${k.replace(/[A-Z]/g, l => '-' + l.toLowerCase())}`).value = d[k] || '');
     });
 
-    DOMElements.syncDoneTasksButton.addEventListener('click', async () => {
-        if (!currentVehicleId) return;
+    // 各種サブミット処理
+    DE.maintenanceLogForm.addEventListener('submit', async e => { e.preventDefault(); await saveSub('maintenance_logs', val('#log-id', DE.maintenanceLogForm), { date: val('#log-date', DE.maintenanceLogForm), task: val('#log-task', DE.maintenanceLogForm), notes: val('#log-notes', DE.maintenanceLogForm) }, DE.maintenanceLogModal, renderMaintenanceLogs, DE); });
+    DE.customizationForm.addEventListener('submit', async e => { e.preventDefault(); await saveSub('customizations', null, { part: val('#custom-part', DE.customizationForm), category: val('#custom-category', DE.customizationForm), details: val('#custom-details', DE.customizationForm) }, DE.customizationModal, renderCustomizations, DE); });
+    DE.setupForm.addEventListener('submit', async e => {
+        e.preventDefault(); const f = DE.setupForm;
+        await saveSub('setups', val('#setup-id', f), { date: val('#setup-date', f), course: val('#setup-course', f), suspension: { damperF: val('#setup-damper-f', f), damperR: val('#setup-damper-r', f), spring: val('#setup-spring', f), camber: val('#setup-camber', f) }, tire: { name: val('#setup-tire', f), airF: val('#setup-air-f', f), airR: val('#setup-air-r', f) }, comment: val('#setup-comment', f) }, DE.setupModal, renderSetups, DE);
+    });
+    DE.sparePartForm.addEventListener('submit', async e => { e.preventDefault(); const f = DE.sparePartForm; await saveSub('spare_parts', DE.sparePartModal.dataset.editingId, { name: val('#part-name', f), partNumber: val('#part-number', f), quantity: val('#part-quantity', f), location: val('#part-location', f), notes: val('#part-notes', f) }, DE.sparePartModal, renderSpareParts, DE); });
 
-        // 削除を伴うため、確認ダイアログを追加（安全第一）
-        if (!confirm('「完了」列のタスクを整備記録に移し、タスク一覧から完全に削除します。\nよろしいですか？')) {
-            return;
-        }
+    // 各種削除ボタン処理
+    DE.deleteLogButton.onclick = () => delSub('maintenance_logs', val('#log-id', DE.maintenanceLogForm), DE.maintenanceLogModal, renderMaintenanceLogs, DE);
+    DE.deleteSetupButton.onclick = () => delSub('setups', val('#setup-id', DE.setupForm), DE.setupModal, renderSetups, DE);
+    DE.deletePartButton.onclick = () => delSub('spare_parts', DE.sparePartModal.dataset.editingId, DE.sparePartModal, renderSpareParts, DE);
+    DE.customizationsContainer.onclick = e => { if (e.target.matches('.delete-button')) delSub('customizations', e.target.dataset.id, null, renderCustomizations, DE); };
+    if (DE.deleteTaskButton) DE.deleteTaskButton.onclick = () => delSub('tasks', DE.taskModal.dataset.editingId, DE.taskModal, renderKanban, DE);
 
-        const btn = DOMElements.syncDoneTasksButton;
-        btn.disabled = true;
-        btn.textContent = '処理中...';
-
+    // タスク/カンバン専用処理
+    DE.showAddTaskButton.addEventListener('click', () => {
+        DE.taskForm.reset(); DE.taskModal.querySelector('h3').textContent = 'タスクを追加';
+        delete DE.taskModal.dataset.editingId; delete DE.taskModal.dataset.source;
+        setTaskModalMode(DE, 'new');
+        if (auth.currentUser?.displayName) DE.taskForm.querySelector('#task-assignee').value = auth.currentUser.displayName;
+        DE.taskModal.classList.remove('hidden');
+    });
+    DE.taskForm.addEventListener('submit', async e => {
+        e.preventDefault(); if (!currentVehicleId) return;
+        const stat = val('#task-status', DE.taskForm);
+        const data = { title: val('#task-title', DE.taskForm), assignee: val('#task-assignee', DE.taskForm), status: stat, dueDate: val('#task-due-date', DE.taskForm), notes: val('#task-notes', DE.taskForm) };
+        if (stat === 'done') data.doneAt = new Date(); else data.doneAt = firestore.FieldValue.delete();
+        await saveSub('tasks', DE.taskModal.dataset.editingId, data, DE.taskModal, renderKanban, DE);
+    });
+    DE.kanbanContainer.addEventListener('change', async e => {
+        if (!e.target.matches('.quick-status-change') || !currentVehicleId) return;
+        e.target.disabled = true; const stat = e.target.value;
+        const data = { status: stat, updatedAt: firestore.FieldValue.serverTimestamp(), doneAt: stat === 'done' ? new Date() : firestore.FieldValue.delete() };
+        await getVRef().collection('tasks').doc(e.target.dataset.id).update(data);
+        renderKanban(currentVehicleId, DE);
+    });
+    DE.kanbanContainer.addEventListener('click', async e => {
+        const h = e.target.closest('h4'); if (h) return h.parentElement.classList.toggle('open');
+        if (['select', 'option'].includes(e.target.tagName.toLowerCase())) return;
+        const c = e.target.closest('.task-card'); if (!c) return;
+        await showTaskDetailFromExternal(c.dataset.id, currentVehicleId, DE);
+        delete DE.taskModal.dataset.source; 
+    });
+    DE.syncDoneTasksButton.addEventListener('click', async () => {
+        if (!currentVehicleId || !confirm('「完了」列のタスクを整備記録に移し、完全に削除します。よろしいですか？')) return;
+        const btn = DE.syncDoneTasksButton; btn.disabled = true; btn.textContent = '処理中...';
         try {
-            const tasksRef = db.collection('vehicles').doc(currentVehicleId).collection('tasks');
-            const logsRef = db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs');
-            
-            // 'copiedToLogs' の判定は不要なので、シンプルに 'done' だけを取得
-            const snapshot = await tasksRef
-                .where('status', '==', 'done')
-                .get();
-
-            if (snapshot.empty) {
-                alert('移動する完了タスクはありません。');
-                return; // finallyへ
-            }
-
-            const batch = db.batch();
-            let count = 0;
-
-            snapshot.forEach(doc => {
-                const task = doc.data();
-                
-                // 3. 整備履歴データを作成
-                // 日付の優先度: 完了日(doneAt) > 期限(dueDate) > 今日
-                let logDateStr = new Date().toISOString().split('T')[0];
-                if (task.doneAt && task.doneAt.toDate) {
-                    logDateStr = task.doneAt.toDate().toISOString().split('T')[0];
-                } else if (task.dueDate) {
-                    logDateStr = task.dueDate;
-                }
-
-                const logData = {
-                    date: logDateStr,
-                    task: task.title || '（タイトルなし）',
-                    // メモに担当者などの情報を付記しておくと親切です
-                    notes: `${task.notes || ''} (担当: ${task.assignee || '未定'})`.trim(),
-                    
-                    // 監査ログ（誰がいつ移したか）
-                    createdAt: firestore.FieldValue.serverTimestamp(),
-                    createdBy: auth.currentUser ? auth.currentUser.displayName : '不明',
-                    createdById: auth.currentUser ? auth.currentUser.uid : '不明'
-                };
-                
-                // バッチに追加：記録の作成
-                const newLogRef = logsRef.doc();
-                batch.set(newLogRef, logData);
+            const snap = await getVRef().collection('tasks').where('status', '==', 'done').get();
+            if (snap.empty) return alert('移動するタスクはありません。');
+            const batch = db.batch(), lRef = getVRef().collection('maintenance_logs');
+            snap.forEach(doc => {
+                const t = doc.data(), d = t.doneAt?.toDate ? t.doneAt.toDate().toISOString().split('T')[0] : (t.dueDate || new Date().toISOString().split('T')[0]);
+                batch.set(lRef.doc(), { date: d, task: t.title || '（タイトルなし）', notes: `${t.notes || ''} (担当: ${t.assignee || '未定'})`.trim(), ...getAudit(true) });
                 batch.delete(doc.ref);
-                count++;
             });
-
-            // 5. バッチ処理を実行（ここで一括 作成＆削除）
-            await batch.commit();
-
-            alert(`${count}件のタスクを整備記録に移動しました。`);
-
-            // 6. 画面の再描画
-            await renderMaintenanceLogs(currentVehicleId, DOMElements);
-            await renderKanban(currentVehicleId, DOMElements);
-
-        } catch (err) {
-            console.error("タスク移動エラー:", err);
-            alert("処理に失敗しました。");
-        } finally {
-            btn.disabled = false;
-            btn.textContent = '🔄 完了タスクを履歴に反映';
-        }
+            await batch.commit(); alert(`${snap.size}件移動しました。`);
+            await Promise.all([renderMaintenanceLogs(currentVehicleId, DE), renderKanban(currentVehicleId, DE)]);
+        } catch (e) { alert("処理に失敗しました。"); } finally { btn.disabled = false; btn.textContent = '🔄 完了タスクを履歴に反映'; }
     });
+}
 
-    // 整備履歴フォームの送信 (新規・編集 兼用)
-    DOMElements.maintenanceLogForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        if (!currentVehicleId) return;
-        const user = auth.currentUser;
-        const logId = DOMElements.maintenanceLogForm.querySelector('#log-id').value;
-        const data = {
-            date: DOMElements.maintenanceLogForm.querySelector('#log-date').value,
-            task: DOMElements.maintenanceLogForm.querySelector('#log-task').value,
-            notes: DOMElements.maintenanceLogForm.querySelector('#log-notes').value,
-            updatedAt: firestore.FieldValue.serverTimestamp(),
-            updatedBy: user ? user.displayName : '不明',
-            updatedById: user ? user.uid : '不明',
-        };
-        
-        if (logId) {
-            // logId があれば「更新」
-            await db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs').doc(logId).update(data);
-        } else {
-            // logId がなければ「新規追加」
-            data.createdAt = firestore.FieldValue.serverTimestamp();
-            data.createdBy = user ? user.displayName : '不明';
-            data.createdById = user ? user.uid : '不明';
-            await db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs').add(data);
-        }
-        
-        DOMElements.maintenanceLogModal.classList.add('hidden');
-        await renderMaintenanceLogs(currentVehicleId, DOMElements);
-    });
-
-    // 整備履歴リストの「項目」クリック (編集モーダルを開く)
-    DOMElements.maintenanceLogsContainer.addEventListener('click', async e => {
-        // .delete-button ではなく、.log-item (リスト項目自体) を探す
-        const item = e.target.closest('.log-item');
-        if (item && currentVehicleId) {
-            const logId = item.dataset.id;
-            await openLogModalForEdit(logId, DOMElements); // 上で追加したヘルパー関数を呼ぶ
-        }
-    });
-
-    // 整備履歴モーダルの「削除」ボタン
-    DOMElements.deleteLogButton.addEventListener('click', async () => {
-        const logId = DOMElements.maintenanceLogForm.querySelector('#log-id').value;
-        if (!logId || !currentVehicleId) return;
-        
-        if (confirm('この整備履歴を本当に削除しますか？')) {
-            try {
-                await db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs').doc(logId).delete();
-                DOMElements.maintenanceLogModal.classList.add('hidden');
-                await renderMaintenanceLogs(currentVehicleId, DOMElements); // リストを再描画
-            } catch (err) {
-                console.error("削除エラー:", err);
-                alert("削除に失敗しました。");
-            }
-        }
-    });
-    // --- カスタマイズ (Customizations) ---
-    DOMElements.showAddCustomButton.addEventListener('click', () => {
-        DOMElements.customizationForm.reset();
-        DOMElements.customizationModal.classList.remove('hidden');
-    });
-    DOMElements.customizationForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        if (!currentVehicleId) return;
-        const user = auth.currentUser;
-        const data = {
-            part: DOMElements.customizationForm.querySelector('#custom-part').value,
-            category: DOMElements.customizationForm.querySelector('#custom-category').value,
-            details: DOMElements.customizationForm.querySelector('#custom-details').value,
-            createdAt: firestore.FieldValue.serverTimestamp(),
-            createdBy: user ? user.displayName : '不明',
-            createdById: user ? user.uid : '不明',
-            updatedAt: firestore.FieldValue.serverTimestamp(),
-            updatedBy: user ? user.displayName : '不明',
-            updatedById: user ? user.uid : '不明',
-        };
-        await db.collection('vehicles').doc(currentVehicleId).collection('customizations').add(data);
-        DOMElements.customizationModal.classList.add('hidden');
-        await renderCustomizations(currentVehicleId, DOMElements);
-    });
-    DOMElements.customizationsContainer.addEventListener('click', async e => {
-        if (e.target.matches('.delete-button')) {
-            if (confirm('この情報を削除しますか？') && currentVehicleId) {
-                await db.collection('vehicles').doc(currentVehicleId).collection('customizations').doc(e.target.dataset.id).delete();
-                await renderCustomizations(currentVehicleId, DOMElements);
-            }
-        }
-    });
-
-    // 「＋ タスクを追加」ボタン
-    DOMElements.showAddTaskButton.addEventListener('click', () => {
-        DOMElements.taskForm.reset();
-        DOMElements.taskModal.querySelector('h3').textContent = 'タスクを追加';
-        delete DOMElements.taskModal.dataset.editingId;
-        setTaskModalMode(DOMElements, 'new');
-        // ログインユーザー名を担当者に自動入力
-        const user = auth.currentUser;
-        if (user && user.displayName) {
-            DOMElements.taskForm.querySelector('#task-assignee').value = user.displayName;
-        }
-        // 削除ボタンを隠す
-        if (DOMElements.deleteTaskButton) {
-            DOMElements.deleteTaskButton.classList.add('hidden');
-        }
-        DOMElements.taskModal.classList.remove('hidden');
-    });
-
-    // タスクフォームの送信（保存）
-    DOMElements.taskForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        if (!currentVehicleId) return;
-        const user = auth.currentUser;
-        const taskId = DOMElements.taskModal.dataset.editingId;
-        const newStatus = DOMElements.taskForm.querySelector('#task-status').value;
-
-        // data オブジェクトから doneAt と、重複した updatedAt を削除
-        const data = {
-            title: DOMElements.taskForm.querySelector('#task-title').value,
-            assignee: DOMElements.taskForm.querySelector('#task-assignee').value,
-            status: newStatus,
-            dueDate: DOMElements.taskForm.querySelector('#task-due-date').value,
-            notes: DOMElements.taskForm.querySelector('#task-notes').value,
-            updatedAt: firestore.FieldValue.serverTimestamp(), // 正しい updatedAt のみ残す
-            updatedBy: user ? user.displayName : '不明',
-            updatedById: user ? user.uid : '不明',
-        };
-
-        if (taskId) {
-            // --- 更新 (Update) ---
-            if (newStatus === 'done') {
-                data.doneAt = new Date();
-            } else {
-                data.doneAt = firestore.FieldValue.delete(); 
-            }
-            await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).update(data);
-        
-        } else {
-            // --- 新規作成 (Add) ---
-            data.createdAt = firestore.FieldValue.serverTimestamp();
-            data.createdBy = user ? user.displayName : '不明';
-            data.createdById = user ? user.uid : '不明';
-
-            if (newStatus === 'done') {
-                data.doneAt = new Date(); // 新規作成時は 'done' の時だけフィールドを追加
-            }
-
-            await db.collection('vehicles').doc(currentVehicleId).collection('tasks').add(data);
-        }
-        
-        DOMElements.taskModal.classList.add('hidden');
-        renderKanban(currentVehicleId, DOMElements);
-    });
-
-    // 削除ボタンのクリックイベント
-    if (DOMElements.deleteTaskButton) {
-        DOMElements.deleteTaskButton.addEventListener('click', async () => {
-            const taskId = DOMElements.taskModal.dataset.editingId;
-            if (!taskId || !currentVehicleId) return;
-            if (confirm('このタスクを本当に削除しますか？')) {
-                try {
-                    await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).delete();
-                    DOMElements.taskModal.classList.add('hidden');
-                    renderKanban(currentVehicleId, DOMElements); // カンバンを再描画
-                } catch (err) {
-                    console.error("削除エラー:", err);
-                    alert("削除に失敗しました。");
-                }
-            }
+function setTaskModalMode(DE, mode) {
+    if (!DE.editTaskToggle) {
+        DE.editTaskToggle = DE.taskModal.querySelector('#edit-task-toggle'); DE.saveTaskButton = DE.taskModal.querySelector('button[type="submit"]');
+        DE.cancelTaskButton = DE.taskModal.querySelector('.cancel-button'); DE.taskModalTitle = DE.taskModal.querySelector('.modal-header-title');
+        DE.taskInputs = DE.taskForm.querySelectorAll('input, select, textarea');
+        DE.editTaskToggle.addEventListener('click', () => {
+            const isExt = DE.taskModal.dataset.source === 'external'; delete DE.taskModal.dataset.source; setTaskModalMode(DE, 'edit');
+            if (isExt && navShowModule && navShowDetailTab && currentVehicleId) showVehicleDetail(DE, navShowModule, navShowDetailTab, currentVehicleId, 'kanban-board');
         });
     }
-
-    // セレクトボックスを操作してステータスを即座に変更する処理
-    DOMElements.kanbanContainer.addEventListener('change', async e => {
-        if (e.target.matches('.quick-status-change')) {
-            const taskId = e.target.dataset.id;
-            const doc = await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).get();
-            const task = doc.data();
-            const newStatus = e.target.value;
-            if (!currentVehicleId || !taskId) return;
-
-            e.target.disabled = true; // 連続タップ防止
-
-            const data = { 
-                status: newStatus, 
-                updatedAt: firestore.FieldValue.serverTimestamp() 
-            };
-            if (newStatus === 'done') {
-                data.doneAt = new Date();
-            } else {
-                data.doneAt = firestore.FieldValue.delete();
-            }
-
-            // DBを更新して即座にカンバンを再描画
-            await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).update(data);
-            renderKanban(currentVehicleId, DOMElements);
-        }
-    });
-    
-    // タスクカードのクリック（編集モーダルを開く）
-    DOMElements.kanbanContainer.addEventListener('click', async e => {
-        // ヘッダー（h4）またはその中の要素がクリックされたか判定
-        const header = e.target.closest('h4');
-        if (header) {
-            const column = header.parentElement;
-            column.classList.toggle('open'); // openクラスを付け外しして表示を切り替え
-            return;
-        }
-
-        // セレクトボックス自体をクリックした場合はモーダルを開かない（イベントを無視する）
-        if (e.target.tagName.toLowerCase() === 'select' || e.target.tagName.toLowerCase() === 'option') {
-            return;
-        }
-        const card = e.target.closest('.task-card');
-        if (!card) return;
-        const taskId = card.dataset.id;
-        const doc = await db.collection('vehicles').doc(currentVehicleId).collection('tasks').doc(taskId).get();
-        const task = doc.data();
-        // 編集モーダルに値をセット
-        DOMElements.taskForm.querySelector('#task-title').value = task.title;
-        DOMElements.taskForm.querySelector('#task-assignee').value = task.assignee;
-        DOMElements.taskForm.querySelector('#task-status').value = task.status;
-        DOMElements.taskForm.querySelector('#task-due-date').value = task.dueDate || '';
-        DOMElements.taskForm.querySelector('#task-notes').value = task.notes || '';
-        DOMElements.taskModal.dataset.editingId = taskId;
-        setTaskModalMode(DOMElements, 'view');
-        DOMElements.taskModal.classList.remove('hidden');
-    });
-
-    // --- セッティングログ ---
-
-    // 「＋ セッティングを記録」ボタン
-    DOMElements.showAddSetupButton.addEventListener('click', () => {
-        DOMElements.setupForm.reset();
-        DOMElements.setupForm.querySelector('#setup-id').value = ''; // IDをクリア
-        DOMElements.setupModal.querySelector('h3').textContent = 'セッティングを記録';
-        DOMElements.deleteSetupButton.classList.add('hidden'); // 削除ボタンを隠す
-        DOMElements.setupModal.classList.remove('hidden');
-    });
-
-    // セッティングフォームの送信 (新規・編集 兼用)
-    DOMElements.setupForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        if (!currentVehicleId) return;
-        const user = auth.currentUser;
-        const setupId = DOMElements.setupForm.querySelector('#setup-id').value;
-
-        const data = {
-            date: DOMElements.setupForm.querySelector('#setup-date').value,
-            course: DOMElements.setupForm.querySelector('#setup-course').value,
-            suspension: {
-                damperF: DOMElements.setupForm.querySelector('#setup-damper-f').value,
-                damperR: DOMElements.setupForm.querySelector('#setup-damper-r').value,
-                spring: DOMElements.setupForm.querySelector('#setup-spring').value,
-                camber: DOMElements.setupForm.querySelector('#setup-camber').value,
-            },
-            tire: {
-                name: DOMElements.setupForm.querySelector('#setup-tire').value,
-                airF: DOMElements.setupForm.querySelector('#setup-air-f').value,
-                airR: DOMElements.setupForm.querySelector('#setup-air-r').value,
-            },
-            comment: DOMElements.setupForm.querySelector('#setup-comment').value,
-            
-            // タイムスタンプとユーザー情報を追加
-            updatedAt: firestore.FieldValue.serverTimestamp(),
-            updatedBy: user ? user.displayName : '不明',
-            updatedById: user ? user.uid : '不明',
-        };
-
-        if (setupId) {
-            // setupId があれば「更新」
-            await db.collection('vehicles').doc(currentVehicleId).collection('setups').doc(setupId).update(data);
-        } else {
-            // setupId がなければ「新規追加」
-            data.createdAt = firestore.FieldValue.serverTimestamp();
-            data.createdBy = user ? user.displayName : '不明';
-            data.createdById = user ? user.uid : '不明';
-            await db.collection('vehicles').doc(currentVehicleId).collection('setups').add(data);
-        }
-
-        DOMElements.setupModal.classList.add('hidden');
-        renderSetups(currentVehicleId, DOMElements);
-    });
-
-    // ★ 新設: セッティングリストの「項目」クリック (編集モーダルを開く)
-    DOMElements.setupLogContainer.addEventListener('click', async e => {
-        const item = e.target.closest('.setup-item');
-        if (item && currentVehicleId) {
-            const setupId = item.dataset.id;
-            await openSetupModalForEdit(setupId, DOMElements);
-        }
-    });
-
-    // ★ 新設: セッティングモーダルの「削除」ボタン
-    DOMElements.deleteSetupButton.addEventListener('click', async () => {
-        const setupId = DOMElements.setupForm.querySelector('#setup-id').value;
-        if (!setupId || !currentVehicleId) return;
-        
-        if (confirm('このセッティング記録を本当に削除しますか？')) {
-            try {
-                await db.collection('vehicles').doc(currentVehicleId).collection('setups').doc(setupId).delete();
-                DOMElements.setupModal.classList.add('hidden');
-                await renderSetups(currentVehicleId, DOMElements); // リストを再描画
-            } catch (err) {
-                console.error("削除エラー:", err);
-                alert("削除に失敗しました。");
-            }
-        }
-    });
-
-    // 予備部品を登録ボタン
-    DOMElements.showAddPartButton.addEventListener('click', () => {
-        DOMElements.sparePartForm.reset();
-        DOMElements.sparePartModal.querySelector('h3').textContent = '予備部品を登録';
-        delete DOMElements.sparePartModal.dataset.editingId;
-        DOMElements.deletePartButton.classList.add('hidden');
-        DOMElements.sparePartModal.classList.remove('hidden');
-    });
-
-    // 予備部品リストのアイテムをクリック（編集）
-    DOMElements.sparePartsContainer.addEventListener('click', async e => {
-        const item = e.target.closest('.spare-part-item');
-        if (item && currentVehicleId) {
-            await openPartModalForEdit(item.dataset.id, DOMElements);
-        }
-    });
-
-    // 予備部品フォームの送信（保存/更新）
-    DOMElements.sparePartForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        if (!currentVehicleId) return;
-        const user = auth.currentUser;
-        const partId = DOMElements.sparePartModal.dataset.editingId;
-        const data = {
-            name: DOMElements.sparePartForm.querySelector('#part-name').value,
-            partNumber: DOMElements.sparePartForm.querySelector('#part-number').value,
-            quantity: DOMElements.sparePartForm.querySelector('#part-quantity').value,
-            location: DOMElements.sparePartForm.querySelector('#part-location').value,
-            notes: DOMElements.sparePartForm.querySelector('#part-notes').value,
-            updatedAt: firestore.FieldValue.serverTimestamp(),
-            updatedBy: user ? user.displayName : '不明',
-            updatedById: user ? user.uid : '不明',
-        };
-        if (partId) {
-            await db.collection('vehicles').doc(currentVehicleId).collection('spare_parts').doc(partId).update(data);
-        } else {
-            data.createdAt = firestore.FieldValue.serverTimestamp();
-            data.createdBy = user ? user.displayName : '不明';
-            data.createdById = user ? user.uid : '不明';
-            await db.collection('vehicles').doc(currentVehicleId).collection('spare_parts').add(data);
-        }
-        DOMElements.sparePartModal.classList.add('hidden');
-        renderSpareParts(currentVehicleId, DOMElements); // リストを再描画
-    });
-
-    // 予備部品モーダルの「削除」ボタン
-    DOMElements.deletePartButton.addEventListener('click', async () => {
-        const partId = DOMElements.sparePartModal.dataset.editingId;
-        if (!partId || !currentVehicleId) return;
-        if (confirm('この予備部品情報を本当に削除しますか？')) {
-            try {
-                await db.collection('vehicles').doc(currentVehicleId).collection('spare_parts').doc(partId).delete();
-                DOMElements.sparePartModal.classList.add('hidden');
-                renderSpareParts(currentVehicleId, DOMElements); // リストを再描画
-            } catch (err) {
-                console.error("削除エラー:", err);
-                alert("削除に失敗しました。");
-            }
-        }
-    });
+    const isView = mode === 'view';
+    DE.taskModalTitle.textContent = isView ? 'タスクの詳細' : (mode === 'edit' ? 'タスクを編集' : 'タスクを追加');
+    DE.editTaskToggle.classList.toggle('hidden', !isView); DE.saveTaskButton.classList.toggle('hidden', isView);
+    if(DE.deleteTaskButton) DE.deleteTaskButton.classList.toggle('hidden', isView || mode === 'new');
+    DE.cancelTaskButton.textContent = isView ? '閉じる' : 'キャンセル';
+    DE.taskInputs.forEach(i => { i.disabled = isView; i.classList.toggle('view-mode-input', isView); });
 }
 
-// 車両リストをDBから取得・描画（差分更新版）
-export function fetchVehicles(DOMElements, onVehicleClick) {
-    if (unsubscribeVehicles) unsubscribeVehicles();
-    DOMElements.vehicleListContainer.replaceChildren();
-
-    unsubscribeVehicles = db.collection('vehicles').orderBy('name').onSnapshot(snapshot => {
-        if (snapshot.empty) {
-            DOMElements.vehicleListContainer.innerHTML = '<p class="empty-msg">車両が登録されていません。</p>';
-            return;
-        }
-        const emptyMsg = DOMElements.vehicleListContainer.querySelector('.empty-msg');
-        if (emptyMsg) emptyMsg.remove();
-
-        snapshot.docChanges().forEach(change => {
-            const vehicle = change.doc.data();
-            const docId = change.doc.id;
-            if (change.type === 'added') {
-                const card = document.createElement('div');
-                card.className = 'vehicle-card';
-                card.dataset.id = docId;
-                card.innerHTML = `
-                    <div class="vehicle-info">
-                        <h3>${vehicle.name}</h3>
-                        <div class="vehicle-meta">
-                            <span class="maker-badge">${vehicle.manufacturer || '未設定'}</span>
-                            <span class="model-code">${vehicle.modelCode || ''}</span>
-                        </div>
-                    </div>
-                    <div class="vehicle-arrow">›</div>
-                `;
-                DOMElements.vehicleListContainer.appendChild(card);
-            } else if (change.type === 'modified') {
-                const card = DOMElements.vehicleListContainer.querySelector(`.vehicle-card[data-id="${docId}"]`);
-                if (card) {
-                    card.innerHTML = `
-                        <div class="vehicle-info">
-                            <h3>${vehicle.name}</h3>
-                            <div class="vehicle-meta">
-                                <span class="maker-badge">${vehicle.manufacturer || '未設定'}</span>
-                                <span class="model-code">${vehicle.modelCode || ''}</span>
-                            </div>
-                        </div>
-                        <div class="vehicle-arrow">›</div>
-                    `;
-                }
-            } 
-            
-            else if (change.type === 'removed') {
-                // 【削除】データが消された時
-                const card = DOMElements.vehicleListContainer.querySelector(`.vehicle-card[data-id="${docId}"]`);
-                if (card) {
-                    card.remove();
-                }
-            }
+export function fetchVehicles(DE, onVehicleClick) {
+    if (unsubscribeVehicles) unsubscribeVehicles(); DE.vehicleListContainer.replaceChildren();
+    unsubscribeVehicles = db.collection('vehicles').orderBy('name').onSnapshot(snap => {
+        if (snap.empty) return DE.vehicleListContainer.innerHTML = '<p class="empty-msg">車両が登録されていません。</p>';
+        DE.vehicleListContainer.querySelector('.empty-msg')?.remove();
+        snap.docChanges().forEach(change => {
+            const v = change.doc.data(), id = change.doc.id;
+            const html = `<div class="vehicle-info"><h3>${v.name}</h3><div class="vehicle-meta"><span class="maker-badge">${v.manufacturer || '未設定'}</span><span class="model-code">${v.modelCode || ''}</span></div></div><div class="vehicle-arrow">›</div>`;
+            if (change.type === 'added') { const c = document.createElement('div'); c.className = 'vehicle-card'; c.dataset.id = id; c.innerHTML = html; DE.vehicleListContainer.appendChild(c); }
+            else { const c = DE.vehicleListContainer.querySelector(`.vehicle-card[data-id="${id}"]`); if (c) { if (change.type === 'modified') c.innerHTML = html; else c.remove(); } }
         });
-    }, err => console.error(err));
-}
-
-// ログアウト時に監視を停止
-export function stopVehicleUpdates() {
-    if (unsubscribeVehicles) {
-        unsubscribeVehicles();
-        unsubscribeVehicles = null;
-    }
-}
-
-// 車両詳細を表示
-export async function showVehicleDetail(DOMElements, showModule, showDetailTab, vehicleId) {
-    showDetailTab('basic-info');
-    DOMElements.detailVehicleName.textContent = '読み込み中...';
-    showModule('vehicle-detail-view'); 
-    const vehicleDoc = await db.collection('vehicles').doc(vehicleId).get();
-    if (!vehicleDoc.exists) { DOMElements.backToListButton.click(); return; }
-    const vehicleData = vehicleDoc.data();
-    DOMElements.detailVehicleName.textContent = `${vehicleData.manufacturer || ''} ${vehicleData.name}`;
-    currentVehicleId = vehicleId; // グローバル変数にセット
-    // 基本情報タブ
-    DOMElements.basicInfoContent.innerHTML = `
-        <p><strong>メーカー:</strong> ${vehicleData.manufacturer || '未設定'}</p>
-        <p><strong>車名:</strong> ${vehicleData.name || '未設定'}</p>
-        <p><strong>グレード:</strong> ${vehicleData.grade || '未設定'}</p>
-        <p><strong>年式:</strong> ${vehicleData.year || '未設定'}</p>
-        <p><strong>型式:</strong> ${vehicleData.modelCode || '未設定'}</p>
-        <p><strong>車台番号:</strong> ${vehicleData.vin || '未設定'}</p>
-        <button id="edit-basic-info-button" class="edit-button">基本情報を編集</button>`;
-    
-    document.getElementById('edit-basic-info-button').addEventListener('click', () => {
-        const form = DOMElements.vehicleForm;
-        form.querySelector('#vehicle-id').value = vehicleId;
-        form.querySelector('#vehicle-manufacturer').value = vehicleData.manufacturer || '';
-        form.querySelector('#vehicle-name').value = vehicleData.name || '';
-        form.querySelector('#vehicle-grade').value = vehicleData.grade || '';
-        form.querySelector('#vehicle-year').value = vehicleData.year || '';
-        form.querySelector('#vehicle-model-code').value = vehicleData.modelCode || '';
-        form.querySelector('#vehicle-vin').value = vehicleData.vin || '';
-        DOMElements.vehicleModal.querySelector('h3').textContent = '基本情報を編集';
-        DOMElements.vehicleModal.classList.remove('hidden');
-    });
-    // 各タブ描画
-    await renderMaintenanceLogs(vehicleId, DOMElements);
-    await renderCustomizations(vehicleId, DOMElements);
-    await renderKanban(vehicleId, DOMElements);
-    await renderSetups(vehicleId, DOMElements);
-    await renderSpareParts(vehicleId, DOMElements);
-}
-
-// --- 内部用描画関数 ---
-
-async function renderMaintenanceLogs(vehicleId, DOMElements) {
-    const container = DOMElements.maintenanceLogsContainer;
-    container.innerHTML = '';
-    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('maintenance_logs').orderBy('date', 'desc').get();
-    
-    if(snapshot.empty) {
-        container.innerHTML = '<p>整備履歴はありません。</p>';
-        return; // 空の場合はここで処理終了
-    }
-    
-    snapshot.forEach(doc => {
-        const log = doc.data();
-        const item = document.createElement('div');
-        item.className = 'history-item log-item'; 
-        item.dataset.id = doc.id; 
-        
-        item.innerHTML = `
-            <p><strong>${new Date(log.date.replace(/-/g, '/')).toLocaleDateString()}</strong> - ${log.task}</p>
-            <p>[メモ] ${log.notes || 'なし'}</p>
-            `;
-        container.appendChild(item);
     });
 }
 
-async function renderCustomizations(vehicleId, DOMElements) {
-    const container = DOMElements.customizationsContainer;
-    container.innerHTML = '';
-    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('customizations').orderBy('part').get();
-    if(snapshot.empty) container.innerHTML = '<p>カスタマイズ情報はありません。</p>';
-    snapshot.forEach(doc => {
-        const custom = doc.data();
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        item.innerHTML = `<p><strong>${custom.part}</strong> (${custom.category || 'その他'})</p><p>${custom.details || '詳細なし'}</p><div class="card-actions"><button class="delete-button" data-id="${doc.id}">削除</button></div>`;
-        container.appendChild(item);
-    });
+export function stopVehicleUpdates() { if (unsubscribeVehicles) { unsubscribeVehicles(); unsubscribeVehicles = null; } }
+
+export async function showVehicleDetail(DE, showModule, showDetailTab, vId, initTab = 'basic-info') {
+    showDetailTab(initTab); DE.detailVehicleName.textContent = '読み込み中...'; showModule('vehicle-detail-view'); 
+    const doc = await db.collection('vehicles').doc(vId).get();
+    if (!doc.exists) return DE.backToListButton.click();
+    const v = doc.data(); currentVehicleId = vId; DE.detailVehicleName.textContent = `${v.manufacturer || ''} ${v.name}`;
+    DE.basicInfoContent.innerHTML = ['メーカー','車名','グレード','年式','型式','車台番号'].map((l, i) => `<p><strong>${l}:</strong> ${[v.manufacturer, v.name, v.grade, v.year, v.modelCode, v.vin][i] || '未設定'}</p>`).join('') + `<button id="edit-basic-info-button" class="edit-button">基本情報を編集</button>`;
+    document.getElementById('edit-basic-info-button').onclick = () => {
+        const f = DE.vehicleForm; f.querySelector('#vehicle-id').value = vId;
+        ['manufacturer','name','grade','year','model-code','vin'].forEach(k => f.querySelector(`#vehicle-${k}`).value = v[k.replace(/-([a-z])/g, g => g[1].toUpperCase())] || '');
+        DE.vehicleModal.querySelector('h3').textContent = '基本情報を編集'; DE.vehicleModal.classList.remove('hidden');
+    };
+    await Promise.all([renderMaintenanceLogs(vId, DE), renderCustomizations(vId, DE), renderKanban(vId, DE), renderSetups(vId, DE), renderSpareParts(vId, DE)]);
 }
 
-// vehicle.js 内の renderKanban を書き換え
-async function renderKanban(vehicleId, DOMElements) {
-    const statuses = ['todo', 'inprogress', 'waiting', 'done'];
-    const counts = { todo: 0, inprogress: 0, waiting: 0, done: 0 };
-
-    statuses.forEach(status => {
-        const col = document.getElementById(`kanban-${status}`);
-        if(col) col.innerHTML = '';
-    });
-
-    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('tasks').orderBy('updatedAt', 'desc').get();
-    
-    snapshot.forEach(doc => {
-        const task = doc.data();
-        counts[task.status]++; // 件数をカウント
-
-        const card = document.createElement('div');
-        card.className = 'task-card';
-        card.dataset.id = doc.id;
-        
-        let dateHtml = task.dueDate ? `<span class="task-date">📅 ${task.dueDate.slice(5).replace(/-/g, '/')}</span>` : '';
-
-        // ステータス選択肢の定義
-        const statusOptions = [
-            { value: 'todo', label: '未着手' },
-            { value: 'inprogress', label: '作業中' },
-            { value: 'waiting', label: '部品待ち' },
-            { value: 'done', label: '完了' }
-        ];
-        
-        // セレクトボックスのHTMLを生成（現在のステータスを選択状態にする）
-        let selectHtml = `<select class="quick-status-change" data-id="${doc.id}">`;
-        statusOptions.forEach(opt => {
-            const selected = task.status === opt.value ? 'selected' : '';
-            selectHtml += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
-        });
-        selectHtml += `</select>`;
-
-        card.innerHTML = `
-            <div class="task-title">${task.title}</div>
-            <div class="task-meta"><span>${task.assignee || '未割当'}</span>${dateHtml}</div>
-            <div class="task-actions" style="margin-top: 8px; text-align: right;">
-                ${selectHtml}
-            </div>
-        `;
-        const column = document.getElementById(`kanban-${task.status}`);
-        if (column) column.appendChild(card);
-    });
-
-    statuses.forEach(status => {
-        const columnEl = document.querySelector(`.kanban-column[data-status="${status}"]`);
-        const header = columnEl.querySelector('h4');
-        // 既存のバッジがあれば削除して再作成
-        const oldBadge = header.querySelector('.task-count-badge');
-        if(oldBadge) oldBadge.remove();
-
-        const badge = document.createElement('span');
-        badge.className = 'task-count-badge';
-        badge.textContent = counts[status];
-        header.appendChild(badge);
-    });
-}
-
-async function renderSetups(vehicleId, DOMElements) {
-    const container = DOMElements.setupLogContainer;
-    container.innerHTML = '';
-    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('setups').orderBy('date', 'desc').get();
-    
-    if (snapshot.empty) {
-        container.innerHTML = '<p>セッティング記録はまだありません。</p>';
-        return;
-    }
-
-    snapshot.forEach(doc => {
-        const s = doc.data();
-        const el = document.createElement('div');
-        el.className = 'setup-item'; // このクラスがクリック対象
-        el.dataset.id = doc.id;      // ★ data-id を追加
-        el.style.cursor = 'pointer'; // ★ クリック可能であることを示す
-        
-        el.innerHTML = `
-            <div class="setup-header">
-                <span>${s.date} @ ${s.course}</span>
-            </div>
-            <div class="setup-grid">
-                <div>
-                    <strong>足回り</strong><br>
-                    減衰: F ${s.suspension.damperF || '-'} / R ${s.suspension.damperR || '-'}<br>
-                    バネ: ${s.suspension.spring || '-'}, キャンバー: ${s.suspension.camber || '-'}
-                </div>
-                <div>
-                    <strong>タイヤ</strong><br>
-                    銘柄: ${s.tire.name || '-'}<br>
-                    内圧: F ${s.tire.airF || '-'} / R ${s.tire.airR || '-'}
-                </div>
-            </div>
-            <div class="setup-comment-box">
-                ドライバー: ${s.comment || 'なし'}
-            </div>
-        `;
-        container.appendChild(el);
-    });
-}
-
-// 予備部品編集モーダルを開く
-async function openPartModalForEdit(partId, DOMElements) {
-    if (!currentVehicleId) return;
+export async function showTaskDetailFromExternal(taskId, vId, DE) {
     try {
-        const doc = await db.collection('vehicles').doc(currentVehicleId).collection('spare_parts').doc(partId).get();
-        if (!doc.exists) {
-            alert("部品が見つかりません。");
-            return;
-        }
-        const part = doc.data();
-        DOMElements.sparePartForm.reset();
-        DOMElements.sparePartModal.dataset.editingId = partId;
-        DOMElements.sparePartModal.querySelector('h3').textContent = '予備部品を編集';
-        
-        DOMElements.sparePartForm.querySelector('#part-name').value = part.name || '';
-        DOMElements.sparePartForm.querySelector('#part-number').value = part.partNumber || '';
-        DOMElements.sparePartForm.querySelector('#part-quantity').value = part.quantity || '';
-        DOMElements.sparePartForm.querySelector('#part-location').value = part.location || '';
-        DOMElements.sparePartForm.querySelector('#part-notes').value = part.notes || '';
-
-        DOMElements.deletePartButton.classList.remove('hidden');
-        DOMElements.sparePartModal.classList.remove('hidden');
-    } catch (err) {
-        console.error("予備部品の読み込みエラー:", err);
-        alert("部品の読み込みに失敗しました。");
-    }
+        const doc = await db.collection('vehicles').doc(vId).collection('tasks').doc(taskId).get();
+        if (!doc.exists) return alert("タスクが見つかりません。");
+        const t = doc.data(), f = DE.taskForm;
+        ['title','assignee','status'].forEach(k => f.querySelector(`#task-${k}`).value = t[k] || '');
+        f.querySelector('#task-due-date').value = t.dueDate || ''; f.querySelector('#task-notes').value = t.notes || '';
+        DE.taskModal.dataset.editingId = taskId; DE.taskModal.dataset.source = 'external'; currentVehicleId = vId; 
+        setTaskModalMode(DE, 'view'); DE.taskModal.classList.remove('hidden');
+    } catch (err) { alert("読み込みに失敗しました。"); }
 }
 
-// 予備部品リストを描画
-async function renderSpareParts(vehicleId, DOMElements) {
-    const container = DOMElements.sparePartsContainer;
-    container.innerHTML = '';
-    const snapshot = await db.collection('vehicles').doc(vehicleId).collection('spare_parts').orderBy('name', 'asc').get();
-    
-    if (snapshot.empty) {
-        container.innerHTML = '<p>予備部品はまだ登録されていません。</p>';
-        return;
-    }
+const renderMaintenanceLogs = (vId, DE) => renderList('maintenance_logs', DE.maintenanceLogsContainer, '整備履歴はありません。', (l, id) => `<div class="history-item log-item" data-id="${id}"><p><strong>${new Date(l.date.replace(/-/g, '/')).toLocaleDateString()}</strong> - ${l.task}</p><p>[メモ] ${l.notes || 'なし'}</p></div>`, ['date', 'desc']);
+const renderCustomizations = (vId, DE) => renderList('customizations', DE.customizationsContainer, 'カスタマイズ情報はありません。', (c, id) => `<div class="history-item"><p><strong>${c.part}</strong> (${c.category || 'その他'})</p><p>${c.details || '詳細なし'}</p><div class="card-actions"><button class="delete-button" data-id="${id}">削除</button></div></div>`, ['part', 'asc']);
+const renderSetups = (vId, DE) => renderList('setups', DE.setupLogContainer, 'セッティング記録はまだありません。', (s, id) => `<div class="setup-item" data-id="${id}" style="cursor:pointer;"><div class="setup-header"><span>${s.date} @ ${s.course}</span></div><div class="setup-grid"><div><strong>足回り</strong><br>減衰: F ${s.suspension.damperF||'-'} / R ${s.suspension.damperR||'-'}<br>バネ: ${s.suspension.spring||'-'}, キャンバー: ${s.suspension.camber||'-'}</div><div><strong>タイヤ</strong><br>銘柄: ${s.tire.name||'-'}<br>内圧: F ${s.tire.airF||'-'} / R ${s.tire.airR||'-'}</div></div><div class="setup-comment-box">ドライバー: ${s.comment||'なし'}</div></div>`, ['date', 'desc']);
+const renderSpareParts = (vId, DE) => renderList('spare_parts', DE.sparePartsContainer, '予備部品はまだ登録されていません。', (p, id) => `<div class="history-item spare-part-item" data-id="${id}"><div class="spare-part-layout"><div class="part-main-info"><span class="part-name">${p.name}</span><span class="part-number">${p.partNumber||'品番なし'}</span></div><div class="part-stock-info"><span class="part-quantity">数量: ${p.quantity||'N/A'}</span><span class="part-location">📍 ${p.location||'場所不明'}</span></div></div>${p.notes ? `<p class="part-notes">メモ: ${p.notes}</p>` : ''}</div>`, ['name', 'asc']);
 
-    snapshot.forEach(doc => {
-        const part = doc.data();
-        const item = document.createElement('div');
-        // 既存の .history-item スタイルを流用しつつ、クリック用に .spare-part-item を追加
-        item.className = 'history-item spare-part-item'; 
-        item.dataset.id = doc.id;
-        
-        // .spare-part-layout (CSSで定義) を使ってレイアウトする
-        item.innerHTML = `
-            <div class="spare-part-layout">
-                <div class="part-main-info">
-                    <span class="part-name">${part.name}</span>
-                    <span class="part-number">${part.partNumber || '品番なし'}</span>
-                </div>
-                <div class="part-stock-info">
-                    <span class="part-quantity">数量: ${part.quantity || 'N/A'}</span>
-                    <span class="part-location">📍 ${part.location || '場所不明'}</span>
-                </div>
-            </div>
-            ${part.notes ? `<p class="part-notes">メモ: ${part.notes}</p>` : ''}
-        `;
-        container.appendChild(item);
+async function renderKanban(vId, DE) {
+    const stats = ['todo', 'inprogress', 'waiting', 'done'], counts = { todo: 0, inprogress: 0, waiting: 0, done: 0 };
+    stats.forEach(s => { const c = document.getElementById(`kanban-${s}`); if(c) c.innerHTML = ''; });
+    const snap = await db.collection('vehicles').doc(vId).collection('tasks').orderBy('updatedAt', 'desc').get();
+    const opts = [{v:'todo',l:'未着手'},{v:'inprogress',l:'作業中'},{v:'waiting',l:'部品待ち'},{v:'done',l:'完了'}];
+    snap.forEach(doc => {
+        const t = doc.data(); counts[t.status]++;
+        const sel = `<select class="quick-status-change" data-id="${doc.id}">${opts.map(o => `<option value="${o.v}" ${t.status === o.v ? 'selected' : ''}>${o.l}</option>`).join('')}</select>`;
+        const d = t.dueDate ? `<span class="task-date">📅 ${t.dueDate.slice(5).replace(/-/g, '/')}</span>` : '';
+        const c = document.getElementById(`kanban-${t.status}`);
+        if(c) c.insertAdjacentHTML('beforeend', `<div class="task-card" data-id="${doc.id}"><div class="task-title">${t.title}</div><div class="task-meta"><span>${t.assignee || '未割当'}</span>${d}</div><div class="task-actions" style="margin-top:8px;text-align:right;">${sel}</div></div>`);
     });
+    stats.forEach(s => { const h = document.querySelector(`.kanban-column[data-status="${s}"] h4`); if(h) { h.querySelector('.task-count-badge')?.remove(); h.insertAdjacentHTML('beforeend', `<span class="task-count-badge">${counts[s]}</span>`); } });
 }
-
-async function openLogModalForEdit(logId, DOMElements) {
-    if (!currentVehicleId) return;
-    try {
-        const doc = await db.collection('vehicles').doc(currentVehicleId).collection('maintenance_logs').doc(logId).get();
-        if (!doc.exists) {
-            alert("履歴が見つかりません。");
-            return;
-        }
-        const log = doc.data();
-        DOMElements.maintenanceLogForm.reset();
-        DOMElements.maintenanceLogModal.querySelector('h3').textContent = '整備履歴を編集';
-        
-        // フォームにデータを設定
-        DOMElements.maintenanceLogForm.querySelector('#log-id').value = logId;
-        DOMElements.maintenanceLogForm.querySelector('#log-date').value = log.date;
-        DOMElements.maintenanceLogForm.querySelector('#log-task').value = log.task;
-        DOMElements.maintenanceLogForm.querySelector('#log-notes').value = log.notes || '';
-
-        // 削除ボタンを表示
-        DOMElements.deleteLogButton.classList.remove('hidden');
-        DOMElements.maintenanceLogModal.classList.remove('hidden');
-    } catch (err) {
-        console.error("整備履歴の読み込みエラー:", err);
-        alert("履歴の読み込みに失敗しました。");
-    }
-}
-
-async function openSetupModalForEdit(setupId, DOMElements) {
-    if (!currentVehicleId) return;
-    try {
-        const doc = await db.collection('vehicles').doc(currentVehicleId).collection('setups').doc(setupId).get();
-        if (!doc.exists) {
-            alert("セッティング記録が見つかりません。");
-            return;
-        }
-        const s = doc.data();
-        const form = DOMElements.setupForm;
-        form.reset();
-        DOMElements.setupModal.querySelector('h3').textContent = 'セッティングを編集';
-        
-        // フォームにデータを設定
-        form.querySelector('#setup-id').value = setupId;
-        form.querySelector('#setup-date').value = s.date;
-        form.querySelector('#setup-course').value = s.course;
-        
-        if (s.suspension) {
-            form.querySelector('#setup-damper-f').value = s.suspension.damperF || '';
-            form.querySelector('#setup-damper-r').value = s.suspension.damperR || '';
-            form.querySelector('#setup-spring').value = s.suspension.spring || '';
-            form.querySelector('#setup-camber').value = s.suspension.camber || '';
-        }
-        if (s.tire) {
-            form.querySelector('#setup-tire').value = s.tire.name || '';
-            form.querySelector('#setup-air-f').value = s.tire.airF || '';
-            form.querySelector('#setup-air-r').value = s.tire.airR || '';
-        }
-        form.querySelector('#setup-comment').value = s.comment || '';
-
-        // 削除ボタンを表示
-        DOMElements.deleteSetupButton.classList.remove('hidden');
-        DOMElements.setupModal.classList.remove('hidden');
-    } catch (err) {
-        console.error("セッティングの読み込みエラー:", err);
-        alert("記録の読み込みに失敗しました。");
-    }
-}
-
-function ensureTaskDOMElements(DOMElements) {
-    if (!DOMElements.editTaskToggle) {
-        DOMElements.editTaskToggle = DOMElements.taskModal.querySelector('#edit-task-toggle');
-        DOMElements.saveTaskButton = DOMElements.taskModal.querySelector('button[type="submit"]');
-        DOMElements.cancelTaskButton = DOMElements.taskModal.querySelector('.cancel-button');
-        DOMElements.taskModalTitle = DOMElements.taskModal.querySelector('.modal-header-title');
-        DOMElements.taskInputs = DOMElements.taskForm.querySelectorAll('input, select, textarea');
-        
-        if (DOMElements.editTaskToggle) {
-            DOMElements.editTaskToggle.addEventListener('click', () => {
-                setTaskModalMode(DOMElements, 'edit');
-            });
-        }
-    }
-}
-
-function setTaskModalMode(DOMElements, mode) {
-    ensureTaskDOMElements(DOMElements);
-    if (mode === 'view') {
-        DOMElements.taskModalTitle.textContent = 'タスクの詳細';
-        DOMElements.editTaskToggle.classList.remove('hidden');
-        DOMElements.saveTaskButton.classList.add('hidden');
-        DOMElements.deleteTaskButton.classList.add('hidden');
-        DOMElements.cancelTaskButton.textContent = '閉じる';
-        DOMElements.taskInputs.forEach(input => {
-            input.disabled = true;
-            input.classList.add('view-mode-input');
-        });
-    } else if (mode === 'edit') {
-        DOMElements.taskModalTitle.textContent = 'タスクを編集';
-        DOMElements.editTaskToggle.classList.add('hidden');
-        DOMElements.saveTaskButton.classList.remove('hidden');
-        DOMElements.deleteTaskButton.classList.remove('hidden');
-        DOMElements.cancelTaskButton.textContent = 'キャンセル';
-        DOMElements.taskInputs.forEach(input => {
-            input.disabled = false;
-            input.classList.remove('view-mode-input');
-        });
-    } else if (mode === 'new') {
-        DOMElements.taskModalTitle.textContent = 'タスクを追加';
-        DOMElements.editTaskToggle.classList.add('hidden');
-        DOMElements.saveTaskButton.classList.remove('hidden');
-        DOMElements.deleteTaskButton.classList.add('hidden');
-        DOMElements.cancelTaskButton.textContent = 'キャンセル';
-        DOMElements.taskInputs.forEach(input => {
-            input.disabled = false;
-            input.classList.remove('view-mode-input');
-        });
-    }
-}
-
-

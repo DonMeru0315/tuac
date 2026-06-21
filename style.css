@@ -4,21 +4,22 @@ body{font-family:"Meiryo","Hiragino Kaku Gothic ProN","MS PGothic",sans-serif;fo
 button,input,select,textarea,.nav-button,.action-link-button{touch-action:manipulation;}
 button:disabled{opacity:0.6;cursor:not-allowed;filter:grayscale(40%);}
 .offline-banner{position:fixed;top:0;left:0;width:100%;background-color:var(--danger);color:white;text-align:center;padding:10px;font-size:0.85rem;font-weight:bold;z-index:9999;transition:transform 0.3s ease-in-out;transform:translateY(-100%);box-shadow:0 2px 10px rgba(0,0,0,0.2);}.offline-banner.show{transform:translateY(0);}
+main { max-width: 1200px; margin: 0 auto; padding: 2rem 5%; width: 100%; box-sizing: border-box; }
 
 /* ヘッダー & フッター */
-header{background-color:var(--accent);color:white;padding:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;}
+header { background-color: var(--accent); color: white; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
 header h1{margin:0;font-size:1.5rem;}
-footer{margin-top:auto;padding:2rem 1rem;text-align:center;border-top:1px solid #e9ecef;background-color:#f8f9fa;color:var(--text-light);flex-shrink:0;}
+footer { margin-top: auto; padding: 2rem 5%; text-align: center; border-top: 1px solid #e9ecef; background-color: #f8f9fa; color: var(--text-light); flex-shrink: 0; }
 .copyright{font-size:0.8rem;margin:0;color:#adb5bd;}
 .contact-link{display:inline-block;color:var(--text-light);text-decoration:none;font-size:0.9rem;margin-bottom:0.5rem;border-bottom:1px dashed #adb5bd;transition:0.2s;}
 .contact-link:hover{color:var(--accent);border-bottom-color:var(--accent);}
 
 /* ナビゲーション */
-#main-nav{display:flex;background-color:#e9ecef;border-bottom:1px solid var(--border);}
-.sp-br{display:none;}
-.nav-button{flex-grow:1;font-size:0.8rem;line-height:1.3;padding:0.5rem 0.2rem;border-bottom:1px solid var(--border);border-right:none;display:flex;align-items:center;justify-content:center;flex-direction:column;height:auto;}
-.nav-button:last-child{border-right:none;}
-.nav-button.active{background-color:#E65C00;color:white;font-weight:bold;}
+#main-nav { display: flex; background-color: #fff; border-bottom: 1px solid #eee; padding: 0; }
+.sp-br { display: none; }
+.nav-button { flex: 1; font-size: 1rem; line-height: 1.3; padding: 0.5rem 0; border: none; background: transparent; color: #888; display: flex; align-items: center; justify-content: center; flex-direction: column; height: 60px; position: relative; border-radius: 0; }
+.nav-button.active { color: #E65C00; background: transparent; font-weight: bold; }
+.nav-button.active::after { content: ''; position: absolute; bottom: 0; left: 20%; width: 60%; height: 3px; background-color: #E65C00; border-radius: 4px 4px 0 0; }
 #info-nav,#detail-nav{display:flex;margin-bottom:1rem;border-bottom:1px solid #ddd;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 #info-nav::-webkit-scrollbar,#detail-nav::-webkit-scrollbar{display:none;}
 .info-nav-button,.detail-nav-button{padding:0.6rem 0.8rem;border:none;background:transparent;cursor:pointer;font-size:0.95rem;color:var(--text-light);flex:0 0 auto;border-bottom:3px solid transparent;transition:0.2s;}
@@ -142,8 +143,8 @@ h3{margin-top:0;font-size:1rem;color:#555;border-bottom:2px solid #D66000;paddin
 .calendar-event.multiday-end-of-week { margin-right: 0 !important; width: calc(100% + 6px) !important; border-radius: 0 4px 4px 0 !important; }
 .calendar-event.multiday-start.multiday-end-of-week { width: 100% !important; border-radius: 4px !important; margin-right: 0 !important; margin-left: 0 !important; }
 .calendar-holiday-name{font-size:1rem;font-weight:bold;color:var(--danger);}
-.calendar-task { background-color: #ff9800; color: white; padding: 2px 2px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; width: 90%;
-    margin-top: 3px; border-left: 3px solid #b36a00; font-weight: bold; box-sizing: border-box; }
+.calendar-task { background-color: #ff9800; color: white; padding: 2px 2px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; width: 95%;
+    margin-top: 3px; font-weight: bold; box-sizing: border-box; }
 
 /* カンバン */
 #kanban-container{display:flex;flex-direction:column;gap:15px;padding:10px 5%;}
