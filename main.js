@@ -322,4 +322,56 @@ document.addEventListener('DOMContentLoaded', () => {
         offlineBanner.classList.add('show');
     }
 
+    // PWAインストール促進機能 (PCでは非表示)
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
+
+    // モバイル端末の場合のみインストール促進処理を実行
+    if (isMobile) {
+        const installBanner = document.getElementById('install-prompt-banner');
+        const installBtn = document.getElementById('install-prompt-btn');
+        const closeBtn = document.getElementById('install-prompt-close');
+        const installText = document.getElementById('install-prompt-text');
+        let deferredPrompt;
+
+        closeBtn.addEventListener('click', () => {
+            installBanner.classList.add('hidden');
+            sessionStorage.setItem('installPromptClosed', 'true');
+        });
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        if (!sessionStorage.getItem('installPromptClosed') && !isStandalone) {
+            
+            // Android / Chrome系の処理
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installBanner.classList.remove('hidden');
+            });
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBanner.classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                } else {
+                    alert("ブラウザの下部メニュー（共有アイコン）から「ホーム画面に追加」を選択してください。");
+                }
+            });
+
+            // iOS Safari 系の独自判定と案内
+            const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+            const isSafari = /safari/.test(window.navigator.userAgent.toLowerCase()) && !/chrome|crios/.test(window.navigator.userAgent.toLowerCase());
+
+            if (isIos() && isSafari) {
+                installBanner.classList.remove('hidden');
+                installText.innerHTML = 'Safariの「共有」アイコンから<br>「ホーム画面に追加」してください';
+                installBtn.textContent = 'OK';
+                installBtn.addEventListener('click', () => {
+                    installBanner.classList.add('hidden');
+                }, { once: true });
+            }
+        }
+    }
+
 });
