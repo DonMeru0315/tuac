@@ -1,5 +1,5 @@
 import { setupAuthListeners } from './auth.js';
-import { auth } from './firebase-init.js';
+import { auth, db } from './firebase-init.js';
 document.addEventListener('DOMContentLoaded', () => {
     // DOM要素の取得
     const DOMElements = {
@@ -173,6 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     // カレンダーを再描画
                     practiceModule.renderCalendar(DOMElements);
 
+                } else if (moduleId === 'help-module') {
+                    loadMembers();
                 }
             } catch (err) {
                 console.error("モジュールの動的インポートに失敗しました:", moduleId, err);
@@ -371,6 +373,105 @@ document.addEventListener('DOMContentLoaded', () => {
                     installBanner.classList.add('hidden');
                 }, { once: true });
             }
+        }
+    }
+
+    // --- 部員名簿の読み込みと自動グループ化 ---
+    async function loadMembers() {
+        const container = document.getElementById('member-list-container');
+        if (!container) return;
+        container.innerHTML = '<p style="color: #666; font-size: 0.9rem;">読み込み中...</p>';
+        
+        try {
+            const snapshot = await db.collection('users').orderBy('createdAt', 'asc').get();
+            
+            if (snapshot.empty) {
+                container.innerHTML = '<p>部員が登録されていません。</p>';
+                return;
+            }
+            
+            // 学年・期ごとにグループ化するためのハッシュマップ
+            const membersByTerm = {};
+            
+            snapshot.forEach(doc => {
+                const user = doc.data();
+                let joinYear = 0, termNum = 0, grade = 0;
+                
+                // 年度と学年の計算
+                if (user.createdAt) {
+                    const d = user.createdAt.toDate();
+                    joinYear = d.getMonth() < 3 ? d.getFullYear() - 1 : d.getFullYear();
+                    
+                    const now = new Date();
+                    const currentYear = now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
+                    
+                    termNum = joinYear - 2022 + 124;
+                    grade = currentYear - joinYear + 1;
+                }
+
+                // OB/OG判定 (5年以上)
+                const isOB = grade > 4;
+                const groupKey = isOB ? 'OB/OG' : joinYear;
+
+                if (!membersByTerm[groupKey]) {
+                    membersByTerm[groupKey] = {
+                        isOB: isOB,
+                        gradeNum: isOB ? 999 : grade,
+                        termName: isOB ? '' : `${termNum}期生`,
+                        members: []
+                    };
+                }
+                
+                // 管理者バッジ
+                const roleLabel = user.role === 'admin' ? '<span style="font-size:0.8rem; color:#888; margin-left:5px;">(管理者)</span>' : '';
+                
+                let memberInfo = '';
+                if (isOB) {
+                    // OB/OGの場合: 名前 〇期生
+                    memberInfo = `${user.name} ${termNum}期生`;
+                } else {
+                    // 学生の場合: 名前 学部
+                    const dept = user.department ? ` ${user.department}` : '';
+                    memberInfo = `${user.name}${dept}`;
+                }
+                
+                // シンプルなdivとして追加
+                membersByTerm[groupKey].members.push(`<div style="padding: 4px 0; font-size: 1rem;">${memberInfo}${roleLabel}</div>`);
+            });
+            
+            let html = '';
+            
+            // ★ソート処理: 学生は学年の降順(4,3,2,1)、OB/OGは常に一番下
+            const sortedKeys = Object.keys(membersByTerm).sort((a, b) => {
+                const groupA = membersByTerm[a];
+                const groupB = membersByTerm[b];
+                if (groupA.isOB && !groupB.isOB) return 1;  // OBを下に
+                if (!groupA.isOB && groupB.isOB) return -1; // 学生を上に
+                return groupB.gradeNum - groupA.gradeNum;   // 学生同士は学年が高い順
+            });
+            
+            sortedKeys.forEach(key => {
+                const group = membersByTerm[key];
+                html += `<div style="margin-bottom: 1.5rem;">`;
+                
+                if (group.isOB) {
+                    html += `<h4 style="margin:0 0 5px 0; color:var(--primary); font-size:1.05rem; border-bottom:1px solid #eee; padding-bottom:3px;">OB/OG</h4>`;
+                } else {
+                    // 1〜4の数字を全角に変換
+                    const zenkakuGrade = ['１', '２', '３', '４'][group.gradeNum - 1] || group.gradeNum;
+                    html += `<h4 style="margin:0 0 5px 0; color:var(--primary); font-size:1.05rem; border-bottom:1px solid #eee; padding-bottom:3px;">${zenkakuGrade}年(${group.termName})</h4>`;
+                }
+                
+                html += `<div style="display:flex; flex-direction:column;">`;
+                html += group.members.join('');
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+            
+        } catch (error) {
+            console.error("名簿取得エラー:", error);
+            container.innerHTML = '<p style="color:var(--danger);">名簿の読み込みに失敗しました。</p>';
         }
     }
 

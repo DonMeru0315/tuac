@@ -27,7 +27,13 @@
             <div id="login-register-area">
                 <h3 id="form-title">ログイン</h3>
                 <form id="auth-form">
-                    <input type="text" id="auth-name" placeholder="名前" class="hidden">
+                    <div id="auth-name-group" class="hidden" style="display:flex; gap:10px; margin-bottom: 0.5rem;">
+                        <input type="text" id="auth-last-name" placeholder="姓" style="margin-bottom:0;">
+                        <input type="text" id="auth-first-name" placeholder="名" style="margin-bottom:0;">
+                    </div>
+                    <input type="text" id="auth-student-id" placeholder="学生番号" class="hidden">
+                    <input type="text" id="auth-department" placeholder="学部" class="hidden">
+                    
                     <input type="email" id="auth-email" placeholder="メールアドレス" required autocapitalize="none" autocorrect="off" autocomplete="username">
                     <input type="password" id="auth-password" placeholder="パスワード" required autocomplete="current-password">
                     <button type="submit" id="auth-button">ログイン</button>
@@ -40,9 +46,33 @@
                     <div class="dropdown-header">
                         <p id="dropdown-user-name" class="dropdown-name"></p>
                         <p id="dropdown-user-email" class="dropdown-email"></p>
+                        <p id="dropdown-user-student-id" style="color:black; margin:4px 0; font-size:0.85rem;"></p>
+                        <p id="dropdown-user-department" style="color:black; margin:4px 0; font-size:0.85rem;"></p>
+                        <p id="dropdown-user-term" style="color:var(--primary); margin:4px 0; font-size:0.9rem; font-weight:bold;"></p>
                     </div>
                     <hr>
+                    <button id="show-edit-profile-button" style="width:100%; padding:0.6rem; margin-bottom:0.5rem; background:#fff; color:var(--primary); border:1px solid var(--primary); border-radius:4px; cursor:pointer; font-weight:bold;">👤 情報を編集する</button>
                     <button id="logout-button" class="logout-button-small">ログアウト</button>
+                </div>
+            </div>
+            <div id="profile-modal" class="modal-background hidden">
+                <div class="modal-content">
+                    <h3>部員情報の編集</h3>
+                    <form id="profile-form">
+                        <label>名前</label>
+                        <div style="display:flex; gap:10px; margin-bottom: 0.5rem;">
+                            <input type="text" id="profile-last-name" placeholder="姓" required style="margin-bottom:0;">
+                            <input type="text" id="profile-first-name" placeholder="名" required style="margin-bottom:0;">
+                        </div>
+                        <label for="profile-student-id">学生番号</label>
+                        <input type="text" id="profile-student-id" required>
+                        <label for="profile-department">学部</label>
+                        <input type="text" id="profile-department" required>
+                        <div class="modal-buttons">
+                            <button type="button" class="cancel-button">キャンセル</button>
+                            <button type="submit">保存する</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -54,7 +84,7 @@
             <button class="nav-button" data-module="practice-module">部活<br class="sp-br">日程</button>
             <button class="nav-button" data-module="info-module">情報<br class="sp-br">共有</button>
             <button class="nav-button" data-module="tools-module">ツール<br class="sp-br"></button>
-            <button class="nav-button" data-module="help-module">ヘルプ<br class="sp-br"></button>
+            <button class="nav-button" data-module="help-module">部員<br class="sp-br">企業</button>
         </nav>
 
         <main>
@@ -82,7 +112,7 @@
                     <div id="basic-info-content"></div>
                 </div>
                 <div id="maintenance-logs-tab" class="detail-tab-content hidden">
-                    <button id="show-add-log-button" class="primary-button">＋ 整備履歴を追加</button>
+                    <button id="show-add-log-button" class="primary-button">＋ 整備・作業履歴を追加</button>
                     <button id="sync-done-tasks-button" class="primary-button" style="background-color: #6c757d;">🔄 完了タスクを履歴に反映</button>
                     <div id="maintenance-logs-container"></div>
                 </div>
@@ -219,42 +249,38 @@
             <div id="help-module" class="module-content hidden">
                 <h2>部員・情報</h2>
                         
-                <div class="wiki-section" style="margin-bottom: 1.5rem;">
-                    <h3>👥 部員名簿</h3>
-                    <ul style="line-height: 1.8; margin-top: 0.5rem;">
-                        <li><strong>4年:</strong> 山田 太郎, 鈴木 一郎</li>
-                        <li><strong>3年:</strong> 佐藤 次郎, 田中 花子</li>
-                        <li><strong>2年:</strong> 伊藤 三郎</li>
-                        <li><strong>1年:</strong> 募集中</li>
-                    </ul>
-                </div>
-            
-                <div class="wiki-section" style="margin-bottom: 1.5rem;">
-                    <h3>🤝 スポンサー・協力企業様</h3>
-                    <ul style="line-height: 1.8; margin-top: 0.5rem;">
-                        <li>株式会社○○オート 様</li>
-                        <li>△△ガレージ 様</li>
-                    </ul>
-                </div>
-            
-                <div class="wiki-section" style="margin-bottom: 1.5rem;">
-                    <h3>🔗 重要サイト</h3>
-                    <div class="tool-links" style="margin-top: 0.5rem;">
-                        <a href="https://www.sportsanzen.org/" target="_blank" rel="noopener noreferrer" class="tool-button" style="background-color: #28a745;">
-                            スポーツ安全保険
-                        </a>
-                        <a href="https://your-university-portal.com" target="_blank" rel="noopener noreferrer" class="tool-button" style="background-color: #17a2b8;">
-                            大学ポータルサイト
-                        </a>
+                <div class="wiki-section" style="margin-bottom: 0.5rem;">
+                    <h3>部員名簿</h3>
+                    <div id="member-list-container" style="line-height: 1.8; margin-top: 0.5rem;">
+                        <p style="color: #666; font-size: 0.9rem;">読み込み中...</p>
                     </div>
                 </div>
             
-                <div class="wiki-section" style="margin-bottom: 1.5rem;">
-                    <h3 style="color: var(--danger);">🔒 アカウント情報（部外秘）</h3>
-                    <div class="wiki-notice-box" style="margin-top: 0.5rem; margin-bottom: 0;">
-                        <p style="margin: 0 0 10px 0;"><strong>X (旧Twitter)</strong><br>ID: tuac_official<br>PW: XXXXXXXX</p>
-                        <p style="margin: 0 0 10px 0;"><strong>Instagram</strong><br>ID: tuac_insta<br>PW: XXXXXXXX</p>
-                        <p style="margin: 0;"><strong>みんカラ</strong><br>ID: tuac_minkara<br>PW: XXXXXXXX</p>
+                <div class="wiki-section" style="margin-bottom: 0.5rem;">
+                    <h3>スポンサー・協力企業様</h3>
+                    
+                    <h4 style="margin: 0.5rem 0; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 3px;">メインスポンサー</h4>
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem;">
+                        <a href="https://www.shopmsgarage.com/" target="_blank" rel="noopener noreferrer" style="display: block; padding: 1.2rem; background: linear-gradient(135deg, #fff3e0, #ffe0b2); border: 1px solid var(--accent); border-radius: 8px; text-decoration: none; color: #333; text-align: center; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            株式会社 大源 様
+                            <div style="font-size: 0.8rem; font-weight: normal; color: #666; margin-top: 5px;">🔗 Webサイトへ</div>
+                        </a>
+                    </div>
+
+                    <h4 style="margin: 0.5rem 0; color: #555; border-bottom: 1px solid #ccc; padding-bottom: 3px;">スポンサー様 一覧</h4>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <a href="https://ssl.21rentacar.com/" target="_blank" rel="noopener noreferrer" style="display: block; padding: 1rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; color: var(--primary); text-align: center; font-weight: bold;">
+                            日進レンタカー株式会社 様
+                        </a>
+                        <a href="https://cerameta.jp/cf.html" target="_blank" rel="noopener noreferrer" style="display: block; padding: 1rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; color: var(--primary); text-align: center; font-weight: bold;">
+                            株式会社セラメタ 様
+                        </a>
+                        <a href="https://www.winmax.jp/" target="_blank" rel="noopener noreferrer" style="display: block; padding: 1rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; color: var(--primary); text-align: center; font-weight: bold;">
+                            Winmax 様
+                        </a>
+                        <a href="https://www.y-yokohama.com/product/tire/" target="_blank" rel="noopener noreferrer" style="display: block; padding: 1rem; background: #fff; border: 1px solid #ddd; border-radius: 8px; text-decoration: none; color: var(--primary); text-align: center; font-weight: bold;">
+                            横浜ゴム株式会社 様
+                        </a>
                     </div>
                 </div>
             </div>
@@ -290,7 +316,7 @@
 
     <div id="maintenance-log-modal" class="modal-background hidden">
         <div class="modal-content">
-            <h3>整備履歴を追加</h3> 
+            <h3>整備・作業履歴を追加</h3> 
             <form id="maintenance-log-form">
                 
                 <input type="hidden" id="log-id"> 

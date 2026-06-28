@@ -1,6 +1,6 @@
 {
   "name": "拓殖大学 自動車部",
-  "short_name": "ClubAutoLog",
+  "short_name": "TUAC Auto Log",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f4f9",
