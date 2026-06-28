@@ -24,20 +24,14 @@
 
 ### 3\. 情報共有 (Wiki)
 
-  * **整備マニュアル**: Markdown記法に対応したナレッジベース。
+  * **整備マニュアル**: `Quill.js` を導入したリッチテキストエディタによるナレッジベース。
   * **タグ付け・難易度**: 作業の難易度や所要時間を記録し、技術継承を支援。
+  * **画像挿入**: Cloudinaryを利用した本文への画像挿入。
 
-### 4\. 出退勤 (Attendance)
+### 4\. 便利ツール (Tools)
 
-  * **GPS打刻**: 部室（ガレージ）の特定範囲内（デフォルト1000m）にいる場合のみ出席・退席が可能。
-  * **写真記録**: Cloudinaryと連携し、活動終了時に使用した工具や現場の写真をアップロードして記録。
-  * **履歴確認**: 過去1ヶ月分の活動履歴表示。
-
-### 5\. 便利ツール (Tools)
-
-  * **工具使用記録**: 工具の紛失防止のための写真ログ機能。
-  * **リンク集**: 部品検索サイト（EPC-data, PartsFan）や各サーキットの予約ページへのショートカット。
-
+  * **ツールリンク集**: 部品検索サイト（EPC-data, PartsFan）や各サーキットの予約ページへのショートカット。
+  * **帳票エクスポート**: 活動日程や整備記録を、月次・年次で CSV および PDF 形式で出力（`export.js`）。
 ## 使用技術
 
   * **Frontend**: HTML5, CSS3, JavaScript (ES Modules)
@@ -87,39 +81,23 @@ const firebaseConfig = {
 };
 ```
 
-#### Cloudinary設定 (`attendance.js`, `tools.js`)
-
-画像の保存先としてCloudinaryを使用しています。自身のCloud NameとUnsigned Upload Presetを設定してください。
-
-```javascript
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/image/upload";
-const UPLOAD_PRESET = "YOUR_UNSIGNED_PRESET";
-```
-
-#### GPS設定 (`attendance.js`)
-
-ガレージの位置情報を設定します。
-
-```javascript
-const CLUB_LAT = 35.XXXXXX; // 緯度
-const CLUB_LON = 139.XXXXXX; // 経度
-const ALLOWED_RADIUS = 1000; // 許容半径(メートル)
-```
-
 ## 📂 ディレクトリ構成
 
 ```
 .
-├── index.html          # エントリーポイント (レイアウト、モーダル定義)
+├── index.html          # エントリーポイント (レイアウト、ツールリンク、モーダル定義)
 ├── style.css           # スタイルシート (レスポンシブ対応)
-├── main.js             # メインロジック (モジュール読み込み、ナビゲーション)
+├── main.js             # メインロジック (ナビゲーション、PWAインストール制御)
 ├── auth.js             # 認証ロジック (ログイン/登録)
 ├── firebase-init.js    # Firebase初期化
-├── vehicle.js          # 車両管理モジュール
-├── practice.js         # カレンダー・予定モジュール
-├── info.js             # Wikiモジュール
-├── attendance.js       # 出退勤モジュール
-└── tools.js            # 便利ツールモジュール
+├── vehicle.js          # 車両管理モジュール (整備記録、カンバン、セッティング等)
+├── practice.js         # 部活日程モジュール (カレンダー制御)
+├── info.js             # Wikiモジュール (Quill.js連携、Cloudinary画像UP)
+├── export.js           # レポート出力モジュール (CSV/PDF生成)
+├── sw.js               # Service Worker (オフラインキャッシュ・PWA対応)
+├── manifest.json       # PWA マニフェストファイル
+├── icon-192.png        # PWA用アプリアイコン (小)
+└── icon-512.png        # PWA用アプリアイコン (大)
 ```
 
 ## 注意事項
@@ -129,4 +107,4 @@ const ALLOWED_RADIUS = 1000; // 許容半径(メートル)
 
 ## © ライセンス
 
-© 2025 Takushoku Univ. Auto Club
+© 2026 Takushoku Univ. Auto Club
